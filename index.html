@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOTOR MASTER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f4f7f6; font-family: sans-serif; padding-bottom: 70px; }
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px 0; }
+        .card-custom { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .page { display: none; }
+        .page.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-3 page active" id="home">
+        <h5 class="fw-bold">📊 สรุปภาพรวม</h5>
+        <div class="row g-2 text-center mt-2">
+            <div class="col-6"><div class="card-custom"><small class="text-muted">เงินสดในมือ</small><h4 class="text-primary fw-bold" id="dash-bal">฿0</h4></div></div>
+            <div class="col-6"><div class="card-custom"><small class="text-muted">กำไรสุทธิ</small><h4 class="text-success fw-bold" id="dash-pro">฿0</h4></div></div>
+        </div>
+    </div>
+
+    <div class="container mt-3 page" id="inventory">
+        <h5 class="fw-bold">🏍️ สต็อกรถ</h5>
+        <div id="list-inventory"></div>
+    </div>
+
+    <div class="nav-bottom">
+        <button class="btn btn-sm" onclick="showPage('home')">หน้าแรก</button>
+        <button class="btn btn-sm" onclick="showPage('inventory')">สต็อก</button>
+        <button class="btn btn-sm" onclick="showPage('repair')">อู่ซ่อม</button>
+        <button class="btn btn-sm" onclick="showPage('finance')">บัญชี</button>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
+
+        async function loadData() {
+            const res = await fetch(`${API_URL}?action=getMasterData`);
+            const data = await res.json();
+            
+            document.getElementById('dash-bal').innerText = '฿' + data.dashboard.balance.toLocaleString();
+            document.getElementById('dash-pro').innerText = '฿' + data.dashboard.profit.toLocaleString();
+            
+            renderInventory(data.bikes);
+        }
+
+        function renderInventory(bikes) {
+            let h = '';
+            bikes.forEach(b => {
+                h += `<div class="card-custom">
+                    <div class="d-flex justify-content-between"><b>${b.model}</b> <span class="badge bg-dark">${b.plate}</span></div>
+                    <div class="small text-muted mt-2">ทุนรวม: ฿${b.totalInv.toLocaleString()}</div>
+                </div>`;
+            });
+            document.getElementById('list-inventory').innerHTML = h;
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
