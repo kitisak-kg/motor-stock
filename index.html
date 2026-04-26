@@ -3,275 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOTOR MASTER Pro</title>
+    <title>Dashboard - MOTOR MASTER</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
+        body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.8rem; width: 25%; }
-        .nav-btn.active { color: #0d6efd; }
-        .card-bike { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.8rem; text-decoration: none; text-align: center; width: 25%; transition: 0.3s; }
+        .nav-btn.active { color: #0d6efd; transform: scale(1.1); }
+        .card-stat { background: white; border-radius: 15px; padding: 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
+        .card-stat:active { transform: scale(0.98); }
+        .alert-item { background: #fff; border-left: 5px solid #dc3545; border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="spinner-border text-primary mb-2"></div>
-        <div class="fw-bold text-primary">กำลังซิงค์ข้อมูล...</div>
+        <div class="spinner-border text-primary mb-3"></div>
+        <div class="fw-bold text-primary">กำลังซิงค์ข้อมูลจาก Google Sheets...</div>
     </div>
 
-    <div class="container mt-4 page" id="page-home">
-        <h5 class="fw-bold mb-3">📊 สรุปภาพรวม</h5>
-        <div class="row g-2 text-center">
-            <div class="col-6"><div class="card-bike"><small class="text-muted">เงินสดในมือ</small><h4 class="text-primary fw-bold" id="dash-bal">฿0</h4></div></div>
-            <div class="col-6"><div class="card-bike"><small class="text-muted">กำไรสะสม</small><h4 class="text-success fw-bold" id="dash-pro">฿0</h4></div></div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold m-0 text-dark">📊 สรุปภาพรวม</h4>
+            <button class="btn btn-light btn-sm shadow-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> รีเฟรช</button>
         </div>
-    </div>
 
-    <div class="container mt-4 page active" id="page-inventory">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0">🏍️ สต็อกรถ</h5>
-            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="openBikeModal('add')">+ รับรถเข้า</button>
-        </div>
-        <input type="text" id="search" class="form-control mb-3 shadow-sm" placeholder="🔍 ค้นหาทะเบียน..." onkeyup="renderInventory()">
-        <div id="list-inventory"></div>
-    </div>
-
-    <div class="container mt-4 page" id="page-repair">
-        <h5 class="fw-bold mb-3">🛠️ รายการรถรอซ่อม/ซ่อมอยู่</h5>
-        <div id="list-repair"></div>
-    </div>
-
-    <div class="container mt-4 page" id="page-finance">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0">💰 บัญชีเงินทุน</h5>
-            <button class="btn btn-success btn-sm rounded-pill fw-bold" onclick="new bootstrap.Modal(document.getElementById('modal-capital')).show()">+ รับทุน</button>
-        </div>
-        <div id="list-capital" class="text-center p-5 text-muted small">ระบบบัญชีพร้อมใช้งาน</div>
-    </div>
-
-    <div class="nav-bottom">
-        <button class="nav-btn" id="btn-home" onclick="showPage('home')">หน้าแรก</button>
-        <button class="nav-btn active" id="btn-inventory" onclick="showPage('inventory')">สต็อก</button>
-        <button class="nav-btn" id="btn-repair" onclick="showPage('repair')">อู่ซ่อม</button>
-        <button class="nav-btn" id="btn-finance" onclick="showPage('finance')">บัญชี</button>
-    </div>
-
-    <div class="modal fade" id="modal-repair-detail" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-warning text-dark"><h6 class="modal-title fw-bold">จัดการบิลค่าซ่อม</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-0 small">
-            <div class="p-3 bg-light border-bottom">
-                <div class="row g-1">
-                    <div class="col-8"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการอะไหล่/งานซ่อม"></div>
-                    <div class="col-4"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา"></div>
-                    <div class="col-12 mt-1"><input type="text" id="r-shop" class="form-control form-control-sm" placeholder="ชื่ออู่ / ช่าง"></div>
-                    <div class="col-12 mt-2"><button class="btn btn-dark btn-sm w-100 fw-bold" onclick="addRepairItem()">+ บันทึกรายการนี้</button></div>
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card-stat bg-primary text-white text-center shadow-lg">
+                    <small class="opacity-75">💰 เงินสดคงเหลือในมือ</small>
+                    <h2 class="fw-bold mt-1" id="dash-bal">฿0</h2>
                 </div>
             </div>
-            <div id="repair-items-list" class="p-3" style="max-height: 250px; overflow-y: auto;"></div>
-            <div class="p-3 border-top d-flex justify-content-between bg-white fw-bold"><span>ยอดรวมคันนี้:</span><span class="text-danger h6 m-0">฿ <span id="r-total-sum">0</span></span></div>
+            <div class="col-6">
+                <div class="card-stat text-center">
+                    <small class="text-muted">📦 ทุนในสต็อก</small>
+                    <h5 class="fw-bold text-danger mt-1" id="dash-stk">฿0</h5>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card-stat text-center border-start border-success border-4">
+                    <small class="text-muted">📈 กำไรสะสม</small>
+                    <h5 class="text-success fw-bold mt-1" id="dash-pro">฿0</h5>
+                </div>
+            </div>
         </div>
-    </div></div></div>
 
-    <div class="modal fade" id="modal-bike" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-dark text-white"><h6 class="modal-title fw-bold" id="bikeModalTitle">ลงทะเบียนรถใหม่</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4 small">
-            <input type="hidden" id="m-rowIdx">
-            <div class="row g-2 mb-3">
-                <div class="col-6"><label>วันที่ซื้อเข้า</label><input type="date" id="m-buyDate" class="form-control form-control-sm"></div>
-                <div class="col-6"><label>ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
-                <div class="col-12"><label>ยี่ห้อ/รุ่น/สี</label><div class="input-group"><select id="m-brand" class="form-select form-select-sm w-25"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select><input type="text" id="m-model" class="form-control form-control-sm w-50" placeholder="รุ่น"><input type="text" id="m-color" class="form-control form-control-sm" placeholder="สี"></div></div>
+        <h6 class="fw-bold mb-3"><i class="bi bi-bicycle"></i> สถานะรถในร้าน</h6>
+        <div class="card-stat p-3 mb-4">
+            <div class="row text-center">
+                <div class="col-4 border-end">
+                    <small class="text-muted">รอซ่อม</small>
+                    <div class="h5 fw-bold m-0" id="count-wait">0</div>
+                </div>
+                <div class="col-4 border-end">
+                    <small class="text-muted">ซ่อมอยู่</small>
+                    <div class="h5 fw-bold m-0 text-warning" id="count-doing">0</div>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">พร้อมขาย</small>
+                    <div class="h5 fw-bold m-0 text-success" id="count-ready">0</div>
+                </div>
             </div>
-            <div class="row g-2 mb-3 bg-primary bg-opacity-10 p-2 rounded">
-                <div class="col-4"><label>ราคาซื้อ</label><input type="number" id="m-hammer" class="form-control form-control-sm"></div>
-                <div class="col-4"><label>ค่าขน</label><input type="number" id="m-transport" class="form-control form-control-sm"></div>
-                <div class="col-4"><label>ค่าดำเนินการ</label><input type="number" id="m-fee" class="form-control form-control-sm"></div>
-            </div>
-            <div class="row g-2 mb-3">
-                <div class="col-6"><label>สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอซ่อม</option><option>ซ่อมอยู่</option><option>พร้อมขาย</option></select></div>
-                <div class="col-6"><label>สถานะเล่ม</label><select id="m-book" class="form-select form-select-sm"><option>อยู่ที่ร้าน</option><option>รอชุดโอน</option><option>ส่งโอนแล้ว</option></select></div>
-            </div>
-            <button class="btn btn-primary w-100 fw-bold py-2 shadow" onclick="saveBike()">💾 บันทึกข้อมูลรถ</button>
-            <button class="btn btn-outline-danger w-100 fw-bold py-1 btn-sm mt-2" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบรถคันนี้</button>
         </div>
-    </div></div></div>
 
-    <div class="modal fade" id="modal-capital" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-body p-4 text-center">
-        <h6 class="fw-bold mb-3 text-success">บันทึกเงินทุนเพิ่ม</h6>
-        <input type="date" id="c-date" class="form-control mb-2">
-        <input type="number" id="c-amount" class="form-control mb-2" placeholder="จำนวนเงิน">
-        <input type="text" id="c-note" class="form-control mb-3" placeholder="หมายเหตุ">
-        <button class="btn btn-success w-100 fw-bold" onclick="saveCapital()">ยืนยันบันทึก</button>
-    </div></div></div></div>
+        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสารด่วน (ภายใน 30 วัน)</h6>
+        <div id="alert-list">
+            </div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="nav-bottom shadow">
+        <a href="index.html" class="nav-btn active"><i class="bi bi-house-door d-block h4 mb-1"></i>หน้าแรก</a>
+        <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam d-block h4 mb-1"></i>สต็อก</a>
+        <a href="repair.html" class="nav-btn"><i class="bi bi-tools d-block h4 mb-1"></i>อู่ซ่อม</a>
+        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2 d-block h4 mb-1"></i>บัญชี</a>
+    </div>
+
     <script>
+        // ----------------------------------------------------
+        // ใส่ URL ของ GAS ที่คุณเจให้มา
+        // ----------------------------------------------------
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let allBikes = [];
-        let currentBikeId = "";
 
-        window.onload = loadData;
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.getElementById('btn-' + pageId).classList.add('active');
-        }
-
-        async function loadData() {
-            document.getElementById('loader').style.display = 'flex';
+        async function loadDashboard() {
             try {
                 const response = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await response.json();
-                allBikes = data.bikes;
+                
+                // 1. อัปเดตตัวเลขการเงิน
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
+                document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
-                renderInventory();
-                renderRepair();
-            } catch (err) { console.error(err); }
-            document.getElementById('loader').style.display = 'none';
+
+                // 2. นับจำนวนสถานะรถ
+                let wait = 0, doing = 0, ready = 0;
+                let alertsHtml = '';
+                const today = new Date();
+
+                data.bikes.forEach(b => {
+                    if (b.status === 'รอซ่อม') wait++;
+                    if (b.status === 'ซ่อมอยู่') doing++;
+                    if (b.status === 'พร้อมขาย') ready++;
+
+                    // ตรวจสอบวันหมดอายุ (ภาษี และ บัตร ปชช.)
+                    const checkExp = (dateStr, label) => {
+                        if (!dateStr) return;
+                        const expDate = new Date(dateStr);
+                        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 30) {
+                            alertsHtml += `
+                                <div class="alert-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">${b.plate}</span>
+                                        <span class="badge bg-danger">${label}</span>
+                                    </div>
+                                    <div class="small text-muted mt-1">จะหมดอายุในอีก ${diffDays} วัน (${expDate.toLocaleDateString('th-TH')})</div>
+                                </div>`;
+                        }
+                    };
+
+                    checkExp(b.taxExp, 'ภาษี');
+                    checkExp(b.idExp, 'บัตร ปชช.');
+                });
+
+                document.getElementById('count-wait').innerText = wait;
+                document.getElementById('count-doing').innerText = doing;
+                document.getElementById('count-ready').innerText = ready;
+                document.getElementById('alert-list').innerHTML = alertsHtml || '<p class="text-muted text-center py-3">✅ ยังไม่มีแจ้งเตือนเอกสารด่วน</p>';
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("โหลดข้อมูลไม่สำเร็จ โปรดตรวจสอบการตั้งค่า GAS");
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
         }
 
-        function renderInventory() {
-            const q = document.getElementById('search').value.toLowerCase();
-            let h = '';
-            allBikes.filter(b => b.plate.toLowerCase().includes(q) || b.model.toLowerCase().includes(q)).forEach(b => {
-                h += `<div class="card-bike border-start border-4 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
-                    <div class="d-flex justify-content-between"><b>${b.model}</b> <span class="badge bg-dark">${b.plate}</span></div>
-                    <div class="small text-muted mt-1">ทุนรวม (รถ+ซ่อม): ฿${(b.totalInv || 0).toLocaleString()}</div>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 fw-bold" onclick='editBike(${JSON.stringify(b)})'>✏️ แก้ไขข้อมูล</button>
-                </div>`;
-            });
-            document.getElementById('list-inventory').innerHTML = h || '<p class="text-center p-4">ไม่มีข้อมูล</p>';
-        }
-
-        function renderRepair() {
-            const list = document.getElementById('list-repair');
-            let h = '';
-            allBikes.filter(b => b.status !== 'พร้อมขาย').forEach(b => {
-                h += `<div class="card-bike border-start border-5 border-warning shadow-sm">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div><span class="badge bg-dark mb-1">${b.plate}</span><h6 class="fw-bold m-0">${b.model}</h6></div>
-                        <span class="badge bg-warning text-dark">${b.status}</span>
-                    </div>
-                    <div class="mt-2 small">ค่าซ่อมสะสม: <b class="text-danger">฿${(b.repairSum || 0).toLocaleString()}</b></div>
-                    <button class="btn btn-outline-warning text-dark btn-sm w-100 mt-3 fw-bold" onclick="openRepairModal('${b.id}')"><i class="bi bi-wrench"></i> จัดการบิลค่าซ่อม / อะไหล่</button>
-                </div>`;
-            });
-            list.innerHTML = h || '<p class="text-center p-5 text-muted">🎉 ไม่มีรถค้างซ่อมในอู่</p>';
-        }
-
-        // --- ระบบจัดการรายการซ่อมแยกรายการ ---
-        async function openRepairModal(id) {
-            currentBikeId = id;
-            new bootstrap.Modal(document.getElementById('modal-repair-detail')).show();
-            fetchRepairDetails();
-        }
-
-        async function fetchRepairDetails() {
-            document.getElementById('repair-items-list').innerHTML = '<div class="text-center small">กำลังโหลดบิล...</div>';
-            const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${currentBikeId}`);
-            const items = await res.json();
-            let h = ''; let sum = 0;
-            items.forEach(it => {
-                h += `<div class="d-flex justify-content-between mb-2 border-bottom pb-1">
-                    <span>${it.name} <br><small class="text-muted">📍 ${it.shop || 'ไม่ระบุ'}</small></span>
-                    <span class="fw-bold">฿${it.price.toLocaleString()} <i class="bi bi-trash text-danger ms-2" style="cursor:pointer;" onclick="deleteRepairItem('${it.name}')"></i></span>
-                </div>`;
-                sum += it.price;
-            });
-            document.getElementById('repair-items-list').innerHTML = h || '<div class="text-center text-muted py-3">ยังไม่มีรายการซ่อม</div>';
-            document.getElementById('r-total-sum').innerText = sum.toLocaleString();
-        }
-
-        async function addRepairItem() {
-            const item = document.getElementById('r-item').value;
-            const price = document.getElementById('r-price').value;
-            const shop = document.getElementById('r-shop').value;
-            if(!item || !price) return alert("กรุณากรอกรายการและราคา");
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepair', bikeId: currentBikeId, item: item, price: price, shop: shop }) });
-            document.getElementById('r-item').value = ""; document.getElementById('r-price').value = "";
-            document.getElementById('loader').style.display = 'none';
-            fetchRepairDetails();
-        }
-
-        async function deleteRepairItem(name) {
-            if(!confirm(`ลบรายการ "${name}" ใช่หรือไม่?`)) return;
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', bikeId: currentBikeId, itemName: name }) });
-            document.getElementById('loader').style.display = 'none';
-            fetchRepairDetails();
-        }
-
-        // --- ระบบจัดการรถ (Modal) ---
-        function openBikeModal(mode) {
-            document.getElementById('m-rowIdx').value = "";
-            document.getElementById('bikeModalTitle').innerText = "ลงทะเบียนรถใหม่";
-            document.getElementById('btn-delete').style.display = 'none';
-            ['buyDate','plate','model','color','hammer','transport','fee','taxExp','idExp','stockNote'].forEach(id => document.getElementById('m-'+id).value = "");
-            document.getElementById('m-buyDate').valueAsDate = new Date();
-            new bootstrap.Modal(document.getElementById('modal-bike')).show();
-        }
-
-        function editBike(b) {
-            document.getElementById('m-rowIdx').value = b.rowIdx;
-            document.getElementById('bikeModalTitle').innerText = "แก้ไขข้อมูล - " + b.plate;
-            document.getElementById('btn-delete').style.display = 'block';
-            const f = (d) => (d && !isNaN(new Date(d))) ? new Date(d).toISOString().split('T')[0] : "";
-            document.getElementById('m-buyDate').value = f(b.buyDate);
-            document.getElementById('m-plate').value = b.plate;
-            document.getElementById('m-brand').value = b.brand;
-            document.getElementById('m-model').value = b.model;
-            document.getElementById('m-color').value = b.color;
-            document.getElementById('m-hammer').value = b.hammer;
-            document.getElementById('m-transport').value = b.transport;
-            document.getElementById('m-fee').value = b.fee;
-            document.getElementById('m-status').value = b.status;
-            document.getElementById('m-book').value = b.bookStatus;
-            new bootstrap.Modal(document.getElementById('modal-bike')).show();
-        }
-
-        async function saveBike() {
-            const rowIdx = document.getElementById('m-rowIdx').value;
-            const payload = {
-                action: rowIdx ? 'updateBike' : 'saveBike', rowIdx: rowIdx,
-                buyDate: document.getElementById('m-buyDate').value,
-                plate: document.getElementById('m-plate').value,
-                brand: document.getElementById('m-brand').value,
-                model: document.getElementById('m-model').value,
-                color: document.getElementById('m-color').value,
-                hammer: document.getElementById('m-hammer').value,
-                transport: document.getElementById('m-transport').value,
-                fee: document.getElementById('m-fee').value,
-                status: document.getElementById('m-status').value,
-                bookStatus: document.getElementById('m-book').value
-            };
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-            location.reload();
-        }
-
-        async function deleteBike() {
-            if(!confirm('ลบรถคันนี้ถาวร?')) return;
-            const rowIdx = document.getElementById('m-rowIdx').value;
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: rowIdx }) });
-            location.reload();
-        }
-
-        async function saveCapital() {
-            const payload = { action: 'saveCapital', amount: document.getElementById('c-amount').value, note: document.getElementById('c-note').value, date: document.getElementById('c-date').value };
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-            location.reload();
-        }
+        window.onload = loadDashboard;
     </script>
 </body>
 </html>
