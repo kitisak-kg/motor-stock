@@ -8,57 +8,36 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
+        /* เมนูนำทางด้านล่างมาตรฐาน */
         .nav-bottom { 
-    position: fixed; 
-    bottom: 0; 
-    width: 100%; 
-    background: white; 
-    border-top: 1px solid #dee2e6; 
-    display: flex; 
-    justify-content: space-around; 
-    padding: 8px 0; 
-    z-index: 2000; 
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1); 
-}
-.nav-btn { 
-    border: none; 
-    background: none; 
-    font-weight: bold; 
-    color: #6c757d; 
-    font-size: 0.75rem; 
-    text-decoration: none; 
-    text-align: center; 
-    width: 25%; 
-    transition: 0.2s;
-}
-.nav-btn i { 
-    font-size: 1.3rem; 
-    display: block; 
-    margin-bottom: 2px; 
-}
-.nav-btn.active { 
-    color: #0d6efd; 
-}
-/* เพิ่ม Padding ล่างให้เนื้อหาไม่โดนเมนูบัง */
-body { padding-bottom: 80px !important; }
+            position: fixed; bottom: 0; width: 100%; background: white; 
+            border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; 
+            padding: 8px 0; z-index: 2000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); 
+        }
+        .nav-btn { 
+            border: none; background: none; font-weight: bold; color: #6c757d; 
+            font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s;
+        }
+        .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .nav-btn.active { color: #0d6efd; }
+
         .card-finance { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.9rem; }
-        .tab-btn.active { background: #fff; color: #2ecc71; border-bottom: 3px solid #2ecc71; }
+        .tab-btn.active { background: #fff; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="spinner-border text-success mb-2"></div>
-        <div class="fw-bold text-dark">กำลังบันทึกข้อมูลการเงิน...</div>
+        <div class="spinner-border text-primary mb-2"></div>
+        <div class="fw-bold text-dark">กำลังดำเนินการ...</div>
     </div>
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold m-0"><i class="bi bi-wallet2"></i> บัญชีและการเงิน</h5>
-            <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modal-capital')).show()">+ รับทุนเพิ่ม</button>
+            <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="openCapitalModal()">+ รับทุนเพิ่ม</button>
         </div>
 
         <div class="card-finance bg-success text-white text-center shadow">
@@ -72,7 +51,7 @@ body { padding-bottom: 80px !important; }
         </div>
 
         <div id="section-cap">
-            <h6 class="fw-bold small mb-2 text-muted">รายการเงินทุนจากนายทุน</h6>
+            <h6 class="fw-bold small mb-2 text-muted">รายการเงินทุนจากนายทุน (พ.ศ.)</h6>
             <div id="list-capital-history">
                 <div class="text-center py-5 text-muted">กำลังดึงข้อมูลประวัติ...</div>
             </div>
@@ -86,12 +65,12 @@ body { padding-bottom: 80px !important; }
         </div>
     </div>
 
-    <div class="nav-bottom">
-    <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
-    <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
-    <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
-    <a href="finance.html" class="nav-btn active"><i class="bi bi-wallet2-fill"></i>บัญชี</a>
-</div>
+    <div class="nav-bottom shadow">
+        <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
+        <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
+        <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
+        <a href="finance.html" class="nav-btn active"><i class="bi bi-wallet2-fill"></i>บัญชี</a>
+    </div>
 
     <div class="modal fade" id="modal-capital" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-body p-4 text-center">
@@ -115,13 +94,12 @@ body { padding-bottom: 80px !important; }
 
         async function loadFinanceData() {
             try {
-                // ดึงข้อมูลรวมจากหน้าแรก
                 const response = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await response.json();
                 
                 document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
                 
-                // แสดงผลรถที่ขายแล้ว
+                // 1. แสดงผลรถที่ขายแล้ว
                 const soldBikes = data.bikes.filter(b => b.saleStatus === 'ขายแล้ว');
                 let soldHtml = '';
                 soldBikes.forEach(b => {
@@ -139,49 +117,53 @@ body { padding-bottom: 80px !important; }
                 });
                 document.getElementById('list-sold-history').innerHTML = soldHtml || '<p class="text-center p-4">ยังไม่มีรถที่ขายได้</p>';
 
-                // ดึงข้อมูลประวัติการรับทุน (เรียกแยกเพื่อให้เห็นรายละเอียด)
-                // หมายเหตุ: ต้องตรวจสอบว่า Code.gs มี action นี้หรือไม่
-                fetchCapitalHistory();
+                // 2. แสดงประวัติรับทุน (ใช้ค่าจากชีทตรงๆ ไม่แปลง Date)
+                if (data.capitalHistory) {
+                    let capHtml = '';
+                    data.capitalHistory.forEach(c => {
+                        capHtml += `
+                        <div class="card-finance">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold text-success">+ ฿${Number(c.amount).toLocaleString()}</div>
+                                    <div class="x-small text-muted"><i class="bi bi-calendar3"></i> ${c.date}</div>
+                                </div>
+                                <div class="small fw-bold">${c.note || '-'}</div>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4">ไม่มีประวัติการรับทุน</p>';
+                }
 
             } catch (err) { console.error(err); }
         }
 
-        async function fetchCapitalHistory() {
-            // หากต้องการดูรายละเอียดทุน ต้องให้ Code.gs ส่ง array ของ Capital มาด้วย
-            // ในที่นี้เราจะดึงผ่านก้อน MasterData หากเราแก้ Code.gs แล้ว
-            const response = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await response.json();
-            
-            // ตรวจสอบว่าใน data มีก้อน capitalHistory หรือไม่ (ถ้าเราแก้ Code.gs ตามด้านล่าง)
-            if (data.capitalHistory) {
-                let capHtml = '';
-                data.capitalHistory.forEach(c => {
-                    capHtml += `
-                    <div class="card-finance">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold text-success">+ ฿${Number(c.amount).toLocaleString()}</div>
-                                <div class="x-small text-muted">${new Date(c.date).toLocaleDateString('th-TH')}</div>
-                            </div>
-                            <div class="small fw-bold">${c.note || '-'}</div>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4">ไม่มีประวัติการรับทุน</p>';
-            }
+        function openCapitalModal() {
+            document.getElementById('c-date').valueAsDate = new Date();
+            new bootstrap.Modal(document.getElementById('modal-capital')).show();
         }
 
         async function saveCapital() {
             const amt = document.getElementById('c-amount').value;
-            const date = document.getElementById('c-date').value;
+            const rawDate = document.getElementById('c-date').value; // ค.ศ. จาก input
             const note = document.getElementById('c-note').value;
-            if(!amt || !date) return alert("กรุณากรอกยอดเงินและวันที่");
+            
+            if(!amt || !rawDate) return alert("กรุณากรอกยอดเงินและวันที่");
+
+            // แปลง ค.ศ. จากปฏิทินมือถือ เป็น พ.ศ. (วว/ดด/ปปปป) ก่อนส่งลงชีท
+            const d = new Date(rawDate);
+            const thaiDateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear() + 543}`;
 
             document.getElementById('loader').style.display = 'flex';
             try {
                 await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'saveCapital', amount: amt, date: date, note: note })
+                    body: JSON.stringify({ 
+                        action: 'saveCapital', 
+                        amount: amt, 
+                        date: thaiDateStr, // ส่งแบบ พ.ศ. ไปลงชีทข้อความธรรมดา
+                        note: note 
+                    })
                 });
                 location.reload();
             } catch (e) { alert("บันทึกไม่สำเร็จ"); }
@@ -195,10 +177,7 @@ body { padding-bottom: 80px !important; }
             document.getElementById('tab-sold').classList.toggle('active', tab === 'sold');
         }
 
-        window.onload = () => {
-            document.getElementById('c-date').valueAsDate = new Date();
-            loadFinanceData();
-        };
+        window.onload = loadFinanceData;
     </script>
 </body>
 </html>
