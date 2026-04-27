@@ -8,45 +8,47 @@
     <style>
         body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 100px; }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 2000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
-        .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; }
+        .nav-btn i { font-size: 1.2rem; display: block; margin-bottom: 2px; }
         .nav-btn.active { color: #0d6efd; }
         
-        .card-bike { background: white; border-radius: 10px; padding: 10px 15px; margin-bottom: 8px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .tab-fixed { background: white; position: sticky; top: 0; z-index: 900; margin-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-around; }
-        .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.85rem; flex: 1; border-bottom: 3px solid transparent; }
+        .tab-fixed { background: white; position: sticky; top: 0; z-index: 900; margin-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-around; overflow-x: auto; }
+        .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.8rem; white-space: nowrap; border-bottom: 3px solid transparent; }
         .tab-item.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
-        
-        /* ข้อมูลแถวเดียวจบ */
-        .single-line-info { font-size: 0.72rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; display: block; width: 100%; }
-        .sep { color: #ddd; margin: 0 4px; }
-        
-        .data-label { font-size: 0.6rem; color: #888; font-weight: bold; text-transform: uppercase; }
-        .data-value { font-size: 0.78rem; font-weight: 600; color: #333; }
-        .text-urgent { color: #dc3545 !important; font-weight: 800 !important; }
+
+        .card-bike { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .line-1 { font-weight: 800; font-size: 1rem; color: #222; margin-bottom: 4px; }
+        .line-2 { font-size: 0.8rem; color: #666; margin-bottom: 6px; }
+        .line-3 { background: #f8f9fa; border-radius: 8px; padding: 8px; font-size: 0.75rem; color: #444; line-height: 1.6; }
+        .sep { color: #ccc; margin: 0 5px; }
+        .text-label { color: #888; font-weight: normal; }
+        .text-val { font-weight: bold; color: #333; }
+        .status-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 50px; font-weight: bold; }
         
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังประมวลผล...</div></div>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังซิงค์ข้อมูล...</div></div>
 
     <div class="tab-fixed shadow-sm">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
-        <button class="tab-item" id="tab-repair" onclick="filterInventory('repair')">กำลังซ่อม</button>
-        <button class="tab-item" id="tab-ready" onclick="filterInventory('ready')">พร้อมขาย</button>
+        <button class="tab-item" id="tab-wait" onclick="filterInventory('รอส่งซ่อม')">รอส่งซ่อม</button>
+        <button class="tab-item" id="tab-repair" onclick="filterInventory('ซ่อมอยู่')">กำลังซ่อม</button>
+        <button class="tab-item" id="tab-ready" onclick="filterInventory('พร้อมขาย')">พร้อมขาย</button>
+        <button class="tab-item" id="tab-sold" onclick="filterInventory('ขายแล้ว')">ขายไปแล้ว</button>
     </div>
 
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <input type="text" id="search" class="form-control form-control-sm w-75 shadow-sm" placeholder="🔍 ทะเบียน/รุ่น/เลขถัง..." onkeyup="filterInventory(currentFilter)">
-            <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" onclick="openBikeModal('add')">+ เพิ่มรถ</button>
+        <div class="d-flex gap-2 mb-3">
+            <input type="text" id="search" class="form-control form-control-sm shadow-sm" placeholder="🔍 ทะเบียน/รุ่น/เลขถัง..." onkeyup="filterInventory(currentFilter)">
+            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style="min-width: 80px;" onclick="openBikeModal('add')">+ เพิ่มรถ</button>
         </div>
         <div id="list-inventory"></div>
     </div>
 
-    <div class="nav-bottom shadow">
+    <div class="nav-bottom">
         <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
         <a href="inventory.html" class="nav-btn active"><i class="bi bi-box-seam-fill"></i>สต็อก</a>
         <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
@@ -54,63 +56,49 @@
     </div>
 
     <div class="modal fade" id="modal-bike" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title fw-bold" id="bikeModalTitle">รายละเอียดรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title fw-bold" id="bikeModalTitle">แก้ไขข้อมูลรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body p-4 small">
             <input type="hidden" id="m-rowIdx">
             <div class="row g-2 mb-3">
-                <div class="col-6"><label class="fw-bold text-muted">วันที่ซื้อ (พ.ศ.)</label><input type="text" id="m-buyDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/25XX"></div>
-                <div class="col-6"><label class="fw-bold text-muted">ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
-                <div class="col-8"><label class="fw-bold text-muted">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
-                <div class="col-4"><label class="fw-bold text-muted">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
+                <div class="col-6"><label class="fw-bold">วันที่ซื้อรถเข้า (พ.ศ.)</label><input type="text" id="m-buyDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/25XX"></div>
+                <div class="col-6"><label class="fw-bold">ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">โฉมรถ</label><input type="text" id="m-modelLook" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">สีรถ</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
+                <div class="col-6"><label class="fw-bold">ปีที่จดทะเบียน</label><input type="number" id="m-regYear" class="form-control form-control-sm"></div>
+                <div class="col-12"><label class="fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
+                <div class="col-12"><label class="fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
             </div>
-            
-            <div class="bg-light p-2 rounded mb-3 border">
-                <div class="row g-1 mb-2">
-                    <div class="col-6"><label class="x-small fw-bold">เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
-                    <div class="col-6"><label class="x-small fw-bold">เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
-                </div>
-                <div class="row g-1">
-                    <div class="col-8"><label class="x-small fw-bold">แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
-                    <div class="col-4"><label class="x-small fw-bold">ปีผลิต</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+
+            <div class="bg-primary bg-opacity-10 p-3 rounded mb-3 border border-primary">
+                <label class="fw-bold text-primary mb-2">พาร์ทต้นทุนจริง (ซ่อน)</label>
+                <div class="row g-2">
+                    <div class="col-6"><label>ทุนจริง</label><input type="number" id="m-hammer" class="form-control form-control-sm" oninput="calcRealTotal()"></div>
+                    <div class="col-6"><label>ค่าซ่อมจริง</label><input type="number" id="m-repairSum" class="form-control form-control-sm bg-light" readonly></div>
+                    <div class="col-6"><label>ค่าโอนจริง</label><input type="number" id="m-fee" class="form-control form-control-sm" oninput="calcRealTotal()"></div>
+                    <div class="col-6"><label class="fw-bold">รวมต้นทุนจริง</label><input type="number" id="m-totalReal" class="form-control form-control-sm fw-bold border-primary" readonly></div>
+                    <div class="col-12"><label class="fw-bold text-success">ราคาตั้งขาย</label><input type="number" id="m-target" class="form-control form-control-sm border-success"></div>
                 </div>
             </div>
 
-            <div class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary border-opacity-25">
-                <label class="fw-bold small text-primary mb-1"><i class="bi bi-shield-lock"></i> ข้อมูลต้นทุน (ภายในร้าน)</label>
-                <div class="row g-1">
-                    <div class="col-6"><label class="x-small">ทุนซื้อจริง</label><input type="number" id="m-hammer" class="form-control form-control-sm border-primary"></div>
-                    <div class="col-6"><label class="x-small">ค่าโอนทะเบียนออก</label><input type="number" id="m-fee" class="form-control form-control-sm border-primary"></div>
+            <div class="bg-success bg-opacity-10 p-3 rounded mb-3 border border-success">
+                <label class="fw-bold text-success mb-2">พาร์ทข้อมูลโชว์ลูกค้า</label>
+                <div class="row g-2">
+                    <div class="col-6"><label>ทุนหลอก</label><input type="number" id="m-showCost" class="form-control form-control-sm" oninput="calcShowTotal()"></div>
+                    <div class="col-6"><label>รวมต้นทุนโชว์</label><input type="number" id="m-totalShow" class="form-control form-control-sm fw-bold border-success" readonly></div>
                 </div>
             </div>
 
-            <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success border-opacity-25">
-                <label class="fw-bold small text-success mb-1"><i class="bi bi-eye"></i> ข้อมูลสำหรับโชว์ลูกค้า / ราคาขาย</label>
-                <div class="row g-1">
-                    <div class="col-6"><label class="x-small">ทุนรถ (ตัวเลขโชว์)</label><input type="number" id="m-showCost" class="form-control form-control-sm border-success"></div>
-                    <div class="col-6"><label class="x-small fw-bold">ราคาตั้งขายสุทธิ</label><input type="number" id="m-target" class="form-control form-control-sm border-success fw-bold"></div>
-                </div>
-            </div>
-
-            <div class="row g-2">
-                <div class="col-6"><label class="x-small fw-bold text-danger">ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
-                <div class="col-6"><label class="x-small fw-bold text-danger">บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
-                <div class="col-6"><label class="fw-bold">สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอซ่อม</option><option>ซ่อมอยู่</option><option>พร้อมขาย</option></select></div>
+            <div class="row g-2 mb-3">
+                <div class="col-6"><label class="fw-bold text-danger">ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
+                <div class="col-6"><label class="fw-bold text-danger">บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
+                <div class="col-6"><label class="fw-bold">สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอส่งซ่อม</option><option>ซ่อมอยู่</option><option>พร้อมขาย</option></select></div>
                 <div class="col-6"><label class="fw-bold">เล่ม/ชุดโอน</label><select id="m-book" class="form-select form-select-sm"><option>อยู่ที่ร้าน</option><option>รอชุดโอน</option><option>ส่งโอนแล้ว</option><option>โอนเสร็จ</option></select></div>
                 <div class="col-12"><label class="fw-bold">หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
             </div>
-            <button class="btn btn-primary w-100 fw-bold py-2 mt-4" onclick="saveBike()">💾 บันทึกข้อมูล</button>
-            <button class="btn btn-outline-danger w-100 btn-sm mt-2 border-0" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบถาวร</button>
-        </div>
-    </div></div></div>
-
-    <div class="modal fade" id="modal-sale" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">💰 ขายแล้ว</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <input type="hidden" id="s-rowIdx">
-            <div class="mb-3 text-center"><h5 id="s-title" class="fw-bold"></h5></div>
-            <label class="small fw-bold">ราคาที่ขายได้จริง</label><input type="number" id="s-price" class="form-control mb-3" placeholder="0.00">
-            <label class="small fw-bold">วันที่ขาย (พ.ศ.)</label><input type="text" id="s-date" class="form-control date-mask mb-4" placeholder="วว/ดด/25XX">
-            <button class="btn btn-success w-100 fw-bold py-2" onclick="confirmSale()">✅ ยืนยันปิดการขาย</button>
+            <button class="btn btn-primary w-100 fw-bold py-2 shadow" onclick="saveBike()">💾 บันทึกข้อมูลทั้งหมด</button>
         </div>
     </div></div></div>
 
@@ -118,12 +106,11 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = [];
-        let bikeModal, saleModal;
+        let bikeModal = null;
         let currentFilter = 'all';
 
         window.onload = function() {
             bikeModal = new bootstrap.Modal(document.getElementById('modal-bike'));
-            saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
             document.querySelectorAll('.date-mask').forEach(input => {
                 input.addEventListener('input', function(e) {
                     let v = e.target.value.replace(/\D/g, '').slice(0, 8);
@@ -137,69 +124,49 @@
 
         async function loadInventory() {
             document.getElementById('loader').style.display = 'flex';
-            try {
-                const res = await fetch(`${API_URL}?action=getMasterData`);
-                const data = await res.json();
-                allBikes = data.bikes;
-                filterInventory(currentFilter);
-            } catch (e) { alert("ดึงข้อมูลไม่สำเร็จ"); }
+            const res = await fetch(`${API_URL}?action=getMasterData`);
+            const data = await res.json();
+            allBikes = data.bikes;
+            filterInventory(currentFilter);
             document.getElementById('loader').style.display = 'none';
         }
-
-        const isUrgent = (str) => {
-            if (!str || str === "-") return "";
-            let p = str.split(/[\/\-]/);
-            if (p.length !== 3) return "";
-            let d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = parseInt(p[2]);
-            if (y > 2400) y -= 543;
-            const diff = (new Date(y, m, d) - new Date()) / (1000*60*60*24);
-            return (diff <= 30 && diff > -365) ? "text-urgent" : "";
-        };
 
         function filterInventory(type) {
             currentFilter = type;
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('tab-' + type).classList.add('active');
+            document.getElementById('tab-' + (type === 'all' ? 'all' : (type === 'รอส่งซ่อม' ? 'wait' : (type === 'ซ่อมอยู่' ? 'repair' : (type === 'พร้อมขาย' ? 'ready' : 'sold'))))).classList.add('active');
             const q = document.getElementById('search').value.toLowerCase();
             let html = '';
             
-            allBikes.filter(b => b.saleStatus !== 'ขายแล้ว').forEach(b => {
+            allBikes.forEach(b => {
                 const searchTxt = `${b.plate} ${b.model} ${b.cha}`.toLowerCase();
-                if(searchTxt.includes(q) && (type==='all' || (type==='repair' && (b.status==='รอซ่อม'||b.status==='ซ่อมอยู่')) || (type==='ready' && b.status==='พร้อมขาย'))) {
-                    const color = b.status === 'พร้อมขาย' ? 'border-success' : 'border-warning';
-                    const bookUrgent = b.bookStatus === 'อยู่ที่ร้าน' ? '' : 'text-danger fw-bold';
-                    const totalShow = (b.showCost || 0) + (b.repairSum || 0);
+                const isMatchTab = (type === 'all' && b.saleStatus !== 'ขายแล้ว') || (b.saleStatus === type) || (b.status === type && b.saleStatus !== 'ขายแล้ว');
+                
+                if(searchTxt.includes(q) && isMatchTab) {
+                    const statusColor = b.saleStatus === 'ขายแล้ว' ? 'bg-secondary' : (b.status === 'พร้อมขาย' ? 'bg-success' : 'bg-warning text-dark');
+                    const totalShow = (b.showCost || 0) + (b.repairSum || 0) + (b.transferFee || 0);
 
-                    html += `<div class="card-bike border-start border-5 ${color}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="w-100">
-                                <span class="badge bg-dark" style="font-size: 0.6rem;">${b.plate || 'N/A'}</span>
-                                <b style="font-size: 0.9rem; margin-left: 4px;">${b.brand} ${b.model}</b>
-                                <div class="single-line-info">
-                                    <span title="ถัง"><i class="bi bi-hash"></i>${b.cha || '-'}</span><span class="sep">|</span>
-                                    <span class="${isUrgent(b.taxExp)}" title="ภาษี"><i class="bi bi-calendar-x"></i> ${b.taxExp || '-'}</span><span class="sep">|</span>
-                                    <span class="${isUrgent(b.idExp)}" title="บัตร"><i class="bi bi-person-vcard"></i> ${b.idExp || '-'}</span><span class="sep">|</span>
-                                    <span class="${bookUrgent}" title="เล่ม"><i class="bi bi-file-earmark-text"></i> ${b.bookStatus}</span>
-                                    ${b.stockNote ? `<span class="sep">|</span><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
-                                </div>
-                            </div>
-                            <span class="badge ${b.status==='พร้อมขาย'?'bg-success':'bg-warning text-dark'}" style="font-size: 0.6rem;">${b.status}</span>
+                    html += `<div class="card-bike border-start border-5 ${b.status === 'พร้อมขาย' ? 'border-success' : 'border-warning'}">
+                        <div class="d-flex justify-content-between line-1">
+                            <div>${b.plate} ${b.brand} ${b.model} ${b.color} ปีรถ ${b.regYear}</div>
+                            <span class="status-badge ${statusColor}">${b.saleStatus === 'ขายแล้ว' ? 'ขายแล้ว' : b.status}</span>
                         </div>
-
-                        <div class="row g-0 mt-2 py-1 border-top text-center bg-light rounded-top">
-                            <div class="col-4 border-end"><div class="data-label">ทุนรถ</div><div class="data-value text-muted">฿${b.showCost.toLocaleString()}</div></div>
-                            <div class="col-4 border-end"><div class="data-label">ค่าซ่อม</div><div class="data-value">฿${b.repairSum.toLocaleString()}</div></div>
-                            <div class="col-4"><div class="data-label fw-bold">รวมทุน</div><div class="data-value fw-bold">฿${totalShow.toLocaleString()}</div></div>
+                        <div class="line-2">
+                            ถัง: ${b.cha || '-'} <span class="sep">|</span> 
+                            ภาษีหมด: ${b.taxExp || '-'} <span class="sep">|</span> 
+                            บัตร ปชช หมด: ${b.idExp || '-'}
                         </div>
-
-                        <div class="row g-0 py-1 border-top border-bottom text-center mb-2 shadow-sm rounded-bottom" style="background: #f8fff9;">
-                            <div class="col-6 border-end"><div class="data-label text-primary">ค่าโอนทะเบียน (จ่ายเพิ่ม)</div><div class="data-value text-primary">฿${b.transferFee.toLocaleString()}</div></div>
-                            <div class="col-6"><div class="data-label text-success">ราคาตั้งขายสุทธิ</div><div class="data-value text-success" style="font-size: 1rem;">฿${b.targetPrice.toLocaleString()}</div></div>
+                        <div class="line-3">
+                            <span class="text-label">ทุนรถ:</span> <span class="text-val">฿${(b.showCost||0).toLocaleString()}</span> <span class="sep">|</span>
+                            <span class="text-label">ค่าซ่อมจริง:</span> <span class="text-val text-danger">฿${(b.repairSum||0).toLocaleString()}</span> <span class="sep">|</span>
+                            <span class="text-label">ค่าโอนจริง:</span> <span class="text-val text-primary">฿${(b.transferFee||0).toLocaleString()}</span> <br>
+                            <span class="text-label">รวมต้นทุน:</span> <span class="text-val">฿${totalShow.toLocaleString()}</span> <span class="sep">|</span>
+                            <span class="text-label">ราคาตั้งขาย:</span> <span class="text-val text-success">฿${(b.targetPrice||0).toLocaleString()}</span>
+                            ${b.stockNote ? `<div style="color: #856404; font-size: 0.7rem; margin-top: 4px;">* ${b.stockNote}</div>` : ''}
                         </div>
-
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold" onclick="openEdit(${b.rowIdx})"><i class="bi bi-pencil"></i> แก้ไข</button>
-                            <button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 ขายแล้ว</button>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold" onclick="openEdit(${b.rowIdx})"><i class="bi bi-pencil-square"></i> แก้ไข</button>
+                            ${b.saleStatus !== 'ขายแล้ว' ? `<button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 ขายแล้ว</button>` : ''}
                         </div>
                     </div>`;
                 }
@@ -213,23 +180,40 @@
             document.getElementById('m-rowIdx').value = b.rowIdx;
             document.getElementById('m-buyDate').value = b.buyDate;
             document.getElementById('m-plate').value = b.plate;
-            document.getElementById('m-brand').value = b.brand;
-            document.getElementById('m-model').value = b.model;
             document.getElementById('m-cha').value = b.cha;
             document.getElementById('m-eng').value = b.eng;
             document.getElementById('m-source').value = b.source;
-            document.getElementById('m-year').value = b.year;
-            document.getElementById('m-hammer').value = b.realCost; // ทุนจริง
-            document.getElementById('m-showCost').value = b.showCost; // ทุนหลอก
-            document.getElementById('m-fee').value = b.transferFee; // ค่าโอน
+            document.getElementById('m-modelLook').value = b.modelLook;
+            document.getElementById('m-color').value = b.color;
+            document.getElementById('m-regYear').value = b.regYear;
+            document.getElementById('m-brand').value = b.brand;
+            document.getElementById('m-model').value = b.model;
+            document.getElementById('m-hammer').value = b.realCost;
+            document.getElementById('m-repairSum').value = b.repairSum;
+            document.getElementById('m-fee').value = b.transferFee;
             document.getElementById('m-target').value = b.targetPrice;
+            document.getElementById('m-showCost').value = b.showCost;
             document.getElementById('m-taxExp').value = b.taxExp;
             document.getElementById('m-idExp').value = b.idExp;
             document.getElementById('m-status').value = b.status;
             document.getElementById('m-book').value = b.bookStatus;
             document.getElementById('m-stockNote').value = b.stockNote;
-            document.getElementById('btn-delete').style.display = 'block';
+            calcRealTotal(); calcShowTotal();
             bikeModal.show();
+        }
+
+        function calcRealTotal() {
+            const h = Number(document.getElementById('m-hammer').value) || 0;
+            const r = Number(document.getElementById('m-repairSum').value) || 0;
+            const f = Number(document.getElementById('m-fee').value) || 0;
+            document.getElementById('m-totalReal').value = h + r + f;
+        }
+
+        function calcShowTotal() {
+            const s = Number(document.getElementById('m-showCost').value) || 0;
+            const r = Number(document.getElementById('m-repairSum').value) || 0;
+            const f = Number(document.getElementById('m-fee').value) || 0;
+            document.getElementById('m-totalShow').value = s + r + f;
         }
 
         async function saveBike() {
@@ -237,11 +221,12 @@
                 action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike',
                 rowIdx: document.getElementById('m-rowIdx').value,
                 buyDate: document.getElementById('m-buyDate').value, plate: document.getElementById('m-plate').value,
-                brand: document.getElementById('m-brand').value, model: document.getElementById('m-model').value,
                 cha: document.getElementById('m-cha').value, eng: document.getElementById('m-eng').value, 
-                source: document.getElementById('m-source').value, year: document.getElementById('m-year').value,
-                realCost: document.getElementById('m-hammer').value, showCost: document.getElementById('m-showCost').value, 
-                transferFee: document.getElementById('m-fee').value, targetPrice: document.getElementById('m-target').value,
+                source: document.getElementById('m-source').value, modelLook: document.getElementById('m-modelLook').value,
+                color: document.getElementById('m-color').value, regYear: document.getElementById('m-regYear').value,
+                brand: document.getElementById('m-brand').value, model: document.getElementById('m-model').value,
+                realCost: document.getElementById('m-hammer').value, transferFee: document.getElementById('m-fee').value, 
+                showCost: document.getElementById('m-showCost').value, targetPrice: document.getElementById('m-target').value,
                 taxExp: document.getElementById('m-taxExp').value, idExp: document.getElementById('m-idExp').value,
                 status: document.getElementById('m-status').value, bookStatus: document.getElementById('m-book').value,
                 stockNote: document.getElementById('m-stockNote').value
@@ -252,24 +237,23 @@
         }
 
         function openSaleModal(rowIdx) {
+            if(!confirm('ปิดการขายรถคันนี้?')) return;
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            document.getElementById('s-rowIdx').value = rowIdx;
-            document.getElementById('s-title').innerText = b.plate + " " + b.model;
-            document.getElementById('s-price').value = b.targetPrice;
+            const soldPrice = prompt("กรอกราคาที่ขายได้จริง:", b.targetPrice);
+            if(soldPrice === null) return;
             const t = new Date();
-            document.getElementById('s-date').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
-            saleModal.show();
-        }
-
-        async function confirmSale() {
-            const payload = { action: 'closeSale', rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value };
+            const saleDate = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-            location.reload();
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'closeSale', rowIdx, soldPrice, saleDate }) }).then(()=>location.reload());
         }
 
-        async function deleteBike() { if(!confirm('ลบถาวร?')) return; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); }
-        function openBikeModal() { document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; ['buyDate','plate','model','cha','eng','source','year','hammer','showCost','fee','target','taxExp','idExp','stockNote'].forEach(id => document.getElementById('m-'+id).value = ""); bikeModal.show(); }
+        function openBikeModal() {
+            document.getElementById('m-rowIdx').value = "";
+            ['buyDate','plate','cha','eng','source','modelLook','color','regYear','model','hammer','fee','showCost','target','taxExp','idExp','stockNote'].forEach(id => document.getElementById('m-'+id).value = "");
+            document.getElementById('m-repairSum').value = 0;
+            calcRealTotal(); calcShowTotal();
+            bikeModal.show();
+        }
     </script>
 </body>
 </html>
