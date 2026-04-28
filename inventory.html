@@ -11,16 +11,20 @@
         .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        
         .tab-fixed { background: white; position: sticky; top: 0; z-index: 900; margin-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-around; overflow-x: auto; }
         .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.85rem; flex: 1; white-space: nowrap; border-bottom: 3px solid transparent; }
         .tab-item.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+        
         .card-bike { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: none; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .data-label { font-size: 0.6rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .data-value { font-size: 0.8rem; font-weight: 700; color: #333; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังซิงค์...</div></div>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังประมวลผล...</div></div>
 
     <div class="tab-fixed shadow-sm">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
@@ -51,18 +55,20 @@
             <div class="row g-2 mb-2">
                 <div class="col-6"><label class="x-small fw-bold">1. วันที่ซื้อรถเข้า (พ.ศ.)</label><input type="text" id="m-buyDate" class="form-control form-control-sm date-mask"></div>
                 <div class="col-6"><label class="x-small fw-bold">2. ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
-                <div class="col-6"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
-                <div class="col-6"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
                 <div class="col-6"><label class="x-small fw-bold">3. เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
                 <div class="col-6"><label class="x-small fw-bold">4. เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
                 <div class="col-12"><label class="x-small fw-bold">5. แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
+                
+                <div class="col-4"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
+                <div class="col-8"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
+
                 <div class="col-4"><label class="x-small fw-bold">6. โฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
-                <div class="col-4"><label class="x-small fw-bold">สี</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
+                <div class="col-4"><label class="x-small fw-bold">สีรถ</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                 <div class="col-4"><label class="x-small fw-bold">7. ปีที่จดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
             </div>
 
             <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
-                <div class="fw-bold text-primary small mb-1">พาร์ทข้อมูลความลับ (ภายในร้าน)</div>
+                <div class="fw-bold text-primary small mb-1"><i class="bi bi-shield-lock"></i> ข้อมูลต้นทุน (ภายในร้าน)</div>
                 <div class="row g-2 align-items-end">
                     <div class="col-4"><label class="x-small">8. ทุนจริง</label><input type="number" id="m-realCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
                     <div class="col-4"><label class="x-small">9. ค่าซ่อมจริง</label><input type="number" id="m-repairReal" class="form-control form-control-sm bg-light" readonly></div>
@@ -72,7 +78,7 @@
             </div>
 
             <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
-                <div class="fw-bold text-success small mb-1">พาร์ทข้อมูลโชว์ลูกค้า</div>
+                <div class="fw-bold text-success small mb-1"><i class="bi bi-eye"></i> พาร์ทข้อมูลโชว์ลูกค้า</div>
                 <div class="row g-2 align-items-end">
                     <div class="col-4"><label class="x-small">1. ทุนหลอก</label><input type="number" id="m-showCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
                     <div class="col-4"><label class="x-small">2. ค่าซ่อม</label><input type="number" id="m-repairShow" class="form-control form-control-sm bg-light" readonly></div>
@@ -87,13 +93,11 @@
                 <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
                 <div class="col-6"><label class="x-small fw-bold">15. สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอส่งซ่อม</option><option>กำลังซ่อม</option><option>พร้อมขาย</option></select></div>
                 <div class="col-6"><label class="x-small fw-bold">16. เล่ม/ชุดโอน</label><select id="m-book" class="form-select form-select-sm"><option>อยู่ที่ร้าน</option><option>รอชุดโอน</option><option>ส่งโอนแล้ว</option><option>โอนเสร็จ</option></select></div>
-                <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="1"></textarea></div>
+                <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
             </div>
             
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-outline-danger btn-sm fw-bold w-25" id="btn-delete" style="display:none;" onclick="deleteBike()">ลบ</button>
-                <button class="btn btn-primary btn-sm fw-bold flex-grow-1" onclick="saveBike()">💾 บันทึกข้อมูล</button>
-            </div>
+            <button class="btn btn-primary w-100 fw-bold py-2 mt-2" onclick="saveBike()">💾 บันทึกข้อมูล</button>
+            <button class="btn btn-outline-danger w-100 btn-sm mt-2 border-0" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบถาวร</button>
         </div>
     </div></div></div>
 
@@ -104,7 +108,7 @@
             <h5 id="s-title" class="fw-bold mb-3 text-center"></h5>
             <label class="small fw-bold">ราคาขายจริง</label><input type="number" id="s-price" class="form-control mb-3" placeholder="0.00">
             <label class="small fw-bold">วันที่ขาย (พ.ศ.)</label><input type="text" id="s-date" class="form-control date-mask mb-4" placeholder="วว/ดด/25XX">
-            <button class="btn btn-success w-100 fw-bold py-2" onclick="confirmSale()">✅ ยืนยันขายแล้ว</button>
+            <button class="btn btn-success w-100 fw-bold py-2" onclick="confirmSale()">✅ ยืนยันปิดยอด</button>
         </div>
     </div></div></div>
 
@@ -131,10 +135,12 @@
 
         async function loadInventory() {
             document.getElementById('loader').style.display = 'flex';
-            const res = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await res.json();
-            allBikes = data.bikes;
-            filterInventory(currentFilter);
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                const data = await res.json();
+                allBikes = data.bikes;
+                filterInventory(currentFilter);
+            } catch(e) { alert('โหลดข้อมูลไม่สำเร็จ'); }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -151,13 +157,14 @@
                 const searchTxt = `${b.plate} ${b.model} ${b.cha}`.toLowerCase();
                 if(searchTxt.includes(q) && (type==='all' || b.status === type)) {
                     const statusColor = b.status === 'พร้อมขาย' ? 'bg-success' : (b.status === 'รอส่งซ่อม' ? 'bg-danger' : 'bg-warning text-dark');
+                    const totalShow = (b.showCost||0) + (b.repairSum||0) + (b.transferFee||0);
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">
-                                ${b.plate} ${b.brand} ${b.model} ${b.color} ปี ${b.year}
+                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                ${b.plate || '-'} ${b.brand} ${b.model} ${b.color} ปี ${b.year}
                             </div>
-                            <span class="badge ${statusColor}">${b.status}</span>
+                            <span class="badge ${statusColor}" style="font-size: 0.6rem;">${b.status}</span>
                         </div>
                         
                         <div class="mt-1" style="font-size: 0.72rem; color: #666;">
@@ -169,7 +176,7 @@
                             <div class="col"><div class="text-muted" style="font-size:0.6rem;">ทุนรถ</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ค่าโอน</div><div class="fw-bold">฿${(b.transferFee||0).toLocaleString()}</div></div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">รวมทุน</div><div class="fw-bold text-primary">฿${(b.totalShow||0).toLocaleString()}</div></div>
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">รวมทุน</div><div class="fw-bold text-primary">฿${totalShow.toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
                         </div>
 
@@ -208,6 +215,7 @@
             document.getElementById('m-cha').value = b.cha;
             document.getElementById('m-eng').value = b.eng;
             document.getElementById('m-source').value = b.source;
+            
             document.getElementById('m-realCost').value = b.realCost;
             document.getElementById('m-repairReal').value = b.repairSum;
             document.getElementById('m-repairShow').value = b.repairSum;
@@ -215,11 +223,13 @@
             document.getElementById('m-transferShow').value = b.transferFee;
             document.getElementById('m-showCost').value = b.showCost;
             document.getElementById('m-targetPrice').value = b.targetPrice;
+            
             document.getElementById('m-taxExp').value = b.taxExp;
             document.getElementById('m-idExp').value = b.idExp;
             document.getElementById('m-status').value = b.status;
             document.getElementById('m-book').value = b.bookStatus;
             document.getElementById('m-stockNote').value = b.stockNote;
+            
             calcTotal();
             document.getElementById('btn-delete').style.display = 'block';
             bikeModal.show();
@@ -234,21 +244,30 @@
                 appearance: document.getElementById('m-appearance').value, color: document.getElementById('m-color').value,
                 year: document.getElementById('m-year').value, cha: document.getElementById('m-cha').value,
                 eng: document.getElementById('m-eng').value, source: document.getElementById('m-source').value,
+                
                 realCost: document.getElementById('m-realCost').value, transferFee: document.getElementById('m-transferFee').value,
                 showCost: document.getElementById('m-showCost').value, targetPrice: document.getElementById('m-targetPrice').value,
+                
                 taxExp: document.getElementById('m-taxExp').value, idExp: document.getElementById('m-idExp').value,
                 status: document.getElementById('m-status').value, bookStatus: document.getElementById('m-book').value,
                 stockNote: document.getElementById('m-stockNote').value
             };
+            
             document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-            location.reload();
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                location.reload();
+            } catch(e) {
+                alert("เกิดข้อผิดพลาด บันทึกไม่สำเร็จ");
+                document.getElementById('loader').style.display = 'none';
+            }
         }
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
             document.getElementById('s-rowIdx').value = rowIdx;
             document.getElementById('s-title').innerText = b.plate + " " + b.model;
+            document.getElementById('s-price').value = b.targetPrice;
             const t = new Date();
             document.getElementById('s-date').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             saleModal.show();
@@ -257,8 +276,10 @@
         async function confirmSale() {
             const payload = { action: 'closeSale', rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value };
             document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-            location.reload();
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                location.reload();
+            } catch(e) { alert("เกิดข้อผิดพลาด"); document.getElementById('loader').style.display = 'none'; }
         }
 
         async function deleteBike() { if(!confirm('ลบถาวร?')) return; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); }
