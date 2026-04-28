@@ -14,32 +14,39 @@
         .card-finance { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.85rem; }
         .tab-btn.active { background: #fff; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
-
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังโหลด...</div></div>
+    
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0"><i class="bi bi-wallet2"></i> บัญชี</h5>
+            <h5 class="fw-bold m-0"><i class="bi bi-wallet2 text-primary"></i> บัญชีและกำไร</h5>
             <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modal-capital')).show()">+ รับทุนเพิ่ม</button>
         </div>
 
         <div class="card-finance bg-success text-white text-center shadow">
-            <small class="opacity-75">📈 กำไรสุทธิรวม (จากรถที่ขายแล้ว)</small>
+            <small class="opacity-75">📈 กำไรสุทธิรวมทั้งหมด (จากรถที่ขายแล้ว)</small>
             <h2 class="fw-bold mt-1" id="total-profit">฿0</h2>
         </div>
 
         <div class="d-flex mb-3 shadow-sm rounded overflow-hidden">
-            <button class="tab-btn active" id="tab-cap" onclick="switchFinanceTab('cap')">ประวัติรับทุน</button>
-            <button class="tab-btn" id="tab-sold" onclick="switchFinanceTab('sold')">รถที่ขายแล้ว</button>
+            <button class="tab-btn active" id="tab-summary" onclick="switchTab('summary')">สรุปรายเดือน</button>
+            <button class="tab-btn" id="tab-sold" onclick="switchTab('sold')">รถที่ขายแล้ว</button>
+            <button class="tab-btn" id="tab-cap" onclick="switchTab('cap')">ประวัติทุน</button>
         </div>
 
-        <div id="section-cap">
-            <div id="list-capital-history"><div class="text-center py-5 text-muted">กำลังโหลด...</div></div>
+        <div id="section-summary">
+            <div id="monthly-summary"></div>
         </div>
 
         <div id="section-sold" style="display:none;">
-            <div id="list-sold-history"><div class="text-center py-5 text-muted">กำลังโหลด...</div></div>
+            <div id="list-sold-history"></div>
+        </div>
+
+        <div id="section-cap" style="display:none;">
+            <div id="list-capital-history"></div>
         </div>
     </div>
 
@@ -54,7 +61,7 @@
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-success">บันทึกยอดรับทุน</h6>
             <div class="text-start mb-3">
-                <label class="small fw-bold">วันที่รับเงิน (พ.ศ.)</label><input type="text" id="c-date" class="form-control mb-2" placeholder="วว/ดด/25XX">
+                <label class="small fw-bold">วันที่รับเงิน (พ.ศ.)</label><input type="text" id="c-date" class="form-control mb-2">
                 <label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control mb-2">
                 <label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control">
             </div>
@@ -67,58 +74,85 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
 
         async function loadFinanceData() {
+            document.getElementById('loader').style.display = 'flex';
             const response = await fetch(`${API_URL}?action=getMasterData`);
             const data = await response.json();
             
             document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
             
-            // รถที่ขายแล้ว
             const soldBikes = data.bikes.filter(b => b.saleStatus === 'ขายแล้ว');
+            
+            // 1. ตารางรถขายแล้ว
             let soldHtml = '';
+            let monthGroups = {};
+
             soldBikes.forEach(b => {
+                // ดึงเดือน/ปีเพื่อทำสรุป
+                const dateParts = b.saleDate.split('/');
+                if(dateParts.length === 3) {
+                    const monthYear = `${dateParts[1]}/${dateParts[2]}`;
+                    if(!monthGroups[monthYear]) monthGroups[monthYear] = 0;
+                    monthGroups[monthYear] += b.profit;
+                }
+
                 soldHtml += `<div class="card-finance border-start border-5 border-success">
-                    <div class="d-flex justify-content-between">
-                        <b>${b.plate} ${b.model}</b>
-                        <span class="small text-muted"><i class="bi bi-calendar-check"></i> ${b.saleDate}</span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><b>${b.plate} ${b.model}</b><br><small class="text-muted">ขาย: ${b.saleDate}</small></div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="revertSale(${b.rowIdx})"><i class="bi bi-arrow-return-left"></i> ตีกลับ</button>
                     </div>
                     <div class="row mt-2 small text-center bg-light rounded p-2">
-                        <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">ทุนจริงรวม</span><b>฿${(b.totalInternal||0).toLocaleString()}</b></div>
+                        <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">ทุนรวมจริง</span><b>฿${(b.totalInternal||0).toLocaleString()}</b></div>
                         <div class="col-4 border-end"><span class="text-primary d-block" style="font-size:0.6rem;">ขายได้จริง</span><b class="text-primary">฿${(b.soldPrice||0).toLocaleString()}</b></div>
-                        <div class="col-4"><span class="text-success d-block" style="font-size:0.6rem;">กำไร</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
+                        <div class="col-4"><span class="text-success d-block" style="font-size:0.6rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
                     </div>
                 </div>`;
             });
-            document.getElementById('list-sold-history').innerHTML = soldHtml || '<p class="text-center p-4">ยังไม่มีรถที่ขายได้</p>';
+            document.getElementById('list-sold-history').innerHTML = soldHtml || '<p class="text-center p-4 text-muted">ยังไม่มีรถที่ขายได้</p>';
 
-            // ประวัติรับทุน
+            // 2. สรุปรายเดือน
+            let sumHtml = '';
+            for(const [my, profit] of Object.entries(monthGroups)) {
+                sumHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                    <span class="fw-bold">เดือน/ปี: ${my}</span>
+                    <span class="fw-bold text-success" style="font-size:1.1rem;">+ ฿${profit.toLocaleString()}</span>
+                </div>`;
+            }
+            document.getElementById('monthly-summary').innerHTML = sumHtml ? `<div class="card-finance">${sumHtml}</div>` : '<p class="text-center p-4 text-muted">ยังไม่มีข้อมูลกำไร</p>';
+
+            // 3. ประวัติรับทุน
             if (data.capitalHistory) {
                 let capHtml = '';
                 data.capitalHistory.forEach(c => {
                     capHtml += `<div class="card-finance d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold text-success">+ ฿${Number(c.amount).toLocaleString()}</div>
-                            <div class="x-small text-muted">${c.date}</div>
-                        </div>
+                        <div><div class="fw-bold text-success">+ ฿${Number(c.amount).toLocaleString()}</div><div class="x-small text-muted">${c.date}</div></div>
                         <div class="small text-muted">${c.note || '-'}</div>
                     </div>`;
                 });
-                document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4">ไม่มีประวัติ</p>';
+                document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4 text-muted">ไม่มีประวัติรับทุน</p>';
             }
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        async function revertSale(rowIdx) {
+            if(!confirm('ยืนยันตีกลับรถคันนี้เข้าสต็อกใช่หรือไม่?')) return;
+            document.getElementById('loader').style.display = 'flex';
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: rowIdx }) });
+            location.reload();
         }
 
         async function saveCapital() {
             const payload = { action: 'saveCapital', amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, note: document.getElementById('c-note').value };
+            document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
             location.reload();
         }
 
-        function switchFinanceTab(tab) {
-            document.getElementById('section-cap').style.display = tab === 'cap' ? 'block' : 'none';
-            document.getElementById('section-sold').style.display = tab === 'sold' ? 'block' : 'none';
-            document.getElementById('tab-cap').classList.toggle('active', tab === 'cap');
-            document.getElementById('tab-sold').classList.toggle('active', tab === 'sold');
+        function switchTab(tab) {
+            ['summary','sold','cap'].forEach(t => {
+                document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none';
+                document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+            });
         }
-
         window.onload = loadFinanceData;
     </script>
 </body>
