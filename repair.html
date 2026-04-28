@@ -16,10 +16,10 @@
     </style>
 </head>
 <body>
-    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold text-primary">กำลังบันทึกข้อมูล...</div></div>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold text-primary">กำลังบันทึก...</div></div>
 
     <div class="container mt-4">
-        <h5 class="fw-bold mb-3"><i class="bi bi-tools text-primary"></i> บันทึกงานซ่อม/อะไหล่</h5>
+        <h5 class="fw-bold mb-3"><i class="bi bi-tools text-primary"></i> บันทึกงานซ่อม</h5>
         
         <div class="card-repair shadow-sm mb-4 border-top border-4 border-primary">
             <label class="fw-bold small mb-1 text-primary">1. เลือกรถที่กำลังซ่อม</label>
@@ -30,22 +30,15 @@
             <label class="fw-bold small mb-1 text-primary">2. กรอกรายละเอียดและราคา</label>
             <div class="row g-2">
                 <div class="col-8"><input type="text" id="r-item" class="form-control" placeholder="รายการซ่อม / ชื่ออะไหล่"></div>
-                <div class="col-4"><input type="number" id="r-price" class="form-control" placeholder="ราคา (บาท)"></div>
-                <div class="col-12"><input type="text" id="r-shop" class="form-control" placeholder="ชื่ออู่ซ่อม / ร้านอะไหล่ (ถ้ามี)"></div>
-                <div class="col-12 mt-3">
-                    <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="saveRepair()">
-                        <i class="bi bi-plus-circle"></i> บันทึกรายการลงระบบ
-                    </button>
-                </div>
+                <div class="col-4"><input type="number" id="r-price" class="form-control" placeholder="ราคา"></div>
+                <div class="col-12"><input type="text" id="r-shop" class="form-control" placeholder="ชื่ออู่ / ร้านอะไหล่"></div>
+                <div class="col-12 mt-3"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="saveRepair()"><i class="bi bi-plus-circle"></i> บันทึกรายการลงระบบ</button></div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="fw-bold text-muted small m-0">ประวัติการซ่อมของรถคันนี้</h6>
-        </div>
-        
+        <h6 class="fw-bold text-muted small m-0 mb-2">ประวัติการซ่อมของรถคันนี้</h6>
         <div id="repair-history" class="list-group shadow-sm small mb-4">
-            <div class="list-group-item text-center py-4 text-muted bg-light">กรุณาเลือกรถด้านบนเพื่อดูประวัติ</div>
+            <div class="list-group-item text-center py-4 text-muted bg-light">กรุณาเลือกรถเพื่อดูประวัติ</div>
         </div>
     </div>
 
@@ -60,14 +53,12 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         
-        // 1. โหลดรายชื่อรถตอนเปิดหน้าเว็บ
         async function init() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
                 const select = document.getElementById('select-bike');
                 
-                // กรองเฉพาะรถที่ยังไม่ขาย และจัดเรียงให้ "กำลังซ่อม" กับ "รอส่งซ่อม" ขึ้นมาก่อน
                 let bikes = data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว');
                 bikes.sort((a, b) => {
                     if (a.status === 'กำลังซ่อม') return -1;
@@ -77,99 +68,50 @@
 
                 bikes.forEach(b => {
                     const opt = document.createElement('option');
-                    opt.value = b.id; 
-                    // โชว์ทะเบียน รุ่น และสถานะ ใน Dropdown
-                    opt.text = `${b.plate || 'ไม่มีทะเบียน'} | ${b.brand} ${b.model} [${b.status}]`;
+                    opt.value = b.id; opt.text = `${b.plate || 'ไม่มี'} | ${b.brand} ${b.model} [${b.status}]`;
                     select.appendChild(opt);
                 });
-            } catch(e) {
-                console.error("โหลดข้อมูลล้มเหลว", e);
-            }
+            } catch(e) {}
         }
 
-        // 2. ฟังก์ชันดึงประวัติซ่อม (เขียนแยกออกมาเพื่อให้เรียกใช้ได้ตลอด)
         async function loadRepairHistory(bikeId) {
-            if(!bikeId) {
-                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">กรุณาเลือกรถด้านบนเพื่อดูประวัติ</div>';
-                return;
-            }
-            
-            // โชว์ข้อความกำลังโหลดแทนที่รายการเดิม
-            document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-primary"><div class="spinner-border spinner-border-sm"></div> กำลังดึงข้อมูล...</div>';
+            if(!bikeId) return document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">กรุณาเลือกรถเพื่อดูประวัติ</div>';
+            document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4"><div class="spinner-border spinner-border-sm"></div> ดึงข้อมูล...</div>';
             
             try {
                 const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
                 const list = await res.json();
-                
-                let html = '';
-                let totalRepair = 0;
+                let html = ''; let total = 0;
                 
                 list.forEach(r => {
-                    html += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <b>${r.name}</b><br>
-                            <small class="text-muted"><i class="bi bi-shop"></i> ${r.shop || 'ไม่ระบุอู่'}</small>
-                        </div>
-                        <span class="text-danger fw-bold">฿${r.price.toLocaleString()}</span>
-                    </div>`;
-                    totalRepair += r.price; // บวกยอดรวม
+                    html += `<div class="list-group-item d-flex justify-content-between align-items-center"><div><b>${r.name}</b><br><small class="text-muted"><i class="bi bi-shop"></i> ${r.shop}</small></div><span class="text-danger fw-bold">฿${r.price.toLocaleString()}</span></div>`;
+                    total += r.price;
                 });
-
-                // ถ้ามีประวัติซ่อม ให้เติมยอดรวมไว้บรรทัดล่างสุด
-                if(html !== '') {
-                    html += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-light">
-                        <b class="text-dark">รวมค่าซ่อมคันนี้ทั้งหมด</b>
-                        <b class="text-danger" style="font-size:1.1rem;">฿${totalRepair.toLocaleString()}</b>
-                    </div>`;
-                }
-
-                document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4 text-success fw-bold bg-light">คันนี้ยังไม่มีประวัติการซ่อมครับ</div>';
-            } catch(e) {
-                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-danger">ดึงข้อมูลล้มเหลว กรุณาลองใหม่</div>';
-            }
+                if(html) html += `<div class="list-group-item d-flex justify-content-between align-items-center bg-light"><b class="text-dark">รวมค่าซ่อม</b><b class="text-danger" style="font-size:1.1rem;">฿${total.toLocaleString()}</b></div>`;
+                document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4 text-success fw-bold bg-light">คันนี้ยังไม่มีประวัติซ่อม</div>';
+            } catch(e) {}
         }
 
-        // 3. เมื่อผู้ใช้กดเลือกรถใน Dropdown ให้ไปโหลดประวัติมาโชว์
-        document.getElementById('select-bike').onchange = function() {
-            loadRepairHistory(this.value);
-        };
+        document.getElementById('select-bike').onchange = function() { loadRepairHistory(this.value); };
 
-        // 4. บันทึกข้อมูลซ่อม
         async function saveRepair() {
             const bikeId = document.getElementById('select-bike').value;
             const item = document.getElementById('r-item').value;
             const price = document.getElementById('r-price').value;
             const shop = document.getElementById('r-shop').value;
 
-            if(!bikeId) return alert("❌ กรุณาเลือกรถที่ต้องการซ่อมก่อนครับ");
-            if(!item || !price) return alert("❌ กรุณากรอกรายการซ่อมและราคาให้ครบถ้วนครับ");
-
+            if(!bikeId || !item || !price) return alert("❌ กรุณากรอกให้ครบ");
             document.getElementById('loader').style.display = 'flex';
             
             try {
-                // ส่งข้อมูลไปลง Google Sheets
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'saveRepair', bikeId, item, price, shop }) 
-                });
-                
-                // ถ้ายิงผ่าน ให้เคลียร์เฉพาะช่องพิมพ์ 3 ช่อง (รหัสรถยังคงเลือกคันเดิมอยู่)
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepair', bikeId, item, price, shop }) });
                 document.getElementById('r-item').value = '';
                 document.getElementById('r-price').value = '';
                 document.getElementById('r-shop').value = '';
-                
-                // ดึงประวัติซ่อมมาโชว์ใหม่ โดยไม่ต้องรีเฟรชหน้าเว็บ
                 await loadRepairHistory(bikeId);
-                
-            } catch(e) {
-                alert("❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง");
-            }
-            
+            } catch(e) { alert("❌ บันทึกพลาด ลองใหม่ครับ"); }
             document.getElementById('loader').style.display = 'none';
         }
-
         window.onload = init;
     </script>
 </body>
