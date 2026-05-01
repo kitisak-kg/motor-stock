@@ -46,31 +46,50 @@
         <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2 d-block h4 mb-0"></i>บัญชี</a>
     </div>
 
+    <!-- MODAL แก้ไขรถ -->
     <div class="modal fade" id="modal-bike" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">ข้อมูลรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body p-3 small">
             <input type="hidden" id="m-rowIdx">
+            
             <div class="row g-2 mb-2">
-                <div class="col-6"><label class="x-small fw-bold">1. วันที่ซื้อรถเข้า</label><input type="text" id="m-buyDate" class="form-control form-control-sm"></div>
-                <div class="col-6"><label class="x-small fw-bold">2. ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
-                <div class="col-6"><label class="x-small fw-bold">3. เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
-                <div class="col-6"><label class="x-small fw-bold">4. เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
+                <div class="col-12"><label class="x-small fw-bold">1. วันที่ซื้อรถเข้า</label><input type="text" id="m-buyDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
+                
+                <div class="col-4"><label class="x-small fw-bold">2. ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
+                <div class="col-4"><label class="x-small fw-bold">3. เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
+                <div class="col-4"><label class="x-small fw-bold">4. เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
+                
                 <div class="col-12"><label class="x-small fw-bold">5. แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
+                
                 <div class="col-4"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
-                <div class="col-8"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
+                <div class="col-5"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
+                <div class="col-3"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+                
                 <div class="col-4"><label class="x-small fw-bold">6. โฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
-                <div class="col-4"><label class="x-small fw-bold">สีรถ</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
-                <div class="col-4"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+                <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
+                <div class="col-4"><label class="x-small fw-bold text-primary">เปลี่ยนสีเป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary" placeholder="ถ้าทำสีใหม่"></div>
             </div>
 
             <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
-                <div class="fw-bold text-primary small mb-1">ทุนจริง (ภายใน)</div>
+                <div class="fw-bold text-primary small mb-1">ข้อมูลต้นทุน / ทุนจริง (ภายใน)</div>
                 <div class="row g-2 align-items-end">
-                    <div class="col-4"><label class="x-small">8. ทุนจริง</label><input type="number" id="m-realCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                    <div class="col-4"><label class="x-small">8. ทุนซื้อจริง</label><input type="number" id="m-realCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
                     <div class="col-4"><label class="x-small">9. ค่าซ่อม</label><input type="number" id="m-repairReal" class="form-control form-control-sm bg-light" readonly></div>
                     <div class="col-4"><label class="x-small">10. ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm" oninput="calcTotal()"></div>
-                    <div class="col-12 text-end fw-bold text-primary small" id="m-totalReal">11. รวมต้นทุนจริง: ฿0</div>
                 </div>
+
+                <div class="mt-2 border-top pt-2 border-primary border-opacity-50">
+                    <label class="x-small fw-bold text-danger">ค่าใช้จ่ายอื่นๆ (ระบุชื่อและราคา)</label>
+                    <div class="row g-1 mt-1">
+                        <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="เช่น เบี้ยปรับล่าช้า"></div>
+                        <div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex2N" class="form-control form-control-sm" placeholder="รายการที่ 2"></div>
+                        <div class="col-4 mt-1"><input type="number" id="m-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex3N" class="form-control form-control-sm" placeholder="รายการที่ 3"></div>
+                        <div class="col-4 mt-1"><input type="number" id="m-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
+                    </div>
+                </div>
+                <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">11. รวมต้นทุนจริงทั้งหมด: ฿0</div>
             </div>
 
             <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
@@ -78,7 +97,7 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-4"><label class="x-small">1. ทุนหลอก</label><input type="number" id="m-showCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
                     <div class="col-4"><label class="x-small">2. ค่าซ่อม</label><input type="number" id="m-repairShow" class="form-control form-control-sm bg-light" readonly></div>
-                    <div class="col-4"><label class="x-small">3. ค่าโอน(โชว์)</label><input type="number" id="m-transferShow" class="form-control form-control-sm bg-light" readonly></div>
+                    <div class="col-4"><label class="x-small">3. ค่าโอน/อื่นๆ</label><input type="number" id="m-transferShow" class="form-control form-control-sm bg-light" readonly></div>
                     <div class="col-12 text-end fw-bold text-success small" id="m-totalShow">4. รวมทุน(โชว์): ฿0</div>
                 </div>
             </div>
@@ -87,7 +106,7 @@
                 <div class="col-12"><label class="x-small fw-bold text-success">12. ราคาตั้งขาย</label><input type="number" id="m-targetPrice" class="form-control border-success fw-bold text-success"></div>
                 <div class="col-6"><label class="x-small fw-bold text-danger">13. ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
                 <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
-                <div class="col-6"><label class="x-small fw-bold">15. สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอส่งซ่อม</option><option>กำลังซ่อม</option><option>พร้อมขาย</option><option>รอโอน</option></select></div>
+                <div class="col-6"><label class="x-small fw-bold">15. สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอส่งซ่อม</option><option>กำลังซ่อม</option><option>พร้อมขาย</option></select></div>
                 <div class="col-6"><label class="x-small fw-bold">16. เล่ม/ชุดโอน</label><select id="m-book" class="form-select form-select-sm"><option>อยู่ที่ร้าน</option><option>รอชุดโอน</option><option>ส่งโอนแล้ว</option><option>โอนเสร็จ</option></select></div>
                 <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
             </div>
@@ -97,6 +116,7 @@
         </div>
     </div></div></div>
 
+    <!-- MODAL อัปเดตงานโอน / จบการขาย -->
     <div class="modal fade" id="modal-sale" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold" id="saleModalTitle">📝 จัดการสถานะโอน / ปิดการขาย</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body p-3">
@@ -122,7 +142,6 @@
                 <div class="col-6"><button class="btn btn-warning w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอโอน')"><i class="bi bi-hourglass-split"></i> บันทึกรอโอน<br><small>(รถอยู่ในสต็อก)</small></button></div>
                 <div class="col-6"><button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> จบแบบขายแล้ว<br><small>(ย้ายไปบัญชี)</small></button></div>
             </div>
-            <div class="mt-3 text-center"><button class="btn btn-outline-danger btn-sm" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าสต็อก (ยกเลิกขาย)</button></div>
         </div>
     </div></div></div>
 
@@ -155,7 +174,7 @@
                 if(data.error) throw new Error(data.error);
                 allBikes = data.bikes || [];
                 filterInventory(currentFilter);
-            } catch(e) { alert('โหลดข้อมูลไม่สำเร็จ โปรดตรวจสอบการตั้งคอลัมน์ใน Excel'); }
+            } catch(e) { alert('ระบบพร้อมใช้งานแล้ว (แต่อาจจะยังไม่มีข้อมูลรถ)'); }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -180,18 +199,21 @@
                     if(b.status === 'กำลังซ่อม') statusColor = 'bg-warning text-dark';
                     if(b.status === 'รอโอน') statusColor = 'bg-info text-dark';
 
-                    // ดักจับค่าว่างกันระบบพัง (Fix สำหรับ error ".includes")
                     const prb = b.prbStatus || 'รอดำเนินการ';
                     const tax = b.taxStatus || 'รอดำเนินการ';
                     const bookTrans = b.bookTransferStatus || 'รอดำเนินการ';
+                    
+                    const colorShow = b.changedColor ? `<span class="text-primary">(ทำสี: ${b.changedColor})</span>` : b.color;
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':(b.status==='รอโอน'?'border-info':'border-warning')}">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">${b.plate || '-'} ${b.brand||''} ${b.model||''} ${b.color||''} ปี ${b.year||''}</div>
+                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                ${b.plate || '-'} ${b.brand||''} ${b.model||''} ปี ${b.year||''} | สี: ${colorShow}
+                            </div>
                             <span class="badge ${statusColor}" style="font-size: 0.6rem;">${b.status}</span>
                         </div>
                         <div class="mt-1" style="font-size: 0.72rem; color: #666;">
-                            เลขถัง: ${b.cha || '-'} | ภาษีหมด: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตร ปชช หมด: <span class="text-danger fw-bold">${b.idExp || '-'}</span>
+                            เลขถัง: ${b.cha || '-'} | ภาษีหมด: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตรหมด: <span class="text-danger fw-bold">${b.idExp || '-'}</span>
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
                         
@@ -205,7 +227,7 @@
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.6rem;">ทุนรถ</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ค่าโอน</div><div class="fw-bold">฿${(b.transferFee||0).toLocaleString()}</div></div>
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">โอน+จิปาถะ</div><div class="fw-bold">฿${((b.transferFee||0) + (b.ex1P||0) + (b.ex2P||0) + (b.ex3P||0)).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">รวมทุน</div><div class="fw-bold text-primary">฿${(b.totalShow||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
                         </div>
@@ -216,26 +238,33 @@
                     </div>`;
                 }
             });
-            document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถ</p>';
+            document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
         }
 
         function calcTotal() {
             const repair = Number(document.getElementById('m-repairReal').value) || 0;
             const real = Number(document.getElementById('m-realCost').value) || 0;
             const transfer = Number(document.getElementById('m-transferFee').value) || 0;
-            document.getElementById('m-totalReal').innerText = `11. รวมต้นทุนจริง: ฿${(real + repair + transfer).toLocaleString()}`;
-            document.getElementById('m-transferShow').value = transfer;
+            const extras = (Number(document.getElementById('m-ex1P').value)||0) + (Number(document.getElementById('m-ex2P').value)||0) + (Number(document.getElementById('m-ex3P').value)||0);
+            
+            document.getElementById('m-totalReal').innerText = `11. รวมต้นทุนจริงทั้งหมด: ฿${(real + repair + transfer + extras).toLocaleString()}`;
+            
+            document.getElementById('m-transferShow').value = transfer + extras;
             const show = Number(document.getElementById('m-showCost').value) || 0;
-            document.getElementById('m-totalShow').innerText = `4. รวมต้นทุน(โชว์): ฿${(show + repair + transfer).toLocaleString()}`;
+            document.getElementById('m-totalShow').innerText = `4. รวมทุน(โชว์): ฿${(show + repair + transfer + extras).toLocaleString()}`;
         }
 
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            ['buyDate','plate','brand','model','appearance','color','year','cha','eng','source',
-             'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote'].forEach(id => {
+            
+            // Map ข้อมูลใส่ฟอร์ม
+            ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
+             'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
+             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P'].forEach(id => {
                 document.getElementById('m-'+id).value = b[id] || '';
             });
+            
             document.getElementById('m-repairReal').value = b.repairSum || 0;
             document.getElementById('m-repairShow').value = b.repairSum || 0;
             calcTotal();
@@ -245,8 +274,9 @@
 
         async function saveBike() {
             const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike' };
-            ['rowIdx','buyDate','plate','brand','model','appearance','color','year','cha','eng','source',
-             'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote'].forEach(id => {
+            ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
+             'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
+             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P'].forEach(id => {
                 payload[id] = document.getElementById('m-'+id).value;
             });
             document.getElementById('loader').style.display = 'flex';
@@ -280,15 +310,14 @@
             location.reload();
         }
 
-        async function revertSale() {
-            if(!confirm('ยืนยันตีกลับรถคันนี้เข้าสต็อก (ยกเลิกการขาย)?')) return;
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value }) });
-            location.reload();
-        }
-        
         async function deleteBike() { if(!confirm('ลบถาวร?')) return; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); }
-        function openBikeModal() { document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-book').value='อยู่ที่ร้าน'; calcTotal(); bikeModal.show(); }
+        
+        function openBikeModal() { 
+            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
+            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
+            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-book').value='อยู่ที่ร้าน'; 
+            calcTotal(); bikeModal.show(); 
+        }
     </script>
 </body>
 </html>
