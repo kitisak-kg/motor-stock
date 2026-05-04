@@ -14,9 +14,11 @@
         .card-dash { background: white; border-radius: 12px; padding: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height: 100%; }
         .stat-val { font-size: 1.3rem; font-weight: 800; margin-top: 5px; }
         .status-box { background: white; border-radius: 10px; padding: 12px; text-align: center; border-bottom: 4px solid #ddd; text-decoration: none; display: block; }
-        .alert-box { height: 180px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
-        .alert-header { font-size: 0.8rem; padding: 6px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
-        .alert-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.75rem; }
+        
+        /* ปรับกล่องแจ้งเตือนให้สูงขึ้น เพื่อรองรับข้อมูลเยอะๆ */
+        .alert-box { max-height: 250px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
+        .alert-header { font-size: 0.9rem; padding: 8px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
+        .alert-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -37,18 +39,22 @@
         </div>
 
         <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
-        <div class="row g-2 mb-4">
-            <div class="col-4">
-                <div class="alert-header bg-danger">ภาษี</div>
-                <div class="alert-box" id="alert-tax"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+        
+        <!-- ปรับโครงสร้างให้ตอบสนองมือถือ: ใช้ col-12 ในมือถือ และ col-md-4 ในจอใหญ่ -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div>
+                <div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
             </div>
-            <div class="col-4">
-                <div class="alert-header bg-warning text-dark">บัตร ปชช.</div>
-                <div class="alert-box" id="alert-id"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+            
+            <div class="col-12 col-md-4">
+                <div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div>
+                <div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
             </div>
-            <div class="col-4">
-                <div class="alert-header bg-info text-dark">เอกสารค้างส่ง (>1 เดือน)</div>
-                <div class="alert-box" id="alert-doc"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+            
+            <div class="col-12 col-md-4">
+                <div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (> 1 เดือน)</div>
+                <div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
             </div>
         </div>
     </div>
@@ -62,7 +68,7 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        
+
         async function loadDashboard() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
@@ -78,30 +84,47 @@
                     if(b.saleStatus !== 'ขายแล้ว') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
                         
-                        // ภาษี
+                        // เช็คภาษี
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
                             if(p.length === 3) {
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                                if (diffDays < -(365 * 2)) alertTax += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>ขาด > 2 ปี!</div>`;
-                                else if (diffDays < 0) alertTax += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>ขาด ${Math.abs(Math.floor(diffDays))} วัน</div>`;
-                                else if (diffDays <= 30) alertTax += `<div class="alert-item text-warning text-dark"><b>${b.plate||'-'}</b><br>เหลือ ${Math.floor(diffDays)} วัน</div>`;
+                                
+                                if (diffDays < 0) {
+                                    let absDays = Math.abs(Math.floor(diffDays));
+                                    let years = Math.floor(absDays / 365);
+                                    let days = absDays % 365;
+                                    let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
+
+                                    if (years >= 2) {
+                                        alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ระวังยกเลิกเล่ม!)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                    } else {
+                                        alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                    }
+                                } else if (diffDays <= 30) {
+                                    alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                }
                             }
                         }
-                        // บัตร
+                        
+                        // เช็คบัตร ปชช
                         if (b.idExp && b.idExp !== '-') {
                             let p = b.idExp.split('/');
                             if(p.length === 3) {
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                                if (diffDays < 0) alertId += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>หมดอายุแล้ว</div>`;
-                                else if (diffDays <= 30) alertId += `<div class="alert-item text-warning text-dark"><b>${b.plate||'-'}</b><br>เหลือ ${Math.floor(diffDays)} วัน</div>`;
+                                
+                                if (diffDays < 0) {
+                                    alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold">หมดอายุแล้ว</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
+                                } else if (diffDays <= 30) {
+                                    alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
+                                }
                             }
                         }
                     }
 
-                    // เอกสารค้างส่ง (เกิน 1 เดือน)
+                    // เช็คเอกสารค้างส่ง (เกิน 1 เดือน)
                     if (b.saleStatus === 'ขายแล้ว' || b.status === 'รอโอน') {
                         if (b.saleDate && b.saleDate !== '-') {
                             let p = b.saleDate.split('/');
@@ -110,10 +133,13 @@
                                 let diffDays = (new Date() - new Date(y, parseInt(p[1])-1, parseInt(p[0]))) / (1000*60*60*24);
                                 if (diffDays > 30) {
                                     let missing = '';
-                                    if(!b.prbStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">พรบ</span>';
+                                    if(!b.prbStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">พรบ.</span>';
                                     if(!b.taxStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">ภาษี</span>';
                                     if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
-                                    if(missing !== '') alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b><br>${missing}</div>`;
+                                    
+                                    if(missing !== '') {
+                                        alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วันก่อน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`;
+                                    }
                                 }
                             }
                         }
