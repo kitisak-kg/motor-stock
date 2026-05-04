@@ -23,11 +23,21 @@
         <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
         
         <div class="card-repair shadow-sm border-top border-4 border-primary">
-            <label class="fw-bold small mb-1">1. เลือกรถที่กำลังซ่อม</label>
-            <select id="select-bike" class="form-select mb-3 shadow-sm border-primary">
-                <option value="">-- เลือกรถ --</option>
-            </select>
             
+            <label class="fw-bold small mb-1 text-primary">1. เลือกรถ (กลุ่มกำลังปั้น/ซ่อม)</label>
+            <select id="select-bike-repair" class="form-select mb-2 shadow-sm border-primary" onchange="handleSelectBike('repair')">
+                <option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>
+            </select>
+
+            <label class="fw-bold small mb-1 text-success mt-2">หรือ เลือกรถ (กลุ่มพร้อมขาย/เก็บงานเพิ่ม)</label>
+            <select id="select-bike-ready" class="form-select mb-3 shadow-sm border-success" onchange="handleSelectBike('ready')">
+                <option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option>
+            </select>
+
+            <!-- ตัวแปรเก็บ ID รถที่ถูกเลือกจริง -->
+            <input type="hidden" id="selected-bike-id" value="">
+            
+            <hr>
             <label class="fw-bold small mb-1">2. เพิ่มรายการซ่อม (รอของให้ใส่ 0)</label>
             <div class="row g-2">
                 <div class="col-7"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการ/อะไหล่"></div>
@@ -48,7 +58,7 @@
 
         <h6 class="fw-bold text-muted small m-0 mb-2">ประวัติซ่อมที่บันทึกแล้ว (กดลบ/แก้ได้)</h6>
         <div id="repair-history" class="list-group shadow-sm small mb-4">
-            <div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถเพื่อดูประวัติ</div>
+            <div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>
         </div>
     </div>
 
@@ -81,33 +91,48 @@
             editModal = new bootstrap.Modal(document.getElementById('modal-edit-repair'));
             const res = await fetch(`${API_URL}?action=getMasterData`);
             const data = await res.json();
-            const select = document.getElementById('select-bike');
             
-            // แยกกลุ่มรถ
-            let html = '<option value="">-- เลือกรถ --</option>';
-            html += '<optgroup label="รถรอซ่อม / กำลังซ่อม">';
-            data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม')).forEach(b => {
-                html += `<option value="${b.id}">${b.plate||'-'} | ${b.model} [${b.status}]</option>`;
+            const selRepair = document.getElementById('select-bike-repair');
+            const selReady = document.getElementById('select-bike-ready');
+
+            data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว').forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id; opt.text = `${b.plate||'-'} | ${b.model} [${b.status}]`;
+                
+                if(b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม') {
+                    selRepair.appendChild(opt);
+                } else if(b.status === 'พร้อมขาย' || b.status === 'รอโอน') {
+                    selReady.appendChild(opt);
+                }
             });
-            html += '</optgroup><optgroup label="รถพร้อมขาย/รอโอน (มีประวัติซ่อม)">';
-            data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'พร้อมขาย' || b.status === 'รอโอน')).forEach(b => {
-                html += `<option value="${b.id}">${b.plate||'-'} | ${b.model} [${b.status}]</option>`;
-            });
-            html += '</optgroup>';
-            select.innerHTML = html;
+        }
+
+        // ฟังก์ชันสลับการเลือกรถ
+        function handleSelectBike(type) {
+            let bikeId = "";
+            if (type === 'repair') {
+                bikeId = document.getElementById('select-bike-repair').value;
+                document.getElementById('select-bike-ready').value = ""; // เคลียร์อีกช่อง
+            } else {
+                bikeId = document.getElementById('select-bike-ready').value;
+                document.getElementById('select-bike-repair').value = ""; // เคลียร์อีกช่อง
+            }
+            document.getElementById('selected-bike-id').value = bikeId;
+            loadRepairHistory(bikeId);
         }
 
         function addTemp() {
             const name = document.getElementById('r-item').value;
-            const price = document.getElementById('r-price').value; // ปล่อยให้รับค่า 0 หรือว่างได้
+            const price = document.getElementById('r-price').value; 
             const shop = document.getElementById('r-shop').value;
-            if(!name || price === '') return alert("กรุณาใส่รายการและราคา (ถ้าของฟรียังไม่มา ให้ใส่ 0)");
+            if(!name || price === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้ใส่ 0)");
             tempRepairs.push({ name, price: Number(price), shop });
             document.getElementById('r-item').value = ''; document.getElementById('r-price').value = ''; document.getElementById('r-shop').value = '';
             renderTemp();
         }
 
         function removeTemp(index) { tempRepairs.splice(index, 1); renderTemp(); }
+        
         function renderTemp() {
             const box = document.getElementById('temp-box');
             if(tempRepairs.length === 0) { box.classList.add('d-none'); return; }
@@ -125,8 +150,8 @@
         }
 
         async function saveAllRepairs() {
-            const bikeId = document.getElementById('select-bike').value;
-            if(!bikeId) return alert("กรุณาเลือกรถครับ");
+            const bikeId = document.getElementById('selected-bike-id').value;
+            if(!bikeId) return alert("กรุณาเลือกรถก่อนบันทึกครับ");
             document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs }) });
             tempRepairs = []; renderTemp();
@@ -135,7 +160,10 @@
         }
 
         async function loadRepairHistory(bikeId) {
-            if(!bikeId) return;
+            if(!bikeId) {
+                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
+                return;
+            }
             const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
             const list = await res.json();
             let html = ''; let total = 0;
@@ -150,7 +178,7 @@
                 total += r.price; 
             });
             if(html) html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
-            document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">ไม่มีประวัติซ่อม</div>';
+            document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">คันนี้ยังไม่มีประวัติซ่อม</div>';
         }
 
         function openEdit(rId, name, price, shop) {
@@ -161,7 +189,8 @@
         async function updateRepairItem() {
             document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value }) });
-            editModal.hide(); await loadRepairHistory(document.getElementById('select-bike').value);
+            editModal.hide(); 
+            await loadRepairHistory(document.getElementById('selected-bike-id').value);
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -173,7 +202,6 @@
             document.getElementById('loader').style.display = 'none';
         }
 
-        document.getElementById('select-bike').onchange = function() { loadRepairHistory(this.value); };
         window.onload = init;
     </script>
 </body>
