@@ -14,6 +14,9 @@
         .card-dash { background: white; border-radius: 12px; padding: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height: 100%; }
         .stat-val { font-size: 1.3rem; font-weight: 800; margin-top: 5px; }
         .status-box { background: white; border-radius: 10px; padding: 12px; text-align: center; border-bottom: 4px solid #ddd; text-decoration: none; display: block; }
+        .alert-box { height: 180px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
+        .alert-header { font-size: 0.8rem; padding: 6px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
+        .alert-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -21,24 +24,9 @@
         <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
         
         <div class="row g-2 mb-4">
-            <div class="col-12">
-                <div class="card-dash bg-primary text-white">
-                    <small class="opacity-75">💰 เงินสดคงเหลือ (เงินทุนลงทุน - ทุนจมสต็อก)</small>
-                    <div class="stat-val" id="dash-bal">฿0</div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card-dash border-start border-4 border-warning">
-                    <small class="text-muted">🏍️ ทุนจมในสต็อก</small>
-                    <div class="stat-val text-warning" id="dash-stk">฿0</div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card-dash border-start border-4 border-success">
-                    <small class="text-muted">📈 กำไรสะสม (แยกต่างหาก)</small>
-                    <div class="stat-val text-success" id="dash-pro">฿0</div>
-                </div>
-            </div>
+            <div class="col-12"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ (เงินทุนลงทุน - ทุนจมสต็อก)</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-warning"><small class="text-muted">🏍️ ทุนจมในสต็อก</small><div class="stat-val text-warning" id="dash-stk">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (แยกส่วน)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
         </div>
 
         <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
@@ -49,8 +37,19 @@
         </div>
 
         <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
-        <div id="alert-list" class="list-group shadow-sm small mb-4">
-            <div class="list-group-item text-center py-3 text-muted">กำลังโหลด...</div>
+        <div class="row g-2 mb-4">
+            <div class="col-4">
+                <div class="alert-header bg-danger">ภาษี</div>
+                <div class="alert-box" id="alert-tax"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+            </div>
+            <div class="col-4">
+                <div class="alert-header bg-warning text-dark">บัตร ปชช.</div>
+                <div class="alert-box" id="alert-id"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+            </div>
+            <div class="col-4">
+                <div class="alert-header bg-info text-dark">เอกสารค้างส่ง (>1 เดือน)</div>
+                <div class="alert-box" id="alert-doc"><div class="text-center p-3 text-muted">ไม่มีเตือน</div></div>
+            </div>
         </div>
     </div>
 
@@ -64,72 +63,68 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         
-        function getAlertItem(plate, model, title, date, icon, colorClass) {
-            return `<div class="list-group-item d-flex justify-content-between align-items-center"><div><b>${plate||'N/A'}</b> <span class="small text-muted">${model}</span><br><span class="${colorClass} fw-bold" style="font-size:0.75rem;"><i class="${icon}"></i> ${title}</span></div><span class="badge bg-light text-dark border">${date}</span></div>`;
-        }
-
         async function loadDashboard() {
-            const res = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await res.json();
-            document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
-            document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
-            document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                const data = await res.json();
+                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
+                document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
+                document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
-            let wait=0, repair=0, ready=0, alerts='';
-            
-            data.bikes.forEach(b => {
-                // เช็คสถานะสต็อก
-                if(b.saleStatus !== 'ขายแล้ว') {
-                    if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
-                    
-                    // เช็คภาษี
-                    if (b.taxExp && b.taxExp !== '-') {
-                        let p = b.taxExp.split('/');
-                        if(p.length === 3) {
-                            let y = parseInt(p[2]); if(y > 2400) y -= 543;
-                            let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                            if (diffDays < -(365 * 2)) alerts += getAlertItem(b.plate, b.model, 'ภาษีขาดเกิน 2 ปี! (ระวังยกเลิกเล่ม)', b.taxExp, 'bi-exclamation-triangle-fill', 'text-danger');
-                            else if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, `ภาษีขาด ${Math.abs(Math.floor(diffDays))} วัน`, b.taxExp, 'bi-exclamation-circle-fill', 'text-danger');
-                            else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `ภาษีใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.taxExp, 'bi-info-circle-fill', 'text-warning text-dark');
+                let wait=0, repair=0, ready=0;
+                let alertTax = '', alertId = '', alertDoc = '';
+                
+                data.bikes.forEach(b => {
+                    if(b.saleStatus !== 'ขายแล้ว') {
+                        if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
+                        
+                        // ภาษี
+                        if (b.taxExp && b.taxExp !== '-') {
+                            let p = b.taxExp.split('/');
+                            if(p.length === 3) {
+                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                                if (diffDays < -(365 * 2)) alertTax += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>ขาด > 2 ปี!</div>`;
+                                else if (diffDays < 0) alertTax += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>ขาด ${Math.abs(Math.floor(diffDays))} วัน</div>`;
+                                else if (diffDays <= 30) alertTax += `<div class="alert-item text-warning text-dark"><b>${b.plate||'-'}</b><br>เหลือ ${Math.floor(diffDays)} วัน</div>`;
+                            }
+                        }
+                        // บัตร
+                        if (b.idExp && b.idExp !== '-') {
+                            let p = b.idExp.split('/');
+                            if(p.length === 3) {
+                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                                if (diffDays < 0) alertId += `<div class="alert-item text-danger"><b>${b.plate||'-'}</b><br>หมดอายุแล้ว</div>`;
+                                else if (diffDays <= 30) alertId += `<div class="alert-item text-warning text-dark"><b>${b.plate||'-'}</b><br>เหลือ ${Math.floor(diffDays)} วัน</div>`;
+                            }
                         }
                     }
-                    // เช็คบัตร ปชช
-                    if (b.idExp && b.idExp !== '-') {
-                        let p = b.idExp.split('/');
-                        if(p.length === 3) {
-                            let y = parseInt(p[2]); if(y > 2400) y -= 543;
-                            let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                            if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, 'บัตร ปชช หมดอายุแล้ว', b.idExp, 'bi-person-x-fill', 'text-danger');
-                            else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `บัตรใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.idExp, 'bi-person-bounding-box', 'text-warning text-dark');
-                        }
-                    }
-                }
 
-                // ตรวจสอบเอกสารรถที่รอโอน หรือ ขายแล้ว (ถ้าเกิน 1 เดือน แล้วยังรอดำเนินการ)
-                if (b.saleStatus === 'ขายแล้ว' || b.status === 'รอโอน') {
-                    if (b.saleDate && b.saleDate !== '-') {
-                        let p = b.saleDate.split('/');
-                        if(p.length === 3) {
-                            let y = parseInt(p[2]); if(y > 2400) y -= 543;
-                            let diffDays = (new Date() - new Date(y, parseInt(p[1])-1, parseInt(p[0]))) / (1000*60*60*24);
-                            
-                            if (diffDays > 30) {
-                                let missing = [];
-                                if(!b.prbStatus.includes('แล้ว')) missing.push('พรบ.');
-                                if(!b.taxStatus.includes('แล้ว')) missing.push('ภาษี');
-                                if(!b.bookTransferStatus.includes('แล้ว')) missing.push('เล่ม');
-                                
-                                if(missing.length > 0) {
-                                    alerts += getAlertItem(b.plate, b.model, `เอกสารค้างเกิน 1 เดือน: ${missing.join(', ')}`, b.saleDate, 'bi-file-earmark-excel-fill', 'text-danger');
+                    // เอกสารค้างส่ง (เกิน 1 เดือน)
+                    if (b.saleStatus === 'ขายแล้ว' || b.status === 'รอโอน') {
+                        if (b.saleDate && b.saleDate !== '-') {
+                            let p = b.saleDate.split('/');
+                            if(p.length === 3) {
+                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                                let diffDays = (new Date() - new Date(y, parseInt(p[1])-1, parseInt(p[0]))) / (1000*60*60*24);
+                                if (diffDays > 30) {
+                                    let missing = '';
+                                    if(!b.prbStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">พรบ</span>';
+                                    if(!b.taxStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">ภาษี</span>';
+                                    if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
+                                    if(missing !== '') alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b><br>${missing}</div>`;
                                 }
                             }
                         }
                     }
-                }
-            });
-            
-            document.getElementById('count-wait').innerText = wait; document.getElementById('count-repair').innerText = repair; document.getElementById('count-ready').innerText = ready;
-            document.getElementById('alert-list').innerHTML = alerts || '<div class="list-group-item text-center py-3 text-muted">ไม่มีรายการด่วน</div>';
+                });
+                
+                document.getElementById('count-wait').innerText = wait; document.getElementById('count-repair').innerText = repair; document.getElementById('count-ready').innerText = ready;
+                if(alertTax) document.getElementById('alert-tax').innerHTML = alertTax;
+                if(alertId) document.getElementById('alert-id').innerHTML = alertId;
+                if(alertDoc) document.getElementById('alert-doc').innerHTML = alertDoc;
+            } catch (e) { console.error(e); }
         }
         window.onload = loadDashboard;
     </script>
