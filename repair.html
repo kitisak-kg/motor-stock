@@ -20,31 +20,31 @@
     <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังโหลด...</div></div>
 
     <div class="container mt-4">
-        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-primary m-0"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
+            <!-- ปุ่มเปลี่ยนสถานะด่วน -->
+            <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="markReady()">✔️ ตั้งเป็นพร้อมขาย</button>
+        </div>
         
         <div class="card-repair shadow-sm border-top border-4 border-primary">
             
             <label class="fw-bold small mb-1 text-dark"><i class="bi bi-search"></i> ค้นหารถที่ต้องการซ่อม</label>
-            <input type="text" id="search-bike" class="form-control mb-3 shadow-sm border-secondary" placeholder="🔍 พิมพ์ทะเบียน, รุ่นรถ หรือสถานะ..." onkeyup="filterBikes()">
+            <input type="text" id="search-bike" class="form-control mb-3 shadow-sm border-secondary" placeholder="🔍 พิมพ์ทะเบียน, รุ่นรถ..." onkeyup="filterBikes()">
             <hr>
 
             <label class="fw-bold small mb-1 text-primary">1. เลือกรถ (กลุ่มกำลังปั้น/ซ่อม)</label>
-            <select id="select-bike-repair" class="form-select mb-2 shadow-sm border-primary" onchange="handleSelectBike('repair')">
-                <option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>
-            </select>
+            <select id="select-bike-repair" class="form-select mb-2 shadow-sm border-primary" onchange="handleSelectBike('repair')"><option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option></select>
 
             <label class="fw-bold small mb-1 text-success mt-2">หรือ เลือกรถ (กลุ่มพร้อมขาย/เก็บงานเพิ่ม)</label>
-            <select id="select-bike-ready" class="form-select mb-3 shadow-sm border-success" onchange="handleSelectBike('ready')">
-                <option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option>
-            </select>
+            <select id="select-bike-ready" class="form-select mb-3 shadow-sm border-success" onchange="handleSelectBike('ready')"><option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option></select>
 
             <input type="hidden" id="selected-bike-id" value="">
             
             <hr>
-            <label class="fw-bold small mb-1">2. เพิ่มรายการซ่อม (รอของให้ใส่ 0)</label>
+            <label class="fw-bold small mb-1">2. เพิ่มรายการซ่อม (รอของให้พิมพ์เลข 0)</label>
             <div class="row g-2">
                 <div class="col-7"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการ/อะไหล่"></div>
-                <div class="col-5"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา"></div>
+                <div class="col-5"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา (ใส่ 0 ได้)"></div>
                 <div class="col-9"><input type="text" id="r-shop" class="form-control form-control-sm" placeholder="อู่/ร้าน"></div>
                 <div class="col-3"><button class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="addTemp()">+ เพิ่ม</button></div>
             </div>
@@ -52,10 +52,8 @@
             <div id="temp-box" class="temp-list d-none">
                 <h6 class="fw-bold small text-muted border-bottom pb-2">รายการเตรียมบันทึก</h6>
                 <div id="temp-items"></div>
-                <div class="d-flex justify-content-between mt-2 pt-2 border-top fw-bold text-danger">
-                    <span>รวมทั้งหมด:</span><span id="temp-total">฿0</span>
-                </div>
-                <button class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" onclick="saveAllRepairs()">💾 บันทึกทั้งหมดลงระบบ</button>
+                <div class="d-flex justify-content-between mt-2 pt-2 border-top fw-bold text-danger"><span>รวมทั้งหมด:</span><span id="temp-total">฿0</span></div>
+                <button class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" onclick="saveAllRepairs()">💾 บันทึกลงระบบ</button>
             </div>
         </div>
 
@@ -96,14 +94,11 @@
             const res = await fetch(`${API_URL}?action=getMasterData`);
             const data = await res.json();
             
-            // แยกกลุ่มรถเก็บไว้ในตัวแปร เพื่อเอาไว้ใช้ตอนค้นหา
             allRepairBikes = data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
             allReadyBikes = data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'พร้อมขาย' || b.status === 'รอโอน'));
-            
-            renderDropdowns(''); // วาด Dropdown ครั้งแรก
+            renderDropdowns(''); 
         }
 
-        // ฟังก์ชันวาด Dropdown และกรองตามคำค้นหา
         function renderDropdowns(filterText) {
             const selRepair = document.getElementById('select-bike-repair');
             const selReady = document.getElementById('select-bike-ready');
@@ -111,25 +106,17 @@
             selRepair.innerHTML = '<option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>';
             allRepairBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
-                if(txt.toLowerCase().includes(filterText)) {
-                    selRepair.innerHTML += `<option value="${b.id}">${txt}</option>`;
-                }
+                if(txt.toLowerCase().includes(filterText)) selRepair.innerHTML += `<option value="${b.id}">${txt}</option>`;
             });
 
             selReady.innerHTML = '<option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option>';
             allReadyBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
-                if(txt.toLowerCase().includes(filterText)) {
-                    selReady.innerHTML += `<option value="${b.id}">${txt}</option>`;
-                }
+                if(txt.toLowerCase().includes(filterText)) selReady.innerHTML += `<option value="${b.id}">${txt}</option>`;
             });
         }
 
-        // เรียกใช้ตอนพิมพ์ช่องค้นหา
-        function filterBikes() {
-            const q = document.getElementById('search-bike').value.toLowerCase();
-            renderDropdowns(q);
-        }
+        function filterBikes() { renderDropdowns(document.getElementById('search-bike').value.toLowerCase()); }
 
         function handleSelectBike(type) {
             let bikeId = "";
@@ -141,52 +128,59 @@
                 document.getElementById('select-bike-repair').value = ""; 
             }
             document.getElementById('selected-bike-id').value = bikeId;
+            if(bikeId) {
+                document.getElementById('btn-mark-ready').classList.remove('d-none');
+            } else {
+                document.getElementById('btn-mark-ready').classList.add('d-none');
+            }
             loadRepairHistory(bikeId);
+        }
+
+        async function markReady() {
+            const bikeId = document.getElementById('selected-bike-id').value;
+            if(!bikeId) return;
+            document.getElementById('loader').style.display = 'flex';
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'markReadyFromRepair', bikeId: bikeId }) });
+            location.reload();
         }
 
         function addTemp() {
             const name = document.getElementById('r-item').value;
-            const price = document.getElementById('r-price').value; 
+            const priceVal = document.getElementById('r-price').value; 
             const shop = document.getElementById('r-shop').value;
-            if(!name || price === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้ใส่ 0)");
-            tempRepairs.push({ name, price: Number(price), shop });
+            
+            // ตรวจจับถ้าเป็นค่าว่าง (แต่ยอมรับเลข 0)
+            if(!name || priceVal === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้พิมพ์เลข 0)");
+            
+            tempRepairs.push({ name, price: Number(priceVal), shop });
             document.getElementById('r-item').value = ''; document.getElementById('r-price').value = ''; document.getElementById('r-shop').value = '';
             renderTemp();
         }
 
         function removeTemp(index) { tempRepairs.splice(index, 1); renderTemp(); }
-        
         function renderTemp() {
             const box = document.getElementById('temp-box');
             if(tempRepairs.length === 0) { box.classList.add('d-none'); return; }
             box.classList.remove('d-none');
             let html = ''; let total = 0;
             tempRepairs.forEach((r, i) => {
-                html += `<div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
-                    <div><span class="text-danger cursor-pointer me-2" onclick="removeTemp(${i})"><i class="bi bi-x-circle-fill"></i></span>${r.name}</div>
-                    <span class="fw-bold">฿${r.price.toLocaleString()}</span>
-                </div>`;
+                html += `<div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom"><div><span class="text-danger cursor-pointer me-2" onclick="removeTemp(${i})"><i class="bi bi-x-circle-fill"></i></span>${r.name}</div><span class="fw-bold">฿${r.price.toLocaleString()}</span></div>`;
                 total += r.price;
             });
-            document.getElementById('temp-items').innerHTML = html;
-            document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
+            document.getElementById('temp-items').innerHTML = html; document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
         }
 
         async function saveAllRepairs() {
             const bikeId = document.getElementById('selected-bike-id').value;
-            if(!bikeId) return alert("กรุณาเลือกรถก่อนบันทึกครับ");
+            if(!bikeId) return alert("กรุณาเลือกรถครับ");
             document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs }) });
-            tempRepairs = []; renderTemp();
-            await loadRepairHistory(bikeId);
+            tempRepairs = []; renderTemp(); await loadRepairHistory(bikeId);
             document.getElementById('loader').style.display = 'none';
         }
 
         async function loadRepairHistory(bikeId) {
-            if(!bikeId) {
-                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
-                return;
-            }
+            if(!bikeId) return document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
             const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
             const list = await res.json();
             let html = ''; let total = 0;
@@ -195,7 +189,7 @@
                     <div><b>${r.name}</b><br><small class="text-muted">${r.shop}</small></div>
                     <div class="text-end">
                         <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
-                        <div><i class="bi bi-pencil-square text-primary ms-2" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"></i> <i class="bi bi-trash text-danger ms-2" onclick="deleteRepair(${r.rowIdx}, '${bikeId}')"></i></div>
+                        <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx}, '${bikeId}')"><i class="bi bi-trash"></i></span></div>
                     </div>
                 </div>`; 
                 total += r.price; 
@@ -212,8 +206,7 @@
         async function updateRepairItem() {
             document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value }) });
-            editModal.hide(); 
-            await loadRepairHistory(document.getElementById('selected-bike-id').value);
+            editModal.hide(); await loadRepairHistory(document.getElementById('selected-bike-id').value);
             document.getElementById('loader').style.display = 'none';
         }
 
