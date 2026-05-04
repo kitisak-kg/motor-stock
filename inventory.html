@@ -21,7 +21,7 @@
     </style>
 </head>
 <body>
-    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังประมวลผล...</div></div>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold" id="loader-text">กำลังประมวลผล...</div></div>
 
     <div class="tab-fixed shadow-sm">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
@@ -66,7 +66,6 @@
                 <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
             </div>
 
-            <!-- ทุนจม -->
             <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
                 <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้าน)</div>
                 <div class="row g-2 align-items-end">
@@ -85,7 +84,6 @@
                 <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
             </div>
 
-            <!-- หักตอนขาย -->
             <div class="bg-danger bg-opacity-10 p-2 rounded mb-2 border border-danger">
                 <div class="fw-bold text-danger small mb-1">ค่าใช้จ่ายตอนขาย (หักออกจากกำไรตอนขาย)</div>
                 <div class="row g-2 align-items-end">
@@ -101,7 +99,6 @@
                 </div>
             </div>
 
-            <!-- รายได้ -->
             <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
                 <div class="fw-bold text-success small mb-1">หน้าร้าน และข้อมูลไฟแนนซ์</div>
                 <div class="row g-1 mb-2">
@@ -258,7 +255,7 @@
 
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            if(!b) return;
+            if(!b) { alert('ไม่พบข้อมูลรถคันนี้ กรุณารีเฟรชหน้าเว็บ'); return; }
             document.getElementById('m-rowIdx').value = b.rowIdx;
             ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
              'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
