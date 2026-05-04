@@ -58,14 +58,17 @@
                 <div class="col-4"><label class="x-small fw-bold">3. เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
                 <div class="col-4"><label class="x-small fw-bold">4. เลขเครื่อง</label><input type="text" id="m-eng" class="form-control form-control-sm"></div>
                 <div class="col-12"><label class="x-small fw-bold">5. แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
+                
                 <div class="col-4"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
                 <div class="col-5"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
                 <div class="col-3"><label class="x-small fw-bold">7. ปีรถ</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+                
                 <div class="col-4"><label class="x-small fw-bold">6. โฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
                 <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                 <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
             </div>
 
+            <!-- ทุนจม -->
             <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
                 <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้าน)</div>
                 <div class="row g-2 align-items-end">
@@ -84,6 +87,7 @@
                 <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
             </div>
 
+            <!-- หักตอนขาย -->
             <div class="bg-danger bg-opacity-10 p-2 rounded mb-2 border border-danger">
                 <div class="fw-bold text-danger small mb-1">ค่าใช้จ่ายตอนขาย (หักออกจากกำไรตอนขาย)</div>
                 <div class="row g-2 align-items-end">
@@ -99,6 +103,7 @@
                 </div>
             </div>
 
+            <!-- รายได้ -->
             <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
                 <div class="fw-bold text-success small mb-1">หน้าร้าน และข้อมูลไฟแนนซ์</div>
                 <div class="row g-1 mb-2">
@@ -246,17 +251,22 @@
             document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
         }
 
+        // ใช้ฟังก์ชัน getVal ช่วยดึงตัวเลขแบบปลอดภัย 100% ป้องกันมือถือรุ่นเก่าค้าง
         function calcTotal() {
-            const repair = Number(document.getElementById('m-repairReal').value) || 0;
-            const real = Number(document.getElementById('m-realCost').value) || 0;
-            const inc = (Number(document.getElementById('m-inc1P').value)||0)+(Number(document.getElementById('m-inc2P').value)||0)+(Number(document.getElementById('m-inc3P').value)||0)+(Number(document.getElementById('m-inc4P').value)||0);
-            document.getElementById('m-totalReal').innerText = `11. รวมต้นทุนจม: ฿${(real + repair + inc).toLocaleString()}`;
+            const getVal = (id) => { const el = document.getElementById(id); return el ? Number(el.value) || 0 : 0; };
+            const repair = getVal('m-repairReal');
+            const real = getVal('m-realCost');
+            const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P') + getVal('m-inc4P');
+            
+            const totalEl = document.getElementById('m-totalReal');
+            if(totalEl) totalEl.innerText = `รวมต้นทุนจม: ฿${(real + repair + inc).toLocaleString()}`;
         }
 
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            if(!b) { alert('ไม่พบข้อมูลรถคันนี้ กรุณารีเฟรชหน้าเว็บ'); return; }
+            if(!b) { alert("ข้อมูลคันนี้ไม่สมบูรณ์ โปรดรีเฟรชหน้าเว็บ"); return; }
             document.getElementById('m-rowIdx').value = b.rowIdx;
+            
             ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
              'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
              'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P', 'inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','inc4N','inc4P',
@@ -264,8 +274,13 @@
                 const el = document.getElementById('m-'+id);
                 if(el) el.value = b[id] || ''; 
             });
-            document.getElementById('m-repairReal').value = b.repairSum || 0; document.getElementById('m-repairShow').value = b.repairSum || 0;
-            calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
+            
+            const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
+            const repShow = document.getElementById('m-repairShow'); if(repShow) repShow.value = b.repairSum || 0;
+            
+            calcTotal(); 
+            document.getElementById('btn-delete').style.display = 'block'; 
+            bikeModal.show();
         }
 
         async function saveBike() {
@@ -298,7 +313,14 @@
         }
 
         async function deleteBike() { if(!confirm('⚠️ ลบรถคันนี้ออกจากสต็อกถาวร? (ระวัง: กู้คืนไม่ได้)')) return; document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); }
-        function openBikeModal() { document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; calcTotal(); bikeModal.show(); }
+        
+        function openBikeModal() { 
+            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
+            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
+            const st = document.getElementById('m-status'); if(st) st.value='รอส่งซ่อม'; 
+            const bk = document.getElementById('m-bookStatus'); if(bk) bk.value='อยู่ที่ร้าน'; 
+            calcTotal(); bikeModal.show(); 
+        }
     </script>
 </body>
 </html>
