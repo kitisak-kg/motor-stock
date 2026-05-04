@@ -21,9 +21,9 @@
         <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
         
         <div class="row g-2 mb-4">
-            <div class="col-12"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ (ทุนร้าน + กำไร)</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
+            <div class="col-12"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ (ทุนร้าน - ทุนจมสต็อก)</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
             <div class="col-6"><div class="card-dash border-start border-4 border-warning"><small class="text-muted">🏍️ ทุนจมในสต็อก</small><div class="stat-val text-warning" id="dash-stk">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (หารกันไปแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
         </div>
 
         <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
@@ -48,62 +48,43 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        
         function getAlertItem(plate, model, title, date, icon, colorClass) {
-            return `<div class="list-group-item d-flex justify-content-between align-items-center">
-                <div><b>${plate||'N/A'}</b> <span class="small text-muted">${model}</span><br><span class="${colorClass} fw-bold" style="font-size:0.75rem;"><i class="${icon}"></i> ${title}</span></div>
-                <span class="badge bg-light text-dark border">${date}</span>
-            </div>`;
+            return `<div class="list-group-item d-flex justify-content-between align-items-center"><div><b>${plate||'N/A'}</b> <span class="small text-muted">${model}</span><br><span class="${colorClass} fw-bold" style="font-size:0.75rem;"><i class="${icon}"></i> ${title}</span></div><span class="badge bg-light text-dark border">${date}</span></div>`;
         }
-
         async function loadDashboard() {
-            try {
-                const res = await fetch(`${API_URL}?action=getMasterData`);
-                const data = await res.json();
-                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
-                document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
-                document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
+            const res = await fetch(`${API_URL}?action=getMasterData`);
+            const data = await res.json();
+            document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
+            document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
+            document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
-                let wait=0, repair=0, ready=0, alerts='';
-                data.bikes.forEach(b => {
-                    if(b.saleStatus !== 'ขายแล้ว') {
-                        if(b.status === 'รอส่งซ่อม') wait++;
-                        if(b.status === 'กำลังซ่อม') repair++;
-                        if(b.status === 'พร้อมขาย') ready++;
-                        
-                        // เช็คภาษี
-                        if (b.taxExp && b.taxExp !== '-') {
-                            let p = b.taxExp.split('/');
-                            if(p.length === 3) {
-                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
-                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                                
-                                if (diffDays < -(365 * 2)) alerts += getAlertItem(b.plate, b.model, 'ภาษีขาดเกิน 2 ปี! (ระวังยกเลิกเล่ม)', b.taxExp, 'bi-exclamation-triangle-fill', 'text-danger');
-                                else if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, `ภาษีขาด ${Math.abs(Math.floor(diffDays))} วัน`, b.taxExp, 'bi-exclamation-circle-fill', 'text-danger');
-                                else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `ภาษีใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.taxExp, 'bi-info-circle-fill', 'text-warning text-dark');
-                            }
-                        }
-                        
-                        // เช็คบัตร ปชช
-                        if (b.idExp && b.idExp !== '-') {
-                            let p = b.idExp.split('/');
-                            if(p.length === 3) {
-                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
-                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                                
-                                if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, 'บัตร ปชช หมดอายุแล้ว', b.idExp, 'bi-person-x-fill', 'text-danger');
-                                else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `บัตรใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.idExp, 'bi-person-bounding-box', 'text-warning text-dark');
-                            }
+            let wait=0, repair=0, ready=0, alerts='';
+            data.bikes.forEach(b => {
+                if(b.saleStatus !== 'ขายแล้ว') {
+                    if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
+                    if (b.taxExp && b.taxExp !== '-') {
+                        let p = b.taxExp.split('/');
+                        if(p.length === 3) {
+                            let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                            let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                            if (diffDays < -(365 * 2)) alerts += getAlertItem(b.plate, b.model, 'ภาษีขาดเกิน 2 ปี! (ระวังยกเลิกเล่ม)', b.taxExp, 'bi-exclamation-triangle-fill', 'text-danger');
+                            else if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, `ภาษีขาด ${Math.abs(Math.floor(diffDays))} วัน`, b.taxExp, 'bi-exclamation-circle-fill', 'text-danger');
+                            else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `ภาษีใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.taxExp, 'bi-info-circle-fill', 'text-warning text-dark');
                         }
                     }
-                });
-                
-                document.getElementById('count-wait').innerText = wait;
-                document.getElementById('count-repair').innerText = repair;
-                document.getElementById('count-ready').innerText = ready;
-                if(alerts) document.getElementById('alert-list').innerHTML = alerts;
-
-            } catch (e) { console.error(e); }
+                    if (b.idExp && b.idExp !== '-') {
+                        let p = b.idExp.split('/');
+                        if(p.length === 3) {
+                            let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                            let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                            if (diffDays < 0) alerts += getAlertItem(b.plate, b.model, 'บัตร ปชช หมดอายุแล้ว', b.idExp, 'bi-person-x-fill', 'text-danger');
+                            else if (diffDays <= 30) alerts += getAlertItem(b.plate, b.model, `บัตรใกล้หมด (อีก ${Math.floor(diffDays)} วัน)`, b.idExp, 'bi-person-bounding-box', 'text-warning text-dark');
+                        }
+                    }
+                }
+            });
+            document.getElementById('count-wait').innerText = wait; document.getElementById('count-repair').innerText = repair; document.getElementById('count-ready').innerText = ready;
+            if(alerts) document.getElementById('alert-list').innerHTML = alerts;
         }
         window.onload = loadDashboard;
     </script>
