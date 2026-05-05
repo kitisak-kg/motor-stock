@@ -128,8 +128,11 @@
                 <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
             </div>
             
-            <button class="btn btn-primary w-100 fw-bold py-2 mt-2" onclick="saveBike()">💾 บันทึกข้อมูล</button>
-            <button class="btn btn-outline-danger w-100 btn-sm mt-2 border-0" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบถาวร</button>
+            <!-- จุดที่แก้ไข: ดึงปุ่มลบมาโชว์คู่กับปุ่มบันทึกให้เห็นชัดๆ เป็นสีแดง -->
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบรถ</button>
+                <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="saveBike()">💾 บันทึกข้อมูล</button>
+            </div>
         </div>
     </div></div></div>
 
@@ -251,7 +254,6 @@
             document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
         }
 
-        // ใช้ฟังก์ชัน getVal ช่วยดึงตัวเลขแบบปลอดภัย 100% ป้องกันมือถือรุ่นเก่าค้าง
         function calcTotal() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? Number(el.value) || 0 : 0; };
             const repair = getVal('m-repairReal');
@@ -312,7 +314,13 @@
             document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); location.reload();
         }
 
-        async function deleteBike() { if(!confirm('⚠️ ลบรถคันนี้ออกจากสต็อกถาวร? (ระวัง: กู้คืนไม่ได้)')) return; document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); }
+        async function deleteBike() { 
+            // แก้ไขข้อความยืนยันการลบให้ชัดเจนตามสั่ง
+            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
+            document.getElementById('loader').style.display = 'flex'; 
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); 
+            location.reload(); 
+        }
         
         function openBikeModal() { 
             document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
