@@ -33,7 +33,6 @@
         <button class="tab-item" id="tab-wait" onclick="filterInventory('รอส่งซ่อม')">รอส่งซ่อม</button>
         <button class="tab-item" id="tab-repair" onclick="filterInventory('กำลังซ่อม')">กำลังซ่อม</button>
         <button class="tab-item" id="tab-ready" onclick="filterInventory('พร้อมขาย')">พร้อมขาย</button>
-        <button class="tab-item" id="tab-transfer" onclick="filterInventory('รอโอน')">รอโอน</button>
     </div>
 
     <div class="container">
@@ -173,15 +172,31 @@
                     <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
                 </div>
                 
-                <div class="bg-dark text-white p-2 rounded mb-2 shadow-sm">
+                <div class="bg-dark text-white p-2 rounded mb-3 shadow-sm">
                     <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
                     <div class="row text-center align-items-center">
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">รับจริง(รวมคอม)</small><div id="s-calc-revenue" class="fw-bold text-success" style="font-size:0.8rem;">฿0</div></div>
-                        <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนจมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
+                        <!-- เปลี่ยนป้ายชื่อให้เคลียร์ว่ามันคือทุนรวมทั้งหมด ไม่ใช่แค่ทุนจม -->
+                        <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนรวมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักค่าโอน+อื่นๆ</small><div id="s-calc-deduct" class="fw-bold text-danger" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
                     </div>
                 </div>
+                
+                <!-- เอากล่องเช็คลิสต์เอกสารกลับมาให้ตามสั่งครับ -->
+                <div class="bg-light p-2 rounded border mb-2">
+                    <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน (บันทึกล่วงหน้าได้)</label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label class="x-small">พรบ.</label><select id="s-prb" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
+                        <div class="col-4"><label class="x-small">ภาษี</label><select id="s-tax" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
+                        <div class="col-4"><label class="x-small">เล่มรถ</label><select id="s-book" class="form-select form-select-sm"><option>รอเล่มโอน</option><option>มอบให้แล้ว</option></select></div>
+                    </div>
+                    <div class="row g-2 border-top pt-2">
+                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มให้ใคร (ผู้รับเรื่อง)</label><input type="text" id="s-transferTo" class="form-control form-control-sm" placeholder="เช่น เฮียทองดี"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer border-top-0 pt-0">
                 <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.85rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ บันทึกการขาย (ย้ายเข้าบัญชี)</button>
@@ -209,6 +224,18 @@
             loadInventory();
         };
 
+        // ฟังก์ชั่นเปิด/ปิดซ่อนทุนซื้อจริง
+        function toggleSecret(icon) {
+            const container = icon.closest('.col-auto').querySelector('.secret-val');
+            if (container.innerText === '***') {
+                container.innerText = container.getAttribute('data-val');
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            } else {
+                container.innerText = '***';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            }
+        }
+
         async function loadInventory() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
@@ -217,18 +244,6 @@
                 filterInventory(currentFilter);
             } catch(e) {}
             document.getElementById('loader').style.display = 'none';
-        }
-
-        // ฟังก์ชั่นเปิด/ปิดซ่อนทุนจริง
-        function toggleSecret(icon) {
-            const container = icon.closest('.col').querySelector('.secret-val');
-            if (container.innerText === '***') {
-                container.innerText = container.getAttribute('data-val');
-                icon.classList.replace('bi-eye-slash', 'bi-eye');
-            } else {
-                container.innerText = '***';
-                icon.classList.replace('bi-eye', 'bi-eye-slash');
-            }
         }
 
         function filterInventory(type) {
@@ -262,16 +277,16 @@
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
 
-                        <!-- 💡 เพิ่มช่อง 'อื่นๆ' (ทุนซื้อจริง) แบบปิดตาไว้ตรงนี้ -->
+                        <!-- 💡 ปรับกล่อง 'อื่นๆ' ให้แคบและย้ายไปขวาสุดหลังราคาตั้งขาย -->
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">รวมทุนจม</div><div class="fw-bold text-primary">฿${(b.totalInternal||0).toLocaleString()}</div></div>
-                            <div class="col border-start">
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
+                            <div class="col-auto border-start ps-2 pe-1">
                                 <div class="text-muted" style="font-size:0.55rem;">อื่นๆ <i class="bi bi-eye-slash ms-1" style="cursor:pointer;" onclick="toggleSecret(this)"></i></div>
                                 <div class="fw-bold text-secondary secret-val" data-val="฿${(b.realCost||0).toLocaleString()}" style="font-size:0.8rem;">***</div>
                             </div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
                         </div>
                         
                         <div class="d-flex gap-2 mt-2">
@@ -358,6 +373,9 @@
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             document.getElementById('s-customer').value = b.customerDetail || '';
             
+            document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ'; document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ'; document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
+            document.getElementById('s-transferTo').value = b.transferTo || ''; document.getElementById('s-transferDate').value = b.transferDate || '';
+            
             document.getElementById('s-transferFee').value = b.transferFee || 0;
             document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0;
@@ -373,7 +391,9 @@
                 action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
                 soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
                 customerDetail: document.getElementById('s-customer').value, 
-                prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
+                // เพิ่มการส่งข้อมูลเอกสารและโอนเล่มกลับไปให้ครบถ้วนแล้วครับ
+                prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, 
+                bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
                 transferFee: document.getElementById('s-transferFee').value,
                 ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value,
                 ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value,
@@ -384,19 +404,19 @@
             document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); location.reload();
         }
 
-        async function deleteBike() { 
-            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
-            document.getElementById('loader').style.display = 'flex'; 
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); 
-            location.reload(); 
-        }
-        
         function openBikeModal() { 
             document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
             document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
             const st = document.getElementById('m-status'); if(st) st.value='รอส่งซ่อม'; 
             const bk = document.getElementById('m-bookStatus'); if(bk) bk.value='อยู่ที่ร้าน'; 
             calcTotal(); bikeModal.show(); 
+        }
+        
+        async function deleteBike() { 
+            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
+            document.getElementById('loader').style.display = 'flex'; 
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); 
+            location.reload(); 
         }
     </script>
 </body>
