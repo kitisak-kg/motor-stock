@@ -14,6 +14,9 @@
         .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.85rem; flex: 1; white-space: nowrap; border-bottom: 3px solid transparent; }
         .tab-item.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
         .card-bike { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: none; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .doc-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; }
+        .doc-ok { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .doc-wait { background: #fff3cd; color: #856404; border-color: #ffeeba; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         
         .box-finance { background-color: #f4fdf6; border: 1px solid #28a745; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
@@ -25,12 +28,12 @@
 <body>
     <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold" id="loader-text">กำลังประมวลผล...</div></div>
 
-    <!-- เอาแถบ รอโอน ออกไปแล้ว เพราะขายแล้วเตะไปบัญชีเลย -->
     <div class="tab-fixed shadow-sm">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
         <button class="tab-item" id="tab-wait" onclick="filterInventory('รอส่งซ่อม')">รอส่งซ่อม</button>
         <button class="tab-item" id="tab-repair" onclick="filterInventory('กำลังซ่อม')">กำลังซ่อม</button>
         <button class="tab-item" id="tab-ready" onclick="filterInventory('พร้อมขาย')">พร้อมขาย</button>
+        <button class="tab-item" id="tab-transfer" onclick="filterInventory('รอโอน')">รอโอน</button>
     </div>
 
     <div class="container">
@@ -180,7 +183,6 @@
                     </div>
                 </div>
             </div>
-            <!-- ปุ่มมีแค่บันทึกการขายเท่านั้น เพื่อเตะไปอยู่หน้าบัญชี -->
             <div class="modal-footer border-top-0 pt-0">
                 <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.85rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ บันทึกการขาย (ย้ายเข้าบัญชี)</button>
             </div>
@@ -217,6 +219,18 @@
             document.getElementById('loader').style.display = 'none';
         }
 
+        // ฟังก์ชั่นเปิด/ปิดซ่อนทุนจริง
+        function toggleSecret(icon) {
+            const container = icon.closest('.col').querySelector('.secret-val');
+            if (container.innerText === '***') {
+                container.innerText = container.getAttribute('data-val');
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            } else {
+                container.innerText = '***';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            }
+        }
+
         function filterInventory(type) {
             currentFilter = type;
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
@@ -248,11 +262,16 @@
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
 
+                        <!-- 💡 เพิ่มช่อง 'อื่นๆ' (ทุนซื้อจริง) แบบปิดตาไว้ตรงนี้ -->
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
-                            <div class="col"><div class="text-muted" style="font-size:0.6rem;">ทุนรถหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">รวมทุนจม</div><div class="fw-bold text-primary">฿${(b.totalInternal||0).toLocaleString()}</div></div>
-                            <div class="col border-start"><div class="text-muted" style="font-size:0.6rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
+                            <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">รวมทุนจม</div><div class="fw-bold text-primary">฿${(b.totalInternal||0).toLocaleString()}</div></div>
+                            <div class="col border-start">
+                                <div class="text-muted" style="font-size:0.55rem;">อื่นๆ <i class="bi bi-eye-slash ms-1" style="cursor:pointer;" onclick="toggleSecret(this)"></i></div>
+                                <div class="fw-bold text-secondary secret-val" data-val="฿${(b.realCost||0).toLocaleString()}" style="font-size:0.8rem;">***</div>
+                            </div>
+                            <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
                         </div>
                         
                         <div class="d-flex gap-2 mt-2">
@@ -354,7 +373,7 @@
                 action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
                 soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
                 customerDetail: document.getElementById('s-customer').value, 
-                prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '', // เซ็ตค่าเริ่มต้นให้เอกสาร
+                prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
                 transferFee: document.getElementById('s-transferFee').value,
                 ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value,
                 ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value,
