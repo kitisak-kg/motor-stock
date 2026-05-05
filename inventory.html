@@ -14,12 +14,8 @@
         .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.85rem; flex: 1; white-space: nowrap; border-bottom: 3px solid transparent; }
         .tab-item.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
         .card-bike { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: none; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .doc-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; }
-        .doc-ok { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .doc-wait { background: #fff3cd; color: #856404; border-color: #ffeeba; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         
-        /* สไตล์กล่องเขียว/กล่องแดง */
         .box-finance { background-color: #f4fdf6; border: 1px solid #28a745; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
         .box-finance-title { color: #198754; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
         .box-deduct { background-color: #fff5f5; border: 1px solid #dc3545; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
@@ -29,12 +25,12 @@
 <body>
     <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold" id="loader-text">กำลังประมวลผล...</div></div>
 
+    <!-- เอาแถบ รอโอน ออกไปแล้ว เพราะขายแล้วเตะไปบัญชีเลย -->
     <div class="tab-fixed shadow-sm">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
         <button class="tab-item" id="tab-wait" onclick="filterInventory('รอส่งซ่อม')">รอส่งซ่อม</button>
         <button class="tab-item" id="tab-repair" onclick="filterInventory('กำลังซ่อม')">กำลังซ่อม</button>
         <button class="tab-item" id="tab-ready" onclick="filterInventory('พร้อมขาย')">พร้อมขาย</button>
-        <button class="tab-item" id="tab-transfer" onclick="filterInventory('รอโอน')">รอโอน</button>
     </div>
 
     <div class="container">
@@ -73,7 +69,6 @@
                     <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
                 </div>
 
-                <!-- กล่องทุนจม (สีฟ้า) -->
                 <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
                     <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
                     <div class="row g-2 align-items-end">
@@ -91,7 +86,18 @@
                     <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
                 </div>
 
-                <!-- กล่องไฟแนนซ์ (สีเขียว) -->
+                <div class="box-deduct">
+                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
+                    <input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
+                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
+                    <div class="row g-1">
+                        <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="m-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="m-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                    </div>
+                </div>
+
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
@@ -103,21 +109,6 @@
                     <input type="number" id="m-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold">
                 </div>
 
-                <!-- กล่องหักเงิน (สีแดง) -->
-                <div class="box-deduct">
-                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
-                    <input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
-                    
-                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
-                    <div class="row g-1">
-                        <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                        <div class="col-8 mt-1"><input type="text" id="m-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="m-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                        <div class="col-8 mt-1"><input type="text" id="m-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="m-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                    </div>
-                </div>
-
-                <!-- กล่องหน้าร้าน -->
                 <div class="bg-success bg-opacity-10 p-2 rounded mb-2 border border-success">
                     <div class="fw-bold text-success small mb-1">หน้าร้าน</div>
                     <div class="row g-1 mb-2">
@@ -134,7 +125,6 @@
                     <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
                 </div>
             </div>
-            <!-- Footer -->
             <div class="modal-footer border-top-0 pt-0">
                 <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบ</button>
                 <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="saveBike()">💾 บันทึกสต็อก</button>
@@ -143,22 +133,32 @@
       </div>
     </div>
 
-    <!-- MODAL ขายรถ / จัดการโอน / ไฟแนนซ์ -->
+    <!-- MODAL ขายรถ -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 จัดการขาย / โอน / ไฟแนนซ์</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 จัดการขายรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-3">
-                <input type="hidden" id="s-rowIdx">
+                <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
                 <div class="row g-2 mb-3">
-                    <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success"></div>
+                    <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
                     <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm"></div>
                 </div>
 
-                <!-- กล่องไฟแนนซ์ -->
+                <div class="box-deduct">
+                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
+                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
+                    <div class="row g-1">
+                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                    </div>
+                </div>
+
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
@@ -167,40 +167,22 @@
                         <div class="col-4"><label class="x-small fw-bold text-dark">อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm"></div>
                     </div>
                     <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
-                    <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold">
-                </div>
-
-                <!-- กล่องหักเงิน -->
-                <div class="box-deduct">
-                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
-                    <input type="number" id="s-transferFee" class="form-control form-control-sm mb-2">
-                    
-                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
-                    <div class="row g-1">
-                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                    </div>
+                    <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
                 </div>
                 
-                <div class="bg-light p-2 rounded border mb-2">
-                    <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน</label>
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="x-small">พรบ.</label><select id="s-prb" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">ภาษี</label><select id="s-tax" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">เล่มรถ</label><select id="s-book" class="form-select form-select-sm"><option>รอเล่มโอน</option><option>มอบให้แล้ว</option></select></div>
-                    </div>
-                    <div class="row g-2 border-top pt-2">
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มให้ใคร (ผู้รับเรื่อง)</label><input type="text" id="s-transferTo" class="form-control form-control-sm" placeholder="เช่น เฮียทองดี"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
+                <div class="bg-dark text-white p-2 rounded mb-2 shadow-sm">
+                    <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
+                    <div class="row text-center align-items-center">
+                        <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">รับจริง(รวมคอม)</small><div id="s-calc-revenue" class="fw-bold text-success" style="font-size:0.8rem;">฿0</div></div>
+                        <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนจมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
+                        <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักค่าโอน+อื่นๆ</small><div id="s-calc-deduct" class="fw-bold text-danger" style="font-size:0.8rem;">฿0</div></div>
+                        <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
                     </div>
                 </div>
             </div>
-            <!-- Footer -->
+            <!-- ปุ่มมีแค่บันทึกการขายเท่านั้น เพื่อเตะไปอยู่หน้าบัญชี -->
             <div class="modal-footer border-top-0 pt-0">
-                <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2 mb-1" style="font-size: 0.8rem;" onclick="processSale('รอโอน')"><i class="bi bi-hourglass-split"></i> บันทึกรอโอน</button>
-                <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ปิดจ๊อบโอนเสร็จ</button>
+                <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.85rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ บันทึกการขาย (ย้ายเข้าบัญชี)</button>
             </div>
         </div>
       </div>
@@ -240,7 +222,7 @@
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
             let tabId = 'tab-all';
             if(type==='รอส่งซ่อม') tabId = 'tab-wait'; if(type==='กำลังซ่อม') tabId = 'tab-repair';
-            if(type==='พร้อมขาย') tabId = 'tab-ready'; if(type==='รอโอน') tabId = 'tab-transfer';
+            if(type==='พร้อมขาย') tabId = 'tab-ready'; 
             document.getElementById(tabId).classList.add('active');
             
             const q = document.getElementById('search').value.toLowerCase();
@@ -252,12 +234,10 @@
                     let statusColor = 'bg-danger';
                     if(b.status === 'พร้อมขาย') statusColor = 'bg-success';
                     if(b.status === 'กำลังซ่อม') statusColor = 'bg-warning text-dark';
-                    if(b.status === 'รอโอน') statusColor = 'bg-info text-dark';
 
-                    const prb = b.prbStatus || 'รอดำเนินการ'; const tax = b.taxStatus || 'รอดำเนินการ'; const bookTrans = b.bookTransferStatus || 'รอดำเนินการ';
                     const colorShow = b.changedColor ? `<span class="text-primary">(ทำสี: ${b.changedColor})</span>` : (b.color||'-');
 
-                    html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':(b.status==='รอโอน'?'border-info':'border-warning')}">
+                    html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="fw-bold text-dark" style="font-size: 0.85rem;">${b.plate || '-'} ${b.brand||''} ${b.model||''} ปี ${b.year||''} | สี: ${colorShow}</div>
                             <span class="badge ${statusColor}" style="font-size: 0.6rem;">${b.status}</span>
@@ -267,20 +247,6 @@
                             เลขถัง: ${b.cha || '-'} | ภาษีหมด: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตรหมด: <span class="text-danger fw-bold">${b.idExp || '-'}</span>
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
-                        
-                        ${b.status === 'รอโอน' ? `
-                        <div class="mt-2 p-2 border border-info rounded bg-info bg-opacity-10 text-center">
-                            <div class="fw-bold text-primary mb-1" style="font-size: 0.75rem;"><i class="bi bi-cart-check-fill"></i> รถคันนี้ขายแล้ว (รอโอน) - ${b.saleDate||'-'}</div>
-                            <div class="small text-muted mb-2 text-start px-2 border-bottom pb-1">
-                                <i class="bi bi-person-lines-fill"></i> เล่มอยู่ที่/ส่งให้: <b>${b.transferTo || 'ยังไม่ระบุ'}</b><br>
-                                <i class="bi bi-calendar-event"></i> ส่งเรื่องวันไหน: <b>${b.transferDate || '-'}</b>
-                            </div>
-                            <div class="d-flex gap-1 justify-content-center">
-                                <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
-                                <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
-                                <span class="doc-badge ${bookTrans.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bookTrans.includes('แล้ว')?'✔':'⏳'}</span>
-                            </div>
-                        </div>` : ''}
 
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.6rem;">ทุนรถหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
@@ -291,7 +257,7 @@
                         
                         <div class="d-flex gap-2 mt-2">
                             <button class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold" onclick="openEdit(${b.rowIdx})"><i class="bi bi-pencil"></i> แก้ไขรถ</button>
-                            <button class="btn btn-${b.status==='รอโอน'?'info':'success'} btn-sm flex-grow-1 fw-bold ${b.status==='รอโอน'?'text-white':''}" onclick="openSaleModal(${b.rowIdx})">${b.status==='รอโอน'?'📝 อัปเดตงานโอน':'💰 จัดการขาย'}</button>
+                            <button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 จัดการขาย</button>
                         </div>
                     </div>`;
                 }
@@ -305,6 +271,23 @@
             const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P');
             const totalEl = document.getElementById('m-totalReal');
             if(totalEl) totalEl.innerText = `รวมต้นทุนจม: ฿${(real + repair + inc).toLocaleString()}`;
+        }
+
+        function calcSaleProfit() {
+            const getVal = (id) => Number(document.getElementById(id).value) || 0;
+            const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission');
+            const transferFee = getVal('s-transferFee');
+            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P');
+            const totalInternal = getVal('s-totalInternal'); 
+            
+            const revenue = soldPrice + comm;
+            const deduct = transferFee + ex1 + ex2 + ex3;
+            const profit = revenue - totalInternal - deduct;
+            
+            document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`;
+            document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
+            document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`;
+            document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
         function openEdit(rowIdx) {
@@ -349,18 +332,20 @@
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
             document.getElementById('s-rowIdx').value = rowIdx;
+            document.getElementById('s-totalInternal').value = b.totalInternal || 0; 
+            
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             document.getElementById('s-customer').value = b.customerDetail || '';
-            document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ'; document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ'; document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
-            document.getElementById('s-transferTo').value = b.transferTo || ''; document.getElementById('s-transferDate').value = b.transferDate || '';
             
             document.getElementById('s-transferFee').value = b.transferFee || 0;
             document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0;
             document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; document.getElementById('s-finTidlor').value = b.finTidlor || 0; document.getElementById('s-finOther').value = b.finOther || 0; document.getElementById('s-saleCommission').value = b.saleCommission || 0;
+            
+            calcSaleProfit(); 
             saleModal.show();
         }
 
@@ -368,9 +353,8 @@
             const payload = { 
                 action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
                 soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
-                customerDetail: document.getElementById('s-customer').value, prbStatus: document.getElementById('s-prb').value, 
-                taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value,
-                transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                customerDetail: document.getElementById('s-customer').value, 
+                prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '', // เซ็ตค่าเริ่มต้นให้เอกสาร
                 transferFee: document.getElementById('s-transferFee').value,
                 ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value,
                 ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value,
