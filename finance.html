@@ -18,6 +18,11 @@
         .doc-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; }
         .doc-ok { background: #d4edda; color: #155724; border-color: #c3e6cb; }
         .doc-wait { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+        
+        .box-finance { background-color: #f4fdf6; border: 1px solid #28a745; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+        .box-finance-title { color: #198754; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
+        .box-deduct { background-color: #fff5f5; border: 1px solid #dc3545; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+        .box-deduct-title { color: #dc3545; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -56,7 +61,7 @@
         <a href="finance.html" class="nav-btn active"><i class="bi bi-wallet2-fill"></i>บัญชี</a>
     </div>
 
-    <!-- MODAL ขายรถ / จัดการโอน / จัดไฟแนนซ์ -->
+    <!-- MODAL ขายรถ / จัดการโอน -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -71,29 +76,29 @@
                     <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm"></div>
                 </div>
 
-                <div class="bg-success bg-opacity-10 p-2 rounded mb-2 border border-success">
-                    <div class="fw-bold text-success small mb-1">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
+                <!-- กล่องไฟแนนซ์ -->
+                <div class="box-finance">
+                    <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
                         <div class="col-4"><label class="x-small fw-bold text-dark">CIMB</label><input type="number" id="s-finCIMB" class="form-control form-control-sm"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm"></div>
                     </div>
                     <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
-                    <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary">
+                    <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold">
                 </div>
 
-                <div class="bg-danger bg-opacity-10 p-2 rounded mb-2 border border-danger">
-                    <div class="fw-bold text-danger small mb-1">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <div class="row g-2 align-items-end mb-1">
-                        <div class="col-12"><label class="x-small fw-bold">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm"></div>
-                    </div>
-                    <div class="mt-1 border-top pt-2 border-danger border-opacity-50">
-                        <label class="x-small fw-bold text-danger">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</label>
-                        <div class="row g-1 mt-1">
-                            <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                            <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                            <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
-                        </div>
+                <!-- กล่องหักเงิน -->
+                <div class="box-deduct">
+                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
+                    <input type="number" id="s-transferFee" class="form-control form-control-sm mb-2">
+                    
+                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
+                    <div class="row g-1">
+                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
                     </div>
                 </div>
                 
@@ -110,9 +115,9 @@
                     </div>
                 </div>
             </div>
-            <!-- ปุ่มอยู่ Footer ตลอดเวลา -->
+            <!-- ปุ่มเซฟลอยอยู่ด้านล่าง -->
             <div class="modal-footer border-top-0 pt-0">
-                <button class="btn btn-primary w-100 fw-bold shadow-sm py-2 mb-2" onclick="processSale('ขายแล้ว')">💾 อัปเดตข้อมูล</button>
+                <button class="btn btn-primary w-100 fw-bold shadow-sm py-2 mb-1" onclick="processSale('ขายแล้ว')">💾 อัปเดตข้อมูล</button>
                 <button class="btn btn-outline-danger w-100 btn-sm" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าสต็อก (ลูกค้าไม่เอา)</button>
             </div>
         </div>
@@ -268,6 +273,7 @@
         }
         
         function switchTab(tab) { ['sold','cap'].forEach(t => { document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none'; document.getElementById('tab-'+t).classList.toggle('active', t === tab); }); }
+        window.onload = loadFinanceData;
     </script>
 </body>
 </html>
