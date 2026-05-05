@@ -43,9 +43,10 @@
             <hr>
             <label class="fw-bold small mb-1">2. เพิ่มรายการซ่อม (รอของให้พิมพ์เลข 0)</label>
             <div class="row g-2">
-                <div class="col-7"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการ/อะไหล่"></div>
-                <div class="col-5"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา (ใส่ 0 ได้)"></div>
-                <div class="col-9"><input type="text" id="r-shop" class="form-control form-control-sm" placeholder="อู่/ร้าน"></div>
+                <!-- เพิ่ม onkeypress เพื่อดักจับปุ่ม Enter -->
+                <div class="col-7"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการ/อะไหล่" onkeypress="handleEnter(event)"></div>
+                <div class="col-5"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา (ใส่ 0 ได้)" onkeypress="handleEnter(event)"></div>
+                <div class="col-9"><input type="text" id="r-shop" class="form-control form-control-sm" placeholder="อู่/ร้าน" onkeypress="handleEnter(event)"></div>
                 <div class="col-3"><button class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="addTemp()">+ เพิ่ม</button></div>
             </div>
 
@@ -75,9 +76,9 @@
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-primary">แก้ไขรายการซ่อม</h6>
             <input type="hidden" id="e-rowIdx">
-            <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ">
-            <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา">
-            <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่">
+            <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+            <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+            <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่" onkeypress="if(event.key === 'Enter') updateRepairItem()">
             <button class="btn btn-primary w-100 fw-bold py-2" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
             <button class="btn btn-light w-100 mt-2 text-muted" data-bs-dismiss="modal">ยกเลิก</button>
         </div>
@@ -144,20 +145,41 @@
             location.reload();
         }
 
+        // ฟังก์ชันดักจับการกดปุ่ม Enter
+        function handleEnter(e) {
+            if(e.key === 'Enter') {
+                e.preventDefault(); // ป้องกันไม่ให้ฟอร์มรีเฟรชเอง
+                addTemp();
+            }
+        }
+
         function addTemp() {
-            const name = document.getElementById('r-item').value;
-            const priceVal = document.getElementById('r-price').value; 
-            const shop = document.getElementById('r-shop').value;
+            const nameInput = document.getElementById('r-item');
+            const priceInput = document.getElementById('r-price');
+            const shopInput = document.getElementById('r-shop');
+
+            const name = nameInput.value;
+            const priceVal = priceInput.value; 
+            const shop = shopInput.value;
             
             // ตรวจจับถ้าเป็นค่าว่าง (แต่ยอมรับเลข 0)
             if(!name || priceVal === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้พิมพ์เลข 0)");
             
             tempRepairs.push({ name, price: Number(priceVal), shop });
-            document.getElementById('r-item').value = ''; document.getElementById('r-price').value = ''; document.getElementById('r-shop').value = '';
+            
+            // เคลียร์ค่าหลังเพิ่ม
+            nameInput.value = ''; 
+            priceInput.value = ''; 
+            shopInput.value = '';
+            
             renderTemp();
+
+            // ให้ Cursor เด้งกลับไปช่องแรกอัตโนมัติ เพื่อพิมพ์รายการต่อไปได้เลย
+            nameInput.focus();
         }
 
         function removeTemp(index) { tempRepairs.splice(index, 1); renderTemp(); }
+        
         function renderTemp() {
             const box = document.getElementById('temp-box');
             if(tempRepairs.length === 0) { box.classList.add('d-none'); return; }
