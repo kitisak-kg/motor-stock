@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
-        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 2000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        /* จุดแก้ปุ่มโดนบัง: เปลี่ยน z-index เป็น 1040 ให้อยู่ใต้ Modal */
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1040; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
         .tab-fixed { background: white; position: sticky; top: 0; z-index: 900; margin-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-around; overflow-x: auto; }
@@ -68,37 +69,38 @@
                 <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
             </div>
 
-            <!-- ทุนจม -->
+            <!-- ทุนจม (3 ช่อง) -->
             <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
-                <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้าน)</div>
+                <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
                 <div class="row g-2 align-items-end">
                     <div class="col-6"><label class="x-small">8. ทุนซื้อจริง</label><input type="number" id="m-realCost" class="form-control form-control-sm" oninput="calcTotal()"></div>
                     <div class="col-6"><label class="x-small">9. ค่าซ่อมสะสม</label><input type="number" id="m-repairReal" class="form-control form-control-sm bg-light" readonly></div>
                 </div>
                 <div class="mt-2 border-top pt-2 border-primary border-opacity-50">
-                    <label class="x-small fw-bold text-primary">ค่าใช้จ่ายที่ "รวมในต้นทุนรถ"</label>
+                    <label class="x-small fw-bold text-primary">ค่าใช้จ่ายที่ "รวมในทุนรถ" (บวกทุน 3 ช่อง)</label>
                     <div class="row g-1 mt-1">
                         <div class="col-8"><input type="text" id="m-inc1N" class="form-control form-control-sm" placeholder="รายการที่ 1"></div><div class="col-4"><input type="number" id="m-inc1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
                         <div class="col-8 mt-1"><input type="text" id="m-inc2N" class="form-control form-control-sm" placeholder="รายการที่ 2"></div><div class="col-4 mt-1"><input type="number" id="m-inc2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
                         <div class="col-8 mt-1"><input type="text" id="m-inc3N" class="form-control form-control-sm" placeholder="รายการที่ 3"></div><div class="col-4 mt-1"><input type="number" id="m-inc3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="m-inc4N" class="form-control form-control-sm" placeholder="รายการที่ 4"></div><div class="col-4 mt-1"><input type="number" id="m-inc4P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
+                        <input type="hidden" id="m-inc4N"><input type="hidden" id="m-inc4P" value="0"> <!-- ซ่อนช่องที่ 4 ไว้เพื่อไม่ให้ข้อมูลเดิมพัง -->
                     </div>
                 </div>
                 <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
             </div>
 
-            <!-- หักตอนขาย -->
+            <!-- หักตอนขาย (4 ช่อง) -->
             <div class="bg-danger bg-opacity-10 p-2 rounded mb-2 border border-danger">
                 <div class="fw-bold text-danger small mb-1">ค่าใช้จ่ายตอนขาย (หักออกจากกำไรตอนขาย)</div>
                 <div class="row g-2 align-items-end">
-                    <div class="col-12"><label class="x-small">10. ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                    <div class="col-12"><label class="x-small">10. ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm"></div>
                 </div>
                 <div class="mt-2 border-top pt-2 border-danger border-opacity-50">
-                    <label class="x-small fw-bold text-danger">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</label>
+                    <label class="x-small fw-bold text-danger">รายการหักตอนขายอื่นๆ (มีให้ 4 ช่อง)</label>
                     <div class="row g-1 mt-1">
-                        <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="m-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="m-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="m-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="m-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcTotal()"></div>
+                        <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="m-ex2P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="m-ex3P" class="form-control form-control-sm" placeholder="ราคา"></div>
+                        <div class="col-8 mt-1"><input type="text" id="m-ex4N" class="form-control form-control-sm" placeholder="รายการหัก 4"></div><div class="col-4 mt-1"><input type="number" id="m-ex4P" class="form-control form-control-sm" placeholder="ราคา"></div>
                     </div>
                 </div>
             </div>
@@ -128,9 +130,8 @@
                 <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
             </div>
             
-            <!-- จุดที่แก้ไข: ดึงปุ่มลบมาโชว์คู่กับปุ่มบันทึกให้เห็นชัดๆ เป็นสีแดง -->
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบรถ</button>
+            <div class="d-flex gap-2 mt-3 mb-2">
+                <button class="btn btn-danger btn-sm fw-bold py-2 shadow-sm" id="btn-delete" style="display:none; width: 30%;" onclick="deleteBike()">🗑️ ลบรถ</button>
                 <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="saveBike()">💾 บันทึกข้อมูล</button>
             </div>
         </div>
@@ -258,7 +259,7 @@
             const getVal = (id) => { const el = document.getElementById(id); return el ? Number(el.value) || 0 : 0; };
             const repair = getVal('m-repairReal');
             const real = getVal('m-realCost');
-            const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P') + getVal('m-inc4P');
+            const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P');
             
             const totalEl = document.getElementById('m-totalReal');
             if(totalEl) totalEl.innerText = `รวมต้นทุนจม: ฿${(real + repair + inc).toLocaleString()}`;
@@ -271,15 +272,13 @@
             
             ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
              'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
-             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P', 'inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','inc4N','inc4P',
+             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','ex4N','ex4P', 'inc1N','inc1P','inc2N','inc2P','inc3N','inc3P',
              'finCIMB','finTidlor','finOther','saleCommission'].forEach(id => {
                 const el = document.getElementById('m-'+id);
                 if(el) el.value = b[id] || ''; 
             });
             
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
-            const repShow = document.getElementById('m-repairShow'); if(repShow) repShow.value = b.repairSum || 0;
-            
             calcTotal(); 
             document.getElementById('btn-delete').style.display = 'block'; 
             bikeModal.show();
@@ -289,7 +288,7 @@
             const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike' };
             ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
              'realCost','transferFee','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
-             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P', 'inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','inc4N','inc4P',
+             'ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','ex4N','ex4P', 'inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','inc4N','inc4P',
              'finCIMB','finTidlor','finOther','saleCommission'].forEach(id => {
                 const el = document.getElementById('m-'+id);
                 if(el) payload[id] = el.value;
@@ -315,7 +314,6 @@
         }
 
         async function deleteBike() { 
-            // แก้ไขข้อความยืนยันการลบให้ชัดเจนตามสั่ง
             if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
             document.getElementById('loader').style.display = 'flex'; 
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); 
