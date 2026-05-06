@@ -22,9 +22,12 @@
 </head>
 <body>
     <div class="container mt-4">
-        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
+        <!-- 💡 เพิ่มปุ่ม พิมพ์รายงาน ไว้ข้างๆ โลโก้ -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
+            <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงานสรุป</a>
+        </div>
         
-        <!-- ปรับเป็น 4 กล่อง 2x2 ให้เห็นยอดเงินทุนชัดเจน -->
         <div class="row g-2 mb-4">
             <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
             <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
@@ -45,12 +48,10 @@
                 <div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div>
                 <div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
             </div>
-            
             <div class="col-12 col-md-4">
                 <div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div>
                 <div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
             </div>
-            
             <div class="col-12 col-md-4">
                 <div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (> 1 เดือน)</div>
                 <div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
@@ -73,7 +74,6 @@
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
                 
-                // โชว์ยอดเงินทุน
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
