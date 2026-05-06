@@ -9,15 +9,11 @@
         body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; }
         .nav-header { background: white; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .report-box { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* สไตล์ตารางให้ดูเป็นทางการ (โปร่งใส ไม่มีสีดำทึบ เพื่อประหยัดหมึกปริ้นเตอร์) */
         table { font-size: 0.85rem; width: 100%; border-collapse: collapse; }
         th { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 8px; text-align: center; }
         td { border: 1px solid #dee2e6; padding: 8px; vertical-align: middle; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        
-        /* 🖨️ โหมดการพิมพ์ (ซ่อนปุ่มและเมนูต่างๆ ทั้งหมดตอนสั่งปริ้นท์) */
         @media print {
             .no-print { display: none !important; }
             body { background: white; margin: 0; padding: 0; }
@@ -33,7 +29,6 @@
     </div>
 
     <div class="container mt-4">
-        <!-- แผงควบคุมเลือกว่าจะปริ้นท์อะไร -->
         <div class="row g-2 mb-4 no-print">
             <div class="col-12 col-md-4">
                 <label class="fw-bold small text-muted">1. เลือกประเภทรายงาน</label>
@@ -44,21 +39,16 @@
                 </select>
             </div>
             <div class="col-12 col-md-4" id="month-filter-box" style="display:none;">
-                <label class="fw-bold small text-muted">2. เลือกเดือนที่ต้องการ (เฉพาะรายงานขาย)</label>
+                <label class="fw-bold small text-muted">2. เลือกเดือนที่ต้องการ</label>
                 <select id="report-month" class="form-select border-success shadow-sm" onchange="buildReport()"></select>
             </div>
         </div>
-
-        <!-- กล่องกระดาษขาวสำหรับปริ้นท์ -->
         <div class="report-box" id="print-area">
             <div class="text-center mb-4">
                 <h4 class="fw-bold" id="r-title">รายงาน MOTOR MASTER</h4>
                 <div class="text-muted small" id="r-subtitle">วันที่พิมพ์: -</div>
             </div>
-            <div id="r-content">
-                <!-- ตารางข้อมูลจะถูกสร้างมาแปะตรงนี้ -->
-                <div class="text-center p-5 text-muted">กำลังโหลดข้อมูล...</div>
-            </div>
+            <div id="r-content"><div class="text-center p-5 text-muted">กำลังโหลดข้อมูล...</div></div>
         </div>
     </div>
 
@@ -71,7 +61,6 @@
             const res = await fetch(`${API_URL}?action=getMasterData`);
             globalData = await res.json();
             
-            // เตรียม Dropdown เดือนสำหรับยอดขาย
             let months = new Set();
             globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว' && b.saleDate).forEach(b => {
                 let p = b.saleDate.split('/');
@@ -80,55 +69,28 @@
             let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
             Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เดือน ${m}</option>`);
             document.getElementById('report-month').innerHTML = mOptions;
-
-            buildReport(); // โหลดรายงานเริ่มต้น
+            buildReport(); 
         };
 
         function buildReport() {
             if(!globalData) return;
             const type = document.getElementById('report-type').value;
-            const monthBox = document.getElementById('month-filter-box');
-            
-            monthBox.style.display = (type === 'sales') ? 'block' : 'none';
-
-            if(type === 'stock') renderStockReport();
-            else if(type === 'sales') renderSalesReport();
-            else if(type === 'repair') renderRepairReport();
+            document.getElementById('month-filter-box').style.display = (type === 'sales') ? 'block' : 'none';
+            if(type === 'stock') renderStockReport(); else if(type === 'sales') renderSalesReport(); else if(type === 'repair') renderRepairReport();
         }
 
         function renderStockReport() {
             document.getElementById('r-title').innerText = "📦 รายงานสต็อกรถมอเตอร์ไซค์คงเหลือ";
             const bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว');
-            
-            let html = `<table>
-                <thead>
-                    <tr><th>ลำดับ</th><th>ทะเบียน</th><th>รุ่นรถ / สี</th><th>สถานะ</th><th class="text-right">ทุนจมรวม</th><th class="text-right">ราคาเป้าหมาย</th></tr>
-                </thead>
-                <tbody>`;
-            
+            let html = `<table><thead><tr><th>ลำดับ</th><th>ทะเบียน</th><th>รุ่นรถ / สี</th><th>สถานะ</th><th class="text-right">ทุนจมรวม</th><th class="text-right">ราคาเป้าหมาย</th></tr></thead><tbody>`;
             let totalCost = 0; let totalTarget = 0;
             bikes.forEach((b, i) => {
-                html += `<tr>
-                    <td class="text-center">${i+1}</td>
-                    <td><b>${b.plate || '-'}</b><br><span style="font-size:0.7rem; color:#666;">ถัง: ${b.cha||'-'}</span></td>
-                    <td>${b.brand||''} ${b.model||''}<br><span style="font-size:0.7rem; color:#666;">สี: ${b.changedColor || b.color || '-'}</span></td>
-                    <td class="text-center">${b.status}</td>
-                    <td class="text-right">฿${(b.totalInternal||0).toLocaleString()}</td>
-                    <td class="text-right text-success fw-bold">฿${(b.targetPrice||0).toLocaleString()}</td>
-                </tr>`;
+                html += `<tr><td class="text-center">${i+1}</td><td><b>${b.plate || '-'}</b><br><span style="font-size:0.7rem; color:#666;">ถัง: ${b.cha||'-'}</span></td>
+                <td>${b.brand||''} ${b.model||''}<br><span style="font-size:0.7rem; color:#666;">สี: ${b.changedColor || b.color || '-'}</span></td>
+                <td class="text-center">${b.status}</td><td class="text-right">฿${(b.totalInternal||0).toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.targetPrice||0).toLocaleString()}</td></tr>`;
                 totalCost += b.totalInternal; totalTarget += b.targetPrice;
             });
-
-            html += `</tbody>
-                <tfoot>
-                    <tr class="fw-bold bg-light">
-                        <td colspan="4" class="text-right">รวมทั้งหมด (${bikes.length} คัน)</td>
-                        <td class="text-right text-danger">฿${totalCost.toLocaleString()}</td>
-                        <td class="text-right text-success">฿${totalTarget.toLocaleString()}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
-            
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="4" class="text-right">รวมทั้งหมด (${bikes.length} คัน)</td><td class="text-right text-danger">฿${totalCost.toLocaleString()}</td><td class="text-right text-success">฿${totalTarget.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
 
@@ -139,89 +101,35 @@
             document.getElementById('r-title').innerText = title;
 
             let bikes = globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว');
-            if(filterMonth !== 'all') {
-                bikes = bikes.filter(b => {
-                    let p = (b.saleDate||'').split('/');
-                    return (p.length === 3 && `${p[1]}/${p[2]}` === filterMonth);
-                });
-            }
+            if(filterMonth !== 'all') bikes = bikes.filter(b => { let p = (b.saleDate||'').split('/'); return (p.length === 3 && `${p[1]}/${p[2]}` === filterMonth); });
 
-            let html = `<table>
-                <thead>
-                    <tr><th>วัน/เดือน/ปี</th><th>ทะเบียน / รุ่น</th><th class="text-right">ทุนจมรวม</th><th class="text-right">หักค่าใช้จ่ายโอน</th><th class="text-right">ราคาขายสุทธิ</th><th class="text-right">กำไรสุทธิ</th></tr>
-                </thead>
-                <tbody>`;
-            
+            let html = `<table><thead><tr><th>วัน/เดือน/ปี</th><th>ทะเบียน / รุ่น</th><th class="text-right">ทุนจมรวม</th><th class="text-right">หักค่าใช้จ่ายโอน</th><th class="text-right">ราคาขายสุทธิ</th><th class="text-right">กำไรสุทธิ</th></tr></thead><tbody>`;
             let sumCost = 0; let sumDeduct = 0; let sumRevenue = 0; let sumProfit = 0;
             bikes.forEach(b => {
-                const deduct = (b.transferFee||0) + (b.exTotal||0);
-                const revenue = (b.soldPrice||0) + (b.saleCommission||0);
-                html += `<tr>
-                    <td class="text-center">${b.saleDate||'-'}</td>
-                    <td><b>${b.plate || '-'}</b> ${b.model||''}</td>
-                    <td class="text-right text-danger">฿${(b.totalInternal||0).toLocaleString()}</td>
-                    <td class="text-right text-danger">฿${deduct.toLocaleString()}</td>
-                    <td class="text-right fw-bold">฿${revenue.toLocaleString()}</td>
-                    <td class="text-right text-success fw-bold">฿${(b.profit||0).toLocaleString()}</td>
-                </tr>`;
+                const deduct = (b.transferFee||0) + (b.exTotal||0); const revenue = (b.soldPrice||0) + (b.saleCommission||0);
+                html += `<tr><td class="text-center">${b.saleDate||'-'}</td><td><b>${b.plate || '-'}</b> ${b.model||''}</td>
+                <td class="text-right text-danger">฿${(b.totalInternal||0).toLocaleString()}</td><td class="text-right text-danger">฿${deduct.toLocaleString()}</td>
+                <td class="text-right fw-bold">฿${revenue.toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.profit||0).toLocaleString()}</td></tr>`;
                 sumCost += b.totalInternal; sumDeduct += deduct; sumRevenue += revenue; sumProfit += b.profit;
             });
-
-            html += `</tbody>
-                <tfoot>
-                    <tr class="fw-bold bg-light">
-                        <td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td>
-                        <td class="text-right text-danger">฿${sumCost.toLocaleString()}</td>
-                        <td class="text-right text-danger">฿${sumDeduct.toLocaleString()}</td>
-                        <td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td>
-                        <td class="text-right text-success fw-bold" style="font-size:1rem;">฿${sumProfit.toLocaleString()}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
-            
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right text-danger">฿${sumDeduct.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
 
         function renderRepairReport() {
             document.getElementById('r-title').innerText = "🛠️ รายงานประวัติและสรุปค่าซ่อมรถ (เฉพาะรถที่กำลังทำและในสต็อก)";
-            // ดึงเฉพาะรถที่ยังไม่ขาย แต่มีประวัติซ่อม
             const bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && b.repairSum > 0);
             const allRepairs = globalData.repairs || [];
-
-            let html = `<table>
-                <thead>
-                    <tr><th>ทะเบียน / รุ่นรถ</th><th>สถานะปัจจุบัน</th><th>รายการอะไหล่และงานซ่อม (ย่อย)</th><th class="text-right">รวมค่าซ่อมคันนี้</th></tr>
-                </thead>
-                <tbody>`;
-
+            let html = `<table><thead><tr><th>ทะเบียน / รุ่นรถ</th><th>สถานะปัจจุบัน</th><th>รายการอะไหล่และงานซ่อม (ย่อย)</th><th class="text-right">รวมค่าซ่อมคันนี้</th></tr></thead><tbody>`;
             let grandTotal = 0;
             bikes.forEach(b => {
-                // ดึงรายการซ่อมย่อยของรถคันนี้มาเรียงเป็น bullet
                 const myRepairs = allRepairs.filter(r => r.bikeId === b.id);
                 let repairLines = `<ul style="margin:0; padding-left:20px; font-size:0.75rem;">`;
-                myRepairs.forEach(r => {
-                    repairLines += `<li>${r.item} <span class="text-muted">(${r.shop})</span>: <b>฿${r.price.toLocaleString()}</b></li>`;
-                });
-                repairLines += `</ul>`;
-
-                html += `<tr>
-                    <td><b>${b.plate || '-'}</b><br>${b.model||''}</td>
-                    <td class="text-center">${b.status}</td>
-                    <td>${repairLines}</td>
-                    <td class="text-right text-danger fw-bold">฿${(b.repairSum||0).toLocaleString()}</td>
-                </tr>`;
+                myRepairs.forEach(r => repairLines += `<li>${r.item} <span class="text-muted">(${r.shop})</span>: <b>฿${r.price.toLocaleString()}</b></li>`); repairLines += `</ul>`;
+                html += `<tr><td><b>${b.plate || '-'}</b><br>${b.model||''}</td><td class="text-center">${b.status}</td><td>${repairLines}</td><td class="text-right text-danger fw-bold">฿${(b.repairSum||0).toLocaleString()}</td></tr>`;
                 grandTotal += b.repairSum;
             });
-
-            html += `</tbody>
-                <tfoot>
-                    <tr class="fw-bold bg-light">
-                        <td colspan="3" class="text-right">ยอดรวมค่าซ่อมรถทั้งหมดที่จมในสต็อกขณะนี้</td>
-                        <td class="text-right text-danger" style="font-size:1rem;">฿${grandTotal.toLocaleString()}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
-            
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">ยอดรวมค่าซ่อมรถทั้งหมดที่จมในสต็อกขณะนี้</td><td class="text-right text-danger" style="font-size:1rem;">฿${grandTotal.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
     </script>
