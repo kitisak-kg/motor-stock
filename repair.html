@@ -56,9 +56,7 @@
         </div>
 
         <h6 class="fw-bold text-muted small m-0 mb-2">ประวัติซ่อมที่บันทึกแล้ว (กดลบ/แก้ได้)</h6>
-        <div id="repair-history" class="list-group shadow-sm small mb-4">
-            <div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>
-        </div>
+        <div id="repair-history" class="list-group shadow-sm small mb-4"><div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div></div>
     </div>
 
     <div class="nav-bottom">
@@ -69,13 +67,28 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
+    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
+                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-edit-repair" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-primary">แก้ไขรายการซ่อม</h6>
             <input type="hidden" id="e-rowIdx">
-            <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-            <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-            <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+            <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ">
+            <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา">
+            <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่">
             <button class="btn btn-primary w-100 fw-bold py-2" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
             <button class="btn btn-light w-100 mt-2 text-muted" data-bs-dismiss="modal">ยกเลิก</button>
         </div>
@@ -84,8 +97,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let tempRepairs = []; let editModal;
-        let allRepairBikes = []; let allReadyBikes = [];
+        let tempRepairs = []; let editModal; let allRepairBikes = []; let allReadyBikes = [];
+
+        // 🔒 ระบบ PIN
+        let pendingPinAction = null; let pinModalInstance = null;
+        function executeWithPin(callback) {
+            if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
+            document.getElementById('global-pin').value = '';
+            pendingPinAction = callback;
+            pinModalInstance.show();
+            setTimeout(() => document.getElementById('global-pin').focus(), 500);
+        }
+        document.getElementById('btn-confirm-pin').addEventListener('click', () => {
+            const pin = document.getElementById('global-pin').value;
+            if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
+            pinModalInstance.hide();
+            if(pendingPinAction) pendingPinAction(pin);
+        });
+        document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
         async function init() {
             editModal = new bootstrap.Modal(document.getElementById('modal-edit-repair'));
@@ -109,31 +138,31 @@
                 if(txt.toLowerCase().includes(filterText)) selReady.innerHTML += `<option value="${b.id}">${txt}</option>`;
             });
         }
-
         function filterBikes() { renderDropdowns(document.getElementById('search-bike').value.toLowerCase()); }
 
         function handleSelectBike(type) {
             let bikeId = "";
             if (type === 'repair') {
-                bikeId = document.getElementById('select-bike-repair').value;
-                document.getElementById('select-bike-ready').value = ""; 
+                bikeId = document.getElementById('select-bike-repair').value; document.getElementById('select-bike-ready').value = ""; 
                 if(bikeId) { document.getElementById('btn-mark-ready').classList.remove('d-none'); document.getElementById('btn-mark-repair').classList.add('d-none'); } 
                 else { document.getElementById('btn-mark-ready').classList.add('d-none'); }
             } else {
-                bikeId = document.getElementById('select-bike-ready').value;
-                document.getElementById('select-bike-repair').value = ""; 
+                bikeId = document.getElementById('select-bike-ready').value; document.getElementById('select-bike-repair').value = ""; 
                 if(bikeId) { document.getElementById('btn-mark-repair').classList.remove('d-none'); document.getElementById('btn-mark-ready').classList.add('d-none'); } 
                 else { document.getElementById('btn-mark-repair').classList.add('d-none'); }
             }
             document.getElementById('selected-bike-id').value = bikeId; loadRepairHistory(bikeId);
         }
 
-        async function updateStatus(newStatus) {
+        function updateStatus(newStatus) {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus }) });
-            location.reload();
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
         }
 
         function handleEnter(e) { if(e.key === 'Enter') { e.preventDefault(); addTemp(); } }
@@ -161,13 +190,17 @@
             document.getElementById('temp-items').innerHTML = html; document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
         }
 
-        async function saveAllRepairs() {
+        function saveAllRepairs() {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return alert("กรุณาเลือกรถครับ");
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs }) });
-            tempRepairs = []; renderTemp(); await loadRepairHistory(bikeId);
-            document.getElementById('loader').style.display = 'none';
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
+                tempRepairs = []; renderTemp(); await loadRepairHistory(bikeId);
+                document.getElementById('loader').style.display = 'none';
+            });
         }
 
         async function loadRepairHistory(bikeId) {
@@ -180,7 +213,7 @@
                     <div><b>${r.name}</b><br><small class="text-muted">${r.shop}</small></div>
                     <div class="text-end">
                         <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
-                        <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx}, '${bikeId}')"><i class="bi bi-trash"></i></span></div>
+                        <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx})"><i class="bi bi-trash"></i></span></div>
                     </div>
                 </div>`; 
                 total += r.price; 
@@ -194,19 +227,27 @@
             editModal.show();
         }
 
-        async function updateRepairItem() {
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value }) });
-            editModal.hide(); await loadRepairHistory(document.getElementById('selected-bike-id').value);
-            document.getElementById('loader').style.display = 'none';
+        function updateRepairItem() {
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
+                editModal.hide(); await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                document.getElementById('loader').style.display = 'none';
+            });
         }
 
-        async function deleteRepair(rId, bikeId) {
+        function deleteRepair(rId) {
             if(!confirm('ลบรายการซ่อมนี้?')) return;
-            document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId }) });
-            await loadRepairHistory(bikeId);
-            document.getElementById('loader').style.display = 'none';
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
+                await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                document.getElementById('loader').style.display = 'none';
+            });
         }
         window.onload = init;
     </script>
