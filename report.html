@@ -2,18 +2,25 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>พิมพ์รายงาน - MOTOR MASTER</title>
+    <title>รายงาน - MOTOR MASTER</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; }
-        .nav-header { background: white; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
+        .nav-header { background: white; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .report-box { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1040; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; }
+        .nav-btn.active { color: #0d6efd; }
+        .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+
         table { font-size: 0.85rem; width: 100%; border-collapse: collapse; }
         th { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 8px; text-align: center; }
         td { border: 1px solid #dee2e6; padding: 8px; vertical-align: middle; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
+        
         @media print {
             .no-print { display: none !important; }
             body { background: white; margin: 0; padding: 0; }
@@ -23,33 +30,45 @@
 </head>
 <body>
     <div class="nav-header d-flex justify-content-between align-items-center no-print">
-        <a href="index.html" class="btn btn-light border fw-bold text-secondary"><i class="bi bi-arrow-left"></i> กลับหน้าแรก</a>
-        <h5 class="fw-bold m-0 text-primary"><i class="bi bi-printer-fill"></i> ระบบพิมพ์รายงานสรุป</h5>
-        <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="window.print()"><i class="bi bi-printer"></i> สั่งปริ้นท์หน้านี้</button>
+        <h5 class="fw-bold m-0 text-primary"><i class="bi bi-file-earmark-bar-graph-fill"></i> ศูนย์รวมรายงาน</h5>
+        <button class="btn btn-dark fw-bold px-3 shadow-sm btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> ปริ้นท์</button>
     </div>
 
-    <div class="container mt-4">
-        <div class="row g-2 mb-4 no-print">
-            <div class="col-12 col-md-4">
-                <label class="fw-bold small text-muted">1. เลือกประเภทรายงาน</label>
-                <select id="report-type" class="form-select border-primary shadow-sm" onchange="buildReport()">
-                    <option value="stock">📦 รายงานสต็อกรถคงเหลือ</option>
-                    <option value="sales">💰 รายงานยอดขายและกำไร (แยกเดือน)</option>
-                    <option value="repair">🛠️ รายงานสรุปค่าซ่อมรถแต่ละคัน</option>
+    <div class="container mt-3">
+        <div class="row g-2 mb-3 no-print">
+            <div class="col-12">
+                <label class="fw-bold small text-muted">เลือกประเภทรายงาน</label>
+                <select id="report-type" class="form-select border-primary shadow-sm fw-bold" onchange="buildReport()">
+                    <option value="stock">1. 📦 สรุปสต็อกรวมทั้งหมด (ตามที่ลง)</option>
+                    <option value="repairing">2. 🛠️ สรุปรถที่กำลังซ่อม / รอซ่อม (เช็คงานอู่)</option>
+                    <option value="ready_fake">3. 🟢 รถพร้อมขาย (ทุนหลอก/หน้าร้าน) แยกตามรุ่น</option>
+                    <option value="ready_real">4. 🔴 รถพร้อมขาย (ทุนจริง/เถ้าแก่) แยกตามรุ่น</option>
+                    <option value="sales">5. 💰 รายงานยอดขายและกำไรสุทธิ (รายเดือน)</option>
                 </select>
             </div>
-            <div class="col-12 col-md-4" id="month-filter-box" style="display:none;">
-                <label class="fw-bold small text-muted">2. เลือกเดือนที่ต้องการ</label>
+            <div class="col-12" id="month-filter-box" style="display:none;">
                 <select id="report-month" class="form-select border-success shadow-sm" onchange="buildReport()"></select>
             </div>
         </div>
+
         <div class="report-box" id="print-area">
             <div class="text-center mb-4">
-                <h4 class="fw-bold" id="r-title">รายงาน MOTOR MASTER</h4>
+                <h5 class="fw-bold" id="r-title">รายงาน MOTOR MASTER</h5>
                 <div class="text-muted small" id="r-subtitle">วันที่พิมพ์: -</div>
             </div>
-            <div id="r-content"><div class="text-center p-5 text-muted">กำลังโหลดข้อมูล...</div></div>
+            <div id="r-content">
+                <div class="text-center p-5 text-muted"><div class="spinner-border text-primary mb-2"></div><br>กำลังประมวลผลข้อมูล...</div>
+            </div>
         </div>
+    </div>
+
+    <!-- เมนู 5 ปุ่ม -->
+    <div class="nav-bottom no-print">
+        <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
+        <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
+        <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
+        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
+        <a href="report.html" class="nav-btn active"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
     <script>
@@ -57,7 +76,7 @@
         let globalData = null;
 
         window.onload = async function() {
-            document.getElementById('r-subtitle').innerText = `วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
+            document.getElementById('r-subtitle').innerText = `พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
             const res = await fetch(`${API_URL}?action=getMasterData`);
             globalData = await res.json();
             
@@ -67,8 +86,9 @@
                 if(p.length === 3) months.add(`${p[1]}/${p[2]}`);
             });
             let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
-            Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เดือน ${m}</option>`);
+            Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เฉพาะเดือน ${m}</option>`);
             document.getElementById('report-month').innerHTML = mOptions;
+
             buildReport(); 
         };
 
@@ -76,60 +96,116 @@
             if(!globalData) return;
             const type = document.getElementById('report-type').value;
             document.getElementById('month-filter-box').style.display = (type === 'sales') ? 'block' : 'none';
-            if(type === 'stock') renderStockReport(); else if(type === 'sales') renderSalesReport(); else if(type === 'repair') renderRepairReport();
+            
+            if(type === 'stock') renderStockReport();
+            else if(type === 'repairing') renderRepairingReport();
+            else if(type === 'ready_fake') renderReadyGrouped('fake');
+            else if(type === 'ready_real') renderReadyGrouped('real');
+            else if(type === 'sales') renderSalesReport();
         }
 
         function renderStockReport() {
-            document.getElementById('r-title').innerText = "📦 รายงานสต็อกรถมอเตอร์ไซค์คงเหลือ";
+            document.getElementById('r-title').innerText = "📦 1. รายงานสต็อกรวมทั้งหมด (รถที่ยังไม่ขาย)";
             const bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว');
-            let html = `<table><thead><tr><th>ลำดับ</th><th>ทะเบียน</th><th>รุ่นรถ / สี</th><th>สถานะ</th><th class="text-right">ทุนจมรวม</th><th class="text-right">ราคาเป้าหมาย</th></tr></thead><tbody>`;
-            let totalCost = 0; let totalTarget = 0;
+            let html = `<table><thead><tr><th>ทะเบียน/เลขถัง</th><th>รุ่น/สี</th><th>สถานะ</th><th class="text-right">ทุนจมปัจจุบัน</th></tr></thead><tbody>`;
+            let totalCost = 0;
             bikes.forEach((b, i) => {
-                html += `<tr><td class="text-center">${i+1}</td><td><b>${b.plate || '-'}</b><br><span style="font-size:0.7rem; color:#666;">ถัง: ${b.cha||'-'}</span></td>
-                <td>${b.brand||''} ${b.model||''}<br><span style="font-size:0.7rem; color:#666;">สี: ${b.changedColor || b.color || '-'}</span></td>
-                <td class="text-center">${b.status}</td><td class="text-right">฿${(b.totalInternal||0).toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.targetPrice||0).toLocaleString()}</td></tr>`;
-                totalCost += b.totalInternal; totalTarget += b.targetPrice;
+                html += `<tr>
+                <td><b>${b.plate || '-'}</b><br><span style="font-size:0.7rem; color:#666;">${b.cha||'-'}</span></td>
+                <td>${b.brand||''} ${b.model||''}<br><span style="font-size:0.7rem; color:#666;">${b.changedColor || b.color || '-'}</span></td>
+                <td class="text-center">${b.status}</td><td class="text-right fw-bold text-dark">฿${(b.totalInternal||0).toLocaleString()}</td></tr>`;
+                totalCost += b.totalInternal;
             });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="4" class="text-right">รวมทั้งหมด (${bikes.length} คัน)</td><td class="text-right text-danger">฿${totalCost.toLocaleString()}</td><td class="text-right text-success">฿${totalTarget.toLocaleString()}</td></tr></tfoot></table>`;
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมสต็อกทั้งหมด (${bikes.length} คัน)</td><td class="text-right text-danger">฿${totalCost.toLocaleString()}</td></tr></tfoot></table>`;
+            document.getElementById('r-content').innerHTML = html;
+        }
+
+        function renderRepairingReport() {
+            document.getElementById('r-title').innerText = "🛠️ 2. รายงานรถรอซ่อม / กำลังซ่อม";
+            const bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
+            let html = `<table><thead><tr><th>ทะเบียน/รุ่นรถ</th><th>สถานะ</th><th class="text-right">ทุนรถ</th><th class="text-right">ค่าซ่อมที่โดนไปแล้ว</th></tr></thead><tbody>`;
+            let totalRepair = 0; let totalInternal = 0;
+            bikes.forEach(b => {
+                const baseCost = (b.totalInternal||0) - (b.repairSum||0);
+                html += `<tr>
+                <td><b>${b.plate || '-'}</b><br><span style="font-size:0.75rem;">${b.model||''}</span></td>
+                <td class="text-center"><span class="badge bg-warning text-dark">${b.status}</span></td>
+                <td class="text-right">฿${baseCost.toLocaleString()}</td>
+                <td class="text-right text-danger fw-bold">฿${(b.repairSum||0).toLocaleString()}</td></tr>`;
+                totalRepair += b.repairSum; totalInternal += b.totalInternal;
+            });
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมค่าซ่อมที่จมไปกับอู่ขณะนี้ (${bikes.length} คัน)</td><td class="text-right text-danger h6 m-0">฿${totalRepair.toLocaleString()}</td></tr></tfoot></table>`;
+            document.getElementById('r-content').innerHTML = html;
+        }
+
+        function renderReadyGrouped(costType) {
+            const isFake = costType === 'fake';
+            const titleIcon = isFake ? '🟢' : '🔴';
+            const titleText = isFake ? 'มุมมองเซลล์/หน้าร้าน (ทุนโชว์)' : 'มุมมองเจ้าของ (ทุนจริง)';
+            document.getElementById('r-title').innerText = `${titleIcon} ${isFake ? '3' : '4'}. รายงานสินค้าพร้อมขาย แยกตามรุ่น\n[ ${titleText} ]`;
+
+            let bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && b.status === 'พร้อมขาย');
+            let groups = {};
+            bikes.forEach(b => {
+                let key = `${b.brand || 'ไม่ระบุ'} ${b.model || 'ไม่ระบุรุ่น'}`.trim();
+                if(!groups[key]) groups[key] = [];
+                groups[key].push(b);
+            });
+
+            let html = ''; let grandTotalCost = 0; let grandTotalTarget = 0;
+
+            Object.keys(groups).sort().forEach(groupName => {
+                html += `<h6 class="fw-bold mt-4 text-primary border-bottom pb-1"><i class="bi bi-tags-fill"></i> ${groupName} <span class="badge bg-secondary">${groups[groupName].length} คัน</span></h6>`;
+                html += `<table><thead><tr><th>ทะเบียน</th><th>สี/ปี</th><th class="text-right">ต้นทุน ${isFake?'(หน้าร้าน)':'(จริง)'}</th><th class="text-right">ราคาตั้งขาย</th></tr></thead><tbody>`;
+                
+                let subCost = 0; let subTarget = 0;
+                groups[groupName].forEach(b => {
+                    let cost = isFake ? ((b.showCost||0) + (b.repairSum||0)) : (b.totalInternal||0);
+                    html += `<tr>
+                        <td><b>${b.plate||'-'}</b></td>
+                        <td class="text-center">${b.changedColor||b.color||'-'} / ${b.year||'-'}</td>
+                        <td class="text-right fw-bold ${isFake ? 'text-dark' : 'text-danger'}">฿${cost.toLocaleString()}</td>
+                        <td class="text-right text-success fw-bold">฿${(b.targetPrice||0).toLocaleString()}</td>
+                    </tr>`;
+                    subCost += cost; subTarget += (b.targetPrice||0);
+                });
+                
+                html += `</tbody><tfoot><tr class="bg-light fw-bold" style="font-size:0.8rem;">
+                    <td colspan="2" class="text-right text-muted">รวมรุ่น ${groupName}</td>
+                    <td class="text-right ${isFake ? '' : 'text-danger'}">฿${subCost.toLocaleString()}</td>
+                    <td class="text-right text-success">฿${subTarget.toLocaleString()}</td>
+                </tr></tfoot></table>`;
+                grandTotalCost += subCost; grandTotalTarget += subTarget;
+            });
+
+            if(Object.keys(groups).length > 0) {
+                html += `<div class="mt-4 p-3 bg-dark text-white rounded text-center shadow-sm">
+                    <h6 class="fw-bold mb-2">สรุปรถพร้อมขายทั้งหมด (${bikes.length} คัน)</h6>
+                    <div class="row"><div class="col-6 border-end border-secondary">รวมต้นทุน${isFake?'โชว์':'จริง'}: <br><b class="${isFake?'text-warning':'text-danger'} h5 m-0">฿${grandTotalCost.toLocaleString()}</b></div><div class="col-6">รวมราคาตั้งขาย: <br><b class="text-success h5 m-0">฿${grandTotalTarget.toLocaleString()}</b></div></div>
+                </div>`;
+            } else { html = '<div class="text-center p-5 text-muted">ไม่มีสินค้าพร้อมขายในสต็อกขณะนี้</div>'; }
             document.getElementById('r-content').innerHTML = html;
         }
 
         function renderSalesReport() {
             const filterMonth = document.getElementById('report-month').value;
-            let title = "💰 รายงานสรุปยอดขายและกำไร";
-            if(filterMonth !== 'all') title += ` (ประจำเดือน ${filterMonth})`;
+            let title = "💰 5. รายงานยอดขายและกำไรสุทธิ";
+            if(filterMonth !== 'all') title += `\n(ประจำเดือน ${filterMonth})`;
             document.getElementById('r-title').innerText = title;
 
             let bikes = globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว');
             if(filterMonth !== 'all') bikes = bikes.filter(b => { let p = (b.saleDate||'').split('/'); return (p.length === 3 && `${p[1]}/${p[2]}` === filterMonth); });
 
-            let html = `<table><thead><tr><th>วัน/เดือน/ปี</th><th>ทะเบียน / รุ่น</th><th class="text-right">ทุนจมรวม</th><th class="text-right">หักค่าใช้จ่ายโอน</th><th class="text-right">ราคาขายสุทธิ</th><th class="text-right">กำไรสุทธิ</th></tr></thead><tbody>`;
-            let sumCost = 0; let sumDeduct = 0; let sumRevenue = 0; let sumProfit = 0;
+            let html = `<table><thead><tr><th>วันที่ขาย</th><th>ทะเบียน/รุ่น</th><th class="text-right">ต้นทุนจริง</th><th class="text-right">ยอดรับ(รวมคอม)</th><th class="text-right">กำไรสุทธิ</th></tr></thead><tbody>`;
+            let sumCost = 0; let sumRevenue = 0; let sumProfit = 0;
             bikes.forEach(b => {
-                const deduct = (b.transferFee||0) + (b.exTotal||0); const revenue = (b.soldPrice||0) + (b.saleCommission||0);
-                html += `<tr><td class="text-center">${b.saleDate||'-'}</td><td><b>${b.plate || '-'}</b> ${b.model||''}</td>
-                <td class="text-right text-danger">฿${(b.totalInternal||0).toLocaleString()}</td><td class="text-right text-danger">฿${deduct.toLocaleString()}</td>
-                <td class="text-right fw-bold">฿${revenue.toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.profit||0).toLocaleString()}</td></tr>`;
-                sumCost += b.totalInternal; sumDeduct += deduct; sumRevenue += revenue; sumProfit += b.profit;
+                const revenue = (b.soldPrice||0) + (b.saleCommission||0);
+                html += `<tr><td class="text-center">${b.saleDate||'-'}</td><td><b>${b.plate || '-'}</b><br><span style="font-size:0.75rem;">${b.model||''}</span></td>
+                <td class="text-right text-danger">฿${(b.totalInternal||0).toLocaleString()}</td>
+                <td class="text-right fw-bold text-dark">฿${revenue.toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.profit||0).toLocaleString()}</td></tr>`;
+                sumCost += b.totalInternal; sumRevenue += revenue; sumProfit += b.profit;
             });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right text-danger">฿${sumDeduct.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
-            document.getElementById('r-content').innerHTML = html;
-        }
-
-        function renderRepairReport() {
-            document.getElementById('r-title').innerText = "🛠️ รายงานประวัติและสรุปค่าซ่อมรถ (เฉพาะรถที่กำลังทำและในสต็อก)";
-            const bikes = globalData.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && b.repairSum > 0);
-            const allRepairs = globalData.repairs || [];
-            let html = `<table><thead><tr><th>ทะเบียน / รุ่นรถ</th><th>สถานะปัจจุบัน</th><th>รายการอะไหล่และงานซ่อม (ย่อย)</th><th class="text-right">รวมค่าซ่อมคันนี้</th></tr></thead><tbody>`;
-            let grandTotal = 0;
-            bikes.forEach(b => {
-                const myRepairs = allRepairs.filter(r => r.bikeId === b.id);
-                let repairLines = `<ul style="margin:0; padding-left:20px; font-size:0.75rem;">`;
-                myRepairs.forEach(r => repairLines += `<li>${r.item} <span class="text-muted">(${r.shop})</span>: <b>฿${r.price.toLocaleString()}</b></li>`); repairLines += `</ul>`;
-                html += `<tr><td><b>${b.plate || '-'}</b><br>${b.model||''}</td><td class="text-center">${b.status}</td><td>${repairLines}</td><td class="text-right text-danger fw-bold">฿${(b.repairSum||0).toLocaleString()}</td></tr>`;
-                grandTotal += b.repairSum;
-            });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">ยอดรวมค่าซ่อมรถทั้งหมดที่จมในสต็อกขณะนี้</td><td class="text-right text-danger" style="font-size:1rem;">฿${grandTotal.toLocaleString()}</td></tr></tfoot></table>`;
+            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1.1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
     </script>
