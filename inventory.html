@@ -18,7 +18,6 @@
         .doc-ok { background: #d4edda; color: #155724; border-color: #c3e6cb; }
         .doc-wait { background: #fff3cd; color: #856404; border-color: #ffeeba; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
-        
         .box-finance { background-color: #f4fdf6; border: 1px solid #28a745; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
         .box-finance-title { color: #198754; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
         .box-deduct { background-color: #fff5f5; border: 1px solid #dc3545; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
@@ -90,8 +89,7 @@
 
                 <div class="box-deduct">
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
-                    <input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
                     <div class="row g-1">
                         <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
@@ -176,14 +174,12 @@
                     <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
                     <div class="row text-center align-items-center">
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">รับจริง(รวมคอม)</small><div id="s-calc-revenue" class="fw-bold text-success" style="font-size:0.8rem;">฿0</div></div>
-                        <!-- เปลี่ยนป้ายชื่อให้เคลียร์ว่ามันคือทุนรวมทั้งหมด ไม่ใช่แค่ทุนจม -->
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนรวมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักค่าโอน+อื่นๆ</small><div id="s-calc-deduct" class="fw-bold text-danger" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
                     </div>
                 </div>
                 
-                <!-- เอากล่องเช็คลิสต์เอกสารกลับมาให้ตามสั่งครับ -->
                 <div class="bg-light p-2 rounded border mb-2">
                     <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน (บันทึกล่วงหน้าได้)</label>
                     <div class="row g-2 mb-2">
@@ -224,7 +220,6 @@
             loadInventory();
         };
 
-        // ฟังก์ชั่นเปิด/ปิดซ่อนทุนซื้อจริง
         function toggleSecret(icon) {
             const container = icon.closest('.col-auto').querySelector('.secret-val');
             if (container.innerText === '***') {
@@ -277,7 +272,6 @@
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
 
-                        <!-- 💡 ปรับกล่อง 'อื่นๆ' ให้แคบและย้ายไปขวาสุดหลังราคาตั้งขาย -->
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
@@ -313,7 +307,6 @@
             const transferFee = getVal('s-transferFee');
             const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P');
             const totalInternal = getVal('s-totalInternal'); 
-            
             const revenue = soldPrice + comm;
             const deduct = transferFee + ex1 + ex2 + ex3;
             const profit = revenue - totalInternal - deduct;
@@ -336,18 +329,42 @@
                 'transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P',
                 'finCIMB','finTidlor','finOther','saleCommission'
             ];
-            
             fields.forEach(id => {
                 const el = document.getElementById('m-'+id);
                 if(el) el.value = b[id] !== undefined ? b[id] : ''; 
             });
-            
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
 
         async function saveBike() {
-            const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike' };
+            const rowIdxInput = document.getElementById('m-rowIdx').value;
+            const isUpdate = !!rowIdxInput;
+            const cleanStr = (str) => (str || '').replace(/\s+/g, '').toLowerCase();
+            const inputPlate = cleanStr(document.getElementById('m-plate').value);
+            const inputCha = cleanStr(document.getElementById('m-cha').value);
+            const inputEng = cleanStr(document.getElementById('m-eng').value);
+
+            if (!isUpdate) {
+                let duplicateList = [];
+                for (let b of allBikes) {
+                    let matchTypes = [];
+                    if (inputPlate && cleanStr(b.plate) === inputPlate) matchTypes.push('ทะเบียน');
+                    if (inputCha && cleanStr(b.cha) === inputCha) matchTypes.push('เลขถัง');
+                    if (inputEng && cleanStr(b.eng) === inputEng) matchTypes.push('เลขเครื่อง');
+
+                    if (matchTypes.length > 0) {
+                        let statusText = b.saleStatus === 'ขายแล้ว' ? 'ขายไปแล้ว' : b.status;
+                        duplicateList.push(`- ${b.plate || 'ไม่มีทะเบียน'} ${b.model || ''} (สถานะ: ${statusText}) [ซ้ำ: ${matchTypes.join(', ')}]`);
+                    }
+                }
+                if (duplicateList.length > 0) {
+                    const confirmMsg = `⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!\n\nรถที่คุณกำลังจะบันทึก มีข้อมูลตรงกับรถที่มีอยู่แล้ว:\n${duplicateList.join('\n')}\n\nคุณแน่ใจหรือไม่ว่าต้องการคีย์รถคันนี้เป็น "คันใหม่" อีกครั้ง?\n(ตัวอย่างเช่น เป็นรถที่รับซื้อคืนมาจากลูกค้า)\n\nกด "ตกลง/OK" เพื่อคีย์เป็นคันใหม่\nกด "ยกเลิก/Cancel" เพื่อกลับไปแก้ไข`;
+                    if (!confirm(confirmMsg)) return; 
+                }
+            }
+
+            const payload = { action: rowIdxInput ? 'updateBike' : 'saveBike' };
             const fields = [
                 'rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source',
                 'realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote',
@@ -382,8 +399,7 @@
             document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; document.getElementById('s-finTidlor').value = b.finTidlor || 0; document.getElementById('s-finOther').value = b.finOther || 0; document.getElementById('s-saleCommission').value = b.saleCommission || 0;
             
-            calcSaleProfit(); 
-            saleModal.show();
+            calcSaleProfit(); saleModal.show();
         }
 
         async function processSale(statusType) {
@@ -391,7 +407,6 @@
                 action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
                 soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
                 customerDetail: document.getElementById('s-customer').value, 
-                // เพิ่มการส่งข้อมูลเอกสารและโอนเล่มกลับไปให้ครบถ้วนแล้วครับ
                 prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, 
                 bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
                 transferFee: document.getElementById('s-transferFee').value,
