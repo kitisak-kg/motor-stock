@@ -23,7 +23,10 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
-            <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงานสรุป</a>
+            <div>
+                <a href="log.html" class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm me-1"><i class="bi bi-shield-lock-fill"></i> ระบบ Log</a>
+                <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงานสรุป</a>
+            </div>
         </div>
         
         <div class="row g-2 mb-4">
@@ -71,7 +74,6 @@
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
-                
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
@@ -83,7 +85,6 @@
                 data.bikes.forEach(b => {
                     if(b.saleStatus !== 'ขายแล้ว') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
-                        
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
                             if(p.length === 3) {
@@ -93,7 +94,7 @@
                                     let absDays = Math.abs(Math.floor(diffDays));
                                     let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
-                                    if (years >= 2) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ระวังยกเลิกเล่ม!)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                    if (years >= 2) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ยกเลิกเล่ม)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                     else alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                 } else if (diffDays <= 30) {
                                     alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
