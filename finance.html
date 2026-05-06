@@ -11,7 +11,6 @@
         .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
-        
         .card-finance { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.85rem; }
         .tab-btn.active { background: #fff; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
@@ -19,7 +18,6 @@
         .doc-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; }
         .doc-ok { background: #d4edda; color: #155724; border-color: #c3e6cb; }
         .doc-wait { background: #fff3cd; color: #856404; border-color: #ffeeba; }
-        
         .box-finance { background-color: #f4fdf6; border: 1px solid #28a745; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
         .box-finance-title { color: #198754; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
         .box-deduct { background-color: #fff5f5; border: 1px solid #dc3545; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
@@ -61,13 +59,26 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <!-- MODAL ป๊อปอัปดูข้อมูลรถแบบละเอียด -->
+    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
+                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
         <div class="modal-body p-3 small" id="detail-content"></div>
     </div></div></div>
 
-    <!-- MODAL อัปเดตเอกสารโอน -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -130,7 +141,6 @@
       </div>
     </div>
 
-    <!-- MODAL รับทุน -->
     <div class="modal fade" id="modal-capital" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-success">จัดการยอดเงินทุน</h6>
@@ -151,6 +161,20 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allSoldBikes = []; let saleModal, capModal, detailsModal;
+
+        // 🔒 ระบบ PIN
+        let pendingPinAction = null; let pinModalInstance = null;
+        function executeWithPin(callback) {
+            if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
+            document.getElementById('global-pin').value = ''; pendingPinAction = callback; pinModalInstance.show();
+            setTimeout(() => document.getElementById('global-pin').focus(), 500);
+        }
+        document.getElementById('btn-confirm-pin').addEventListener('click', () => {
+            const pin = document.getElementById('global-pin').value;
+            if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
+            pinModalInstance.hide(); if(pendingPinAction) pendingPinAction(pin);
+        });
+        document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
         window.onload = function() {
             saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
@@ -178,16 +202,10 @@
             
             let monthGroups = {};
             allSoldBikes.forEach(b => {
-                const parts = (b.saleDate||'').split('/');
-                let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
-                if(parts.length === 3) {
-                    let y = parseInt(parts[2]); if(y < 2400) y += 543; 
-                    let m = parts[1].padStart(2, '0');
-                    key = `${y}-${m}`; label = `${parts[1]}/${y}`;
-                }
+                const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
+                if(parts.length === 3) { let y = parseInt(parts[2]); if(y < 2400) y += 543; let m = parts[1].padStart(2, '0'); key = `${y}-${m}`; label = `${parts[1]}/${y}`; }
                 if(!monthGroups[key]) monthGroups[key] = { label: label, bikes: [], totalProfit: 0 };
-                monthGroups[key].bikes.push(b);
-                monthGroups[key].totalProfit += b.profit;
+                monthGroups[key].bikes.push(b); monthGroups[key].totalProfit += b.profit;
             });
 
             let accHtml = ''; let i = 0;
@@ -242,8 +260,7 @@
         }
 
         function showCarDetails(rowIdx) {
-            const b = allSoldBikes.find(x => x.rowIdx === rowIdx);
-            if(!b) return;
+            const b = allSoldBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             let html = `
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
@@ -273,12 +290,9 @@
 
         function calcSaleProfit() {
             const getVal = (id) => Number(document.getElementById(id).value) || 0;
-            const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission');
-            const transferFee = getVal('s-transferFee');
-            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P');
-            const totalInternal = getVal('s-totalInternal'); 
+            const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
+            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
             const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
-            
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
@@ -296,20 +310,30 @@
             calcSaleProfit(); saleModal.show();
         }
         
-        async function processSale(statusType) {
-            const payload = { 
-                action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
-                soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
-            };
-            document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); location.reload();
+        function processSale(statusType) {
+            executeWithPin(async (pin) => {
+                const payload = { 
+                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, 
+                    soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                    prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                    transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                    finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
+                };
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
         }
         
-        async function revertSale() {
+        function revertSale() {
             if(!confirm('ยืนยันตีกลับรถคันนี้เข้าสต็อก?')) return;
-            document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value }) }); location.reload();
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
         }
         
         function openAddCapital() {
@@ -320,12 +344,22 @@
             document.getElementById('c-rowIdx').value = rowIdx; document.getElementById('c-date').value = date; document.getElementById('c-amount').value = amount.replace(/,/g, ''); document.getElementById('c-note').value = note === '-' ? '' : note;
             document.getElementById('btn-delete-cap').style.display = 'block'; capModal.show();
         }
-        async function saveCapital() {
-            document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, note: document.getElementById('c-note').value }) }); location.reload();
+        function saveCapital() {
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, note: document.getElementById('c-note').value }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
         }
-        async function deleteCapital() {
+        function deleteCapital() {
             if(!confirm('ลบยอดเงินทุนนี้?')) return;
-            document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value }) }); location.reload();
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
         }
         function switchTab(tab) { ['sold','cap'].forEach(t => { document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none'; document.getElementById('tab-'+t).classList.toggle('active', t === tab); }); }
     </script>
