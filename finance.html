@@ -11,6 +11,8 @@
         .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        
+        /* แก้ไข padding ของ card-finance ให้กระชับขึ้น */
         .card-finance { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.85rem; }
         .tab-btn.active { background: #fff; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
@@ -207,28 +209,50 @@
                 let listHtml = '';
                 group.bikes.forEach(b => {
                     const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
-                    listHtml += `<div class="card-finance border-start border-5 border-success sold-item" data-search="${b.plate} ${b.model} ${b.cha}">
-                        <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
-                            <div><b class="text-dark">${b.plate||'-'} ${b.model}</b><br><small class="text-muted">วันที่ขาย: <span class="fw-bold">${b.saleDate||'-'}</span></small></div>
-                            <button class="btn btn-sm btn-outline-primary" onclick="openSaleModal(${b.rowIdx})">อัปเดตเอกสาร/ตีกลับ</button>
+                    
+                    // ==========================================
+                    // 💡 ส่วนที่แก้ไขใหม่: กล่องการ์ดรถแบบกระชับ (Compact Mode)
+                    // ==========================================
+                    listHtml += `<div class="card-finance border-start border-5 border-success sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha}">
+                        
+                        <!-- แถวบน: ข้อมูล + เอกสาร + ปุ่ม (ใช้ flex-wrap เพื่อเรียงในมือถือให้สวยงาม) -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
+                            
+                            <!-- ข้อมูลรถ และ วันที่ขาย -->
+                            <div style="min-width: 110px;">
+                                <b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b>
+                                <small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small>
+                            </div>
+                            
+                            <!-- สถานะการส่งเล่ม (กล่องสีเหลือง) -->
+                            <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 190px;">
+                                <span class="text-muted">ส่งให้/รับเรื่อง:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br>
+                                <span class="text-muted">วันที่ส่งเรื่อง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
+                            </div>
+                            
+                            <!-- เช็คลิสต์ พรบ ภาษี เล่ม -->
+                            <div class="d-flex gap-1" style="font-size:0.65rem;">
+                                <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
+                                <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
+                                <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
+                            </div>
+                            
+                            <!-- ปุ่มอัปเดต/ตีกลับ -->
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> อัปเดต/ตีกลับ</button>
+                            </div>
+                            
                         </div>
-                        <div class="mt-2 p-2 bg-warning bg-opacity-10 border border-warning rounded text-start mb-2" style="font-size:0.75rem;">
-                            <span class="fw-bold text-dark"><i class="bi bi-send-check"></i> สถานะการส่งเล่ม</span><br>
-                            ส่งให้/รับเรื่อง: <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br>
-                            วันที่ส่งเรื่อง: <b class="text-danger">${b.transferDate || '-'}</b>
-                        </div>
-                        <div class="d-flex gap-1 justify-content-center mb-2">
-                            <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
-                            <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
-                            <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
-                        </div>
-                        <div class="row mt-2 small text-center bg-light rounded p-2">
-                            <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b>฿${(b.totalInternal||0).toLocaleString()}</b></div>
-                            <div class="col-3 border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b>฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
-                            <div class="col-3 border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
-                            <div class="col-3"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.8rem;">฿${(b.profit||0).toLocaleString()}</b></div>
+
+                        <!-- แถวล่าง: ตัวเลขการเงินสรุป 4 ช่อง -->
+                        <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
+                            <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b style="font-size:0.75rem;">฿${(b.totalInternal||0).toLocaleString()}</b></div>
+                            <div class="col-3 border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b style="font-size:0.75rem;">฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
+                            <div class="col-3 border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary" style="font-size:0.75rem;">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
+                            <div class="col-3"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
                         </div>
                     </div>`;
+                    // ==========================================
                 });
                 accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
                     <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()})</span></button></h2>
@@ -321,7 +345,6 @@
             document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value }) }); location.reload();
         }
         
-        // ระบบประวัติเงินทุน แก้ไข/ลบได้
         function openAddCapital() {
             document.getElementById('c-rowIdx').value = ''; document.getElementById('c-date').value = '';
             document.getElementById('c-amount').value = ''; document.getElementById('c-note').value = '';
