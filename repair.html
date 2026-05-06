@@ -22,7 +22,6 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-primary m-0"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
-            <!-- 💡 เพิ่มปุ่มสลับสถานะ 2 แบบให้มันสลับไปมาตามที่เลือกรถ -->
             <div>
                 <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="updateStatus('พร้อมขาย')">✔️ ตั้งเป็นพร้อมขาย</button>
                 <button class="btn btn-warning btn-sm shadow-sm fw-bold text-dark d-none" id="btn-mark-repair" onclick="updateStatus('กำลังซ่อม')">🛠️ สลับกลับมาซ่อม</button>
@@ -30,17 +29,13 @@
         </div>
         
         <div class="card-repair shadow-sm border-top border-4 border-primary">
-            
             <label class="fw-bold small mb-1 text-dark"><i class="bi bi-search"></i> ค้นหารถที่ต้องการซ่อม</label>
             <input type="text" id="search-bike" class="form-control mb-3 shadow-sm border-secondary" placeholder="🔍 พิมพ์ทะเบียน, รุ่นรถ..." onkeyup="filterBikes()">
             <hr>
-
             <label class="fw-bold small mb-1 text-primary">1. เลือกรถ (กลุ่มกำลังปั้น/ซ่อม)</label>
             <select id="select-bike-repair" class="form-select mb-2 shadow-sm border-primary" onchange="handleSelectBike('repair')"><option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option></select>
-
             <label class="fw-bold small mb-1 text-success mt-2">หรือ เลือกรถ (กลุ่มพร้อมขาย/รอโอน)</label>
             <select id="select-bike-ready" class="form-select mb-3 shadow-sm border-success" onchange="handleSelectBike('ready')"><option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option></select>
-
             <input type="hidden" id="selected-bike-id" value="">
             
             <hr>
@@ -95,7 +90,6 @@
             editModal = new bootstrap.Modal(document.getElementById('modal-edit-repair'));
             const res = await fetch(`${API_URL}?action=getMasterData`);
             const data = await res.json();
-            
             allRepairBikes = data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
             allReadyBikes = data.bikes.filter(b => b.saleStatus !== 'ขายแล้ว' && (b.status === 'พร้อมขาย' || b.status === 'รอโอน'));
             renderDropdowns(''); 
@@ -104,13 +98,11 @@
         function renderDropdowns(filterText) {
             const selRepair = document.getElementById('select-bike-repair');
             const selReady = document.getElementById('select-bike-ready');
-
             selRepair.innerHTML = '<option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>';
             allRepairBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
                 if(txt.toLowerCase().includes(filterText)) selRepair.innerHTML += `<option value="${b.id}">${txt}</option>`;
             });
-
             selReady.innerHTML = '<option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option>';
             allReadyBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
@@ -120,7 +112,6 @@
 
         function filterBikes() { renderDropdowns(document.getElementById('search-bike').value.toLowerCase()); }
 
-        // 💡 ระบบเช็คว่าเลือกรถจากกล่องไหน แล้วซ่อน/โชว์ปุ่มให้ถูก
         function handleSelectBike(type) {
             let bikeId = "";
             if (type === 'repair') {
@@ -129,24 +120,19 @@
                 if(bikeId) {
                     document.getElementById('btn-mark-ready').classList.remove('d-none');
                     document.getElementById('btn-mark-repair').classList.add('d-none');
-                } else {
-                    document.getElementById('btn-mark-ready').classList.add('d-none');
-                }
+                } else { document.getElementById('btn-mark-ready').classList.add('d-none'); }
             } else {
                 bikeId = document.getElementById('select-bike-ready').value;
                 document.getElementById('select-bike-repair').value = ""; 
                 if(bikeId) {
                     document.getElementById('btn-mark-repair').classList.remove('d-none');
                     document.getElementById('btn-mark-ready').classList.add('d-none');
-                } else {
-                    document.getElementById('btn-mark-repair').classList.add('d-none');
-                }
+                } else { document.getElementById('btn-mark-repair').classList.add('d-none'); }
             }
             document.getElementById('selected-bike-id').value = bikeId;
             loadRepairHistory(bikeId);
         }
 
-        // 💡 ยิง API ไปให้ระบบหลังบ้านเปลี่ยนสถานะ
         async function updateStatus(newStatus) {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
@@ -155,26 +141,15 @@
             location.reload();
         }
 
-        function handleEnter(e) {
-            if(e.key === 'Enter') { e.preventDefault(); addTemp(); }
-        }
+        function handleEnter(e) { if(e.key === 'Enter') { e.preventDefault(); addTemp(); } }
 
         function addTemp() {
-            const nameInput = document.getElementById('r-item');
-            const priceInput = document.getElementById('r-price');
-            const shopInput = document.getElementById('r-shop');
-
-            const name = nameInput.value;
-            const priceVal = priceInput.value; 
-            const shop = shopInput.value;
-            
+            const nameInput = document.getElementById('r-item'); const priceInput = document.getElementById('r-price'); const shopInput = document.getElementById('r-shop');
+            const name = nameInput.value; const priceVal = priceInput.value; const shop = shopInput.value;
             if(!name || priceVal === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้พิมพ์เลข 0)");
-            
             tempRepairs.push({ name, price: Number(priceVal), shop });
             nameInput.value = ''; priceInput.value = ''; shopInput.value = '';
-            
-            renderTemp();
-            nameInput.focus();
+            renderTemp(); nameInput.focus();
         }
 
         function removeTemp(index) { tempRepairs.splice(index, 1); renderTemp(); }
@@ -238,7 +213,6 @@
             await loadRepairHistory(bikeId);
             document.getElementById('loader').style.display = 'none';
         }
-
         window.onload = init;
     </script>
 </body>
