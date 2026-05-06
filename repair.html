@@ -8,7 +8,7 @@
     <style>
         body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 2000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
         .card-repair { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
@@ -66,6 +66,7 @@
         <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
         <a href="repair.html" class="nav-btn active"><i class="bi bi-tools-fill"></i>อู่ซ่อม</a>
         <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
+        <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
     <div class="modal fade" id="modal-edit-repair" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
@@ -96,8 +97,7 @@
         }
 
         function renderDropdowns(filterText) {
-            const selRepair = document.getElementById('select-bike-repair');
-            const selReady = document.getElementById('select-bike-ready');
+            const selRepair = document.getElementById('select-bike-repair'); const selReady = document.getElementById('select-bike-ready');
             selRepair.innerHTML = '<option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>';
             allRepairBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
@@ -117,20 +117,15 @@
             if (type === 'repair') {
                 bikeId = document.getElementById('select-bike-repair').value;
                 document.getElementById('select-bike-ready').value = ""; 
-                if(bikeId) {
-                    document.getElementById('btn-mark-ready').classList.remove('d-none');
-                    document.getElementById('btn-mark-repair').classList.add('d-none');
-                } else { document.getElementById('btn-mark-ready').classList.add('d-none'); }
+                if(bikeId) { document.getElementById('btn-mark-ready').classList.remove('d-none'); document.getElementById('btn-mark-repair').classList.add('d-none'); } 
+                else { document.getElementById('btn-mark-ready').classList.add('d-none'); }
             } else {
                 bikeId = document.getElementById('select-bike-ready').value;
                 document.getElementById('select-bike-repair').value = ""; 
-                if(bikeId) {
-                    document.getElementById('btn-mark-repair').classList.remove('d-none');
-                    document.getElementById('btn-mark-ready').classList.add('d-none');
-                } else { document.getElementById('btn-mark-repair').classList.add('d-none'); }
+                if(bikeId) { document.getElementById('btn-mark-repair').classList.remove('d-none'); document.getElementById('btn-mark-ready').classList.add('d-none'); } 
+                else { document.getElementById('btn-mark-repair').classList.add('d-none'); }
             }
-            document.getElementById('selected-bike-id').value = bikeId;
-            loadRepairHistory(bikeId);
+            document.getElementById('selected-bike-id').value = bikeId; loadRepairHistory(bikeId);
         }
 
         async function updateStatus(newStatus) {
