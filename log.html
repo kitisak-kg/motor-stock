@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ห้องสืบสวน (Audit Log) - MOTOR MASTER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
+        .log-table { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
+        .log-table th { background: #343a40; color: white; padding: 12px; font-size: 0.85rem; }
+        .log-table td { padding: 10px; font-size: 0.8rem; border-bottom: 1px solid #eee; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="container mt-5 pt-5 text-center">
+        <h3 class="fw-bold text-dark"><i class="bi bi-shield-lock-fill text-primary"></i> ห้องสืบสวน (Audit Log)</h3>
+        <p class="text-muted mb-4">ระบบรักษาความปลอดภัย เฉพาะ Admin เท่านั้น</p>
+        
+        <div class="card shadow-sm border-0 mx-auto" style="max-width: 350px;">
+            <div class="card-body p-4">
+                <input type="password" id="admin-pin" class="form-control form-control-lg text-center fw-bold fs-2 tracking-widest mb-3" placeholder="****" maxlength="4">
+                <button class="btn btn-primary w-100 fw-bold py-2" onclick="fetchLogs()">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+        <div class="mt-4"><a href="index.html" class="btn btn-light shadow-sm"><i class="bi bi-house"></i> กลับหน้าแรก</a></div>
+        <div id="login-loader" class="mt-3 text-primary" style="display:none;"><div class="spinner-border spinner-border-sm"></div> กำลังตรวจสอบสิทธิ์...</div>
+    </div>
+
+    <div id="log-screen" class="d-none">
+        <div class="bg-dark text-white p-3 d-flex justify-content-between align-items-center shadow-sm sticky-top">
+            <h5 class="m-0 fw-bold"><i class="bi bi-shield-check"></i> System Logs</h5>
+            <a href="index.html" class="btn btn-sm btn-outline-light">กลับหน้าแรก</a>
+        </div>
+        
+        <div class="container mt-4">
+            <input type="text" id="search-log" class="form-control form-control-lg shadow-sm mb-3 border-primary" placeholder="🔍 ค้นหา พนักงาน / ทะเบียนรถ / การกระทำ..." onkeyup="filterLogs()">
+            
+            <div class="log-table table-responsive">
+                <table class="table table-hover m-0">
+                    <thead><tr><th>เวลาที่บันทึก</th><th>พนักงาน</th><th>การกระทำ</th><th>เป้าหมาย</th><th>รายละเอียด (Diff)</th></tr></thead>
+                    <tbody id="log-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
+
+        document.getElementById('admin-pin').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') fetchLogs();
+        });
+
+        async function fetchLogs() {
+            const pin = document.getElementById('admin-pin').value;
+            if(!pin) return alert('กรุณาใส่รหัส PIN แอดมิน');
+            
+            document.getElementById('login-loader').style.display = 'block';
+            try {
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getLogs', pin: pin }) });
+                const data = await res.json();
+                
+                document.getElementById('login-loader').style.display = 'none';
+                
+                if(data.status === 'error') {
+                    alert(data.message);
+                } else {
+                    document.getElementById('login-screen').classList.add('d-none');
+                    document.getElementById('log-screen').classList.remove('d-none');
+                    
+                    const logs = data.logs.slice(1); // ข้ามบรรทัดหัวตาราง
+                    let html = '';
+                    // .reverse() เพื่อให้ Log ล่าสุดขึ้นข้างบนเสมอ
+                    logs.reverse().forEach(r => {
+                        html += `<tr class="log-row">
+                            <td class="text-nowrap text-muted">${r[0]}</td>
+                            <td><span class="badge bg-secondary">${r[1]}</span></td>
+                            <td class="text-nowrap fw-bold text-dark">${r[2]}</td>
+                            <td class="text-primary fw-bold">${r[3]}</td>
+                            <td>${r[4]}</td>
+                        </tr>`;
+                    });
+                    document.getElementById('log-table-body').innerHTML = html || '<tr><td colspan="5" class="text-center py-4">ยังไม่มีประวัติการใช้งาน</td></tr>';
+                }
+            } catch(e) {
+                document.getElementById('login-loader').style.display = 'none';
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            }
+        }
+
+        function filterLogs() {
+            const q = document.getElementById('search-log').value.toLowerCase();
+            document.querySelectorAll('.log-row').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
