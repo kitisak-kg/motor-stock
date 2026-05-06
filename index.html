@@ -14,7 +14,6 @@
         .card-dash { background: white; border-radius: 12px; padding: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height: 100%; }
         .stat-val { font-size: 1.3rem; font-weight: 800; margin-top: 5px; }
         .status-box { background: white; border-radius: 10px; padding: 12px; text-align: center; border-bottom: 4px solid #ddd; text-decoration: none; display: block; }
-        
         .alert-box { max-height: 250px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
         .alert-header { font-size: 0.9rem; padding: 8px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
         .alert-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
@@ -22,7 +21,6 @@
 </head>
 <body>
     <div class="container mt-4">
-        <!-- 💡 เพิ่มปุ่ม พิมพ์รายงาน ไว้ข้างๆ โลโก้ -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
             <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงานสรุป</a>
@@ -68,7 +66,6 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-
         async function loadDashboard() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
@@ -95,32 +92,23 @@
                                     let absDays = Math.abs(Math.floor(diffDays));
                                     let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
-
-                                    if (years >= 2) {
-                                        alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ระวังยกเลิกเล่ม!)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                    } else {
-                                        alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                    }
+                                    if (years >= 2) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ระวังยกเลิกเล่ม!)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                    else alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                 } else if (diffDays <= 30) {
                                     alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                 }
                             }
                         }
-                        
                         if (b.idExp && b.idExp !== '-') {
                             let p = b.idExp.split('/');
                             if(p.length === 3) {
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
-                                if (diffDays < 0) {
-                                    alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold">หมดอายุแล้ว</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
-                                } else if (diffDays <= 30) {
-                                    alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
-                                }
+                                if (diffDays < 0) alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold">หมดอายุแล้ว</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
+                                else if (diffDays <= 30) alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
                             }
                         }
                     }
-
                     if (b.saleStatus === 'ขายแล้ว' || b.status === 'รอโอน') {
                         if (b.saleDate && b.saleDate !== '-') {
                             let p = b.saleDate.split('/');
@@ -132,10 +120,7 @@
                                     if(!b.prbStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">พรบ.</span>';
                                     if(!b.taxStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">ภาษี</span>';
                                     if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
-                                    
-                                    if(missing !== '') {
-                                        alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วันก่อน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`;
-                                    }
+                                    if(missing !== '') alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วันก่อน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`;
                                 }
                             }
                         }
