@@ -22,8 +22,11 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-primary m-0"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
-            <!-- ปุ่มเปลี่ยนสถานะด่วน -->
-            <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="markReady()">✔️ ตั้งเป็นพร้อมขาย</button>
+            <!-- 💡 เพิ่มปุ่มสลับสถานะ 2 แบบให้มันสลับไปมาตามที่เลือกรถ -->
+            <div>
+                <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="updateStatus('พร้อมขาย')">✔️ ตั้งเป็นพร้อมขาย</button>
+                <button class="btn btn-warning btn-sm shadow-sm fw-bold text-dark d-none" id="btn-mark-repair" onclick="updateStatus('กำลังซ่อม')">🛠️ สลับกลับมาซ่อม</button>
+            </div>
         </div>
         
         <div class="card-repair shadow-sm border-top border-4 border-primary">
@@ -35,7 +38,7 @@
             <label class="fw-bold small mb-1 text-primary">1. เลือกรถ (กลุ่มกำลังปั้น/ซ่อม)</label>
             <select id="select-bike-repair" class="form-select mb-2 shadow-sm border-primary" onchange="handleSelectBike('repair')"><option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option></select>
 
-            <label class="fw-bold small mb-1 text-success mt-2">หรือ เลือกรถ (กลุ่มพร้อมขาย/เก็บงานเพิ่ม)</label>
+            <label class="fw-bold small mb-1 text-success mt-2">หรือ เลือกรถ (กลุ่มพร้อมขาย/รอโอน)</label>
             <select id="select-bike-ready" class="form-select mb-3 shadow-sm border-success" onchange="handleSelectBike('ready')"><option value="">-- เลือกรถ พร้อมขาย / รอโอน --</option></select>
 
             <input type="hidden" id="selected-bike-id" value="">
@@ -43,7 +46,6 @@
             <hr>
             <label class="fw-bold small mb-1">2. เพิ่มรายการซ่อม (รอของให้พิมพ์เลข 0)</label>
             <div class="row g-2">
-                <!-- เพิ่ม onkeypress เพื่อดักจับปุ่ม Enter -->
                 <div class="col-7"><input type="text" id="r-item" class="form-control form-control-sm" placeholder="รายการ/อะไหล่" onkeypress="handleEnter(event)"></div>
                 <div class="col-5"><input type="number" id="r-price" class="form-control form-control-sm" placeholder="ราคา (ใส่ 0 ได้)" onkeypress="handleEnter(event)"></div>
                 <div class="col-9"><input type="text" id="r-shop" class="form-control form-control-sm" placeholder="อู่/ร้าน" onkeypress="handleEnter(event)"></div>
@@ -71,7 +73,6 @@
         <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
     </div>
 
-    <!-- MODAL แก้ไขบิลซ่อม -->
     <div class="modal fade" id="modal-edit-repair" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-primary">แก้ไขรายการซ่อม</h6>
@@ -119,38 +120,43 @@
 
         function filterBikes() { renderDropdowns(document.getElementById('search-bike').value.toLowerCase()); }
 
+        // 💡 ระบบเช็คว่าเลือกรถจากกล่องไหน แล้วซ่อน/โชว์ปุ่มให้ถูก
         function handleSelectBike(type) {
             let bikeId = "";
             if (type === 'repair') {
                 bikeId = document.getElementById('select-bike-repair').value;
                 document.getElementById('select-bike-ready').value = ""; 
+                if(bikeId) {
+                    document.getElementById('btn-mark-ready').classList.remove('d-none');
+                    document.getElementById('btn-mark-repair').classList.add('d-none');
+                } else {
+                    document.getElementById('btn-mark-ready').classList.add('d-none');
+                }
             } else {
                 bikeId = document.getElementById('select-bike-ready').value;
                 document.getElementById('select-bike-repair').value = ""; 
+                if(bikeId) {
+                    document.getElementById('btn-mark-repair').classList.remove('d-none');
+                    document.getElementById('btn-mark-ready').classList.add('d-none');
+                } else {
+                    document.getElementById('btn-mark-repair').classList.add('d-none');
+                }
             }
             document.getElementById('selected-bike-id').value = bikeId;
-            if(bikeId) {
-                document.getElementById('btn-mark-ready').classList.remove('d-none');
-            } else {
-                document.getElementById('btn-mark-ready').classList.add('d-none');
-            }
             loadRepairHistory(bikeId);
         }
 
-        async function markReady() {
+        // 💡 ยิง API ไปให้ระบบหลังบ้านเปลี่ยนสถานะ
+        async function updateStatus(newStatus) {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
             document.getElementById('loader').style.display = 'flex';
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'markReadyFromRepair', bikeId: bikeId }) });
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus }) });
             location.reload();
         }
 
-        // ฟังก์ชันดักจับการกดปุ่ม Enter
         function handleEnter(e) {
-            if(e.key === 'Enter') {
-                e.preventDefault(); // ป้องกันไม่ให้ฟอร์มรีเฟรชเอง
-                addTemp();
-            }
+            if(e.key === 'Enter') { e.preventDefault(); addTemp(); }
         }
 
         function addTemp() {
@@ -162,19 +168,12 @@
             const priceVal = priceInput.value; 
             const shop = shopInput.value;
             
-            // ตรวจจับถ้าเป็นค่าว่าง (แต่ยอมรับเลข 0)
             if(!name || priceVal === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้พิมพ์เลข 0)");
             
             tempRepairs.push({ name, price: Number(priceVal), shop });
-            
-            // เคลียร์ค่าหลังเพิ่ม
-            nameInput.value = ''; 
-            priceInput.value = ''; 
-            shopInput.value = '';
+            nameInput.value = ''; priceInput.value = ''; shopInput.value = '';
             
             renderTemp();
-
-            // ให้ Cursor เด้งกลับไปช่องแรกอัตโนมัติ เพื่อพิมพ์รายการต่อไปได้เลย
             nameInput.focus();
         }
 
