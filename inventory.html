@@ -8,8 +8,9 @@
     <style>
         body { background: #f4f7f6; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
         .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1040; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 25%; transition: 0.2s; }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; }
         .nav-btn.active { color: #0d6efd; }
+        .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
         .tab-fixed { background: white; position: sticky; top: 0; z-index: 900; margin-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-around; overflow-x: auto; }
         .tab-item { padding: 12px; border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.85rem; flex: 1; white-space: nowrap; border-bottom: 3px solid transparent; }
         .tab-item.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
@@ -43,10 +44,11 @@
     </div>
 
     <div class="nav-bottom">
-        <a href="index.html" class="nav-btn"><i class="bi bi-house-door d-block h4 mb-0"></i>หน้าแรก</a>
-        <a href="inventory.html" class="nav-btn active"><i class="bi bi-box-seam-fill d-block h4 mb-0"></i>สต็อก</a>
-        <a href="repair.html" class="nav-btn"><i class="bi bi-tools d-block h4 mb-0"></i>อู่ซ่อม</a>
-        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2 d-block h4 mb-0"></i>บัญชี</a>
+        <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
+        <a href="inventory.html" class="nav-btn active"><i class="bi bi-box-seam-fill"></i>สต็อก</a>
+        <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
+        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
+        <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
     <!-- MODAL เพิ่ม/แก้ไขสต็อกรถ -->
@@ -89,7 +91,8 @@
 
                 <div class="box-deduct">
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label>
+                    <input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
                     <div class="row g-1">
                         <div class="col-8"><input type="text" id="m-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="m-ex1P" class="form-control form-control-sm" placeholder="ราคา"></div>
@@ -179,20 +182,6 @@
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
                     </div>
                 </div>
-                
-                <div class="bg-light p-2 rounded border mb-2">
-                    <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน (บันทึกล่วงหน้าได้)</label>
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="x-small">พรบ.</label><select id="s-prb" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">ภาษี</label><select id="s-tax" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">เล่มรถ</label><select id="s-book" class="form-select form-select-sm"><option>รอเล่มโอน</option><option>มอบให้แล้ว</option></select></div>
-                    </div>
-                    <div class="row g-2 border-top pt-2">
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มให้ใคร (ผู้รับเรื่อง)</label><input type="text" id="s-transferTo" class="form-control form-control-sm" placeholder="เช่น เฮียทองดี"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
-                    </div>
-                </div>
-
             </div>
             <div class="modal-footer border-top-0 pt-0">
                 <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.85rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ บันทึกการขาย (ย้ายเข้าบัญชี)</button>
@@ -258,7 +247,6 @@
                     let statusColor = 'bg-danger';
                     if(b.status === 'พร้อมขาย') statusColor = 'bg-success';
                     if(b.status === 'กำลังซ่อม') statusColor = 'bg-warning text-dark';
-
                     const colorShow = b.changedColor ? `<span class="text-primary">(ทำสี: ${b.changedColor})</span>` : (b.color||'-');
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -307,14 +295,10 @@
             const transferFee = getVal('s-transferFee');
             const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P');
             const totalInternal = getVal('s-totalInternal'); 
-            const revenue = soldPrice + comm;
-            const deduct = transferFee + ex1 + ex2 + ex3;
-            const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
             
-            document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`;
-            document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
-            document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`;
-            document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
+            document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
+            document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
         function openEdit(rowIdx) {
@@ -329,10 +313,7 @@
                 'transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P',
                 'finCIMB','finTidlor','finOther','saleCommission'
             ];
-            fields.forEach(id => {
-                const el = document.getElementById('m-'+id);
-                if(el) el.value = b[id] !== undefined ? b[id] : ''; 
-            });
+            fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
@@ -372,33 +353,21 @@
                 'transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P',
                 'finCIMB','finTidlor','finOther','saleCommission'
             ];
-            fields.forEach(id => {
-                const el = document.getElementById('m-'+id);
-                if(el) payload[id] = el.value;
-            });
+            fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
             document.getElementById('loader').style.display = 'flex';
             await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); location.reload();
         }
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            document.getElementById('s-rowIdx').value = rowIdx;
-            document.getElementById('s-totalInternal').value = b.totalInternal || 0; 
-            
+            document.getElementById('s-rowIdx').value = rowIdx; document.getElementById('s-totalInternal').value = b.totalInternal || 0; 
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             document.getElementById('s-customer').value = b.customerDetail || '';
-            
-            document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ'; document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ'; document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
-            document.getElementById('s-transferTo').value = b.transferTo || ''; document.getElementById('s-transferDate').value = b.transferDate || '';
-            
-            document.getElementById('s-transferFee').value = b.transferFee || 0;
-            document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
-            document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0;
-            document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
+            document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
+            document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; document.getElementById('s-finTidlor').value = b.finTidlor || 0; document.getElementById('s-finOther').value = b.finOther || 0; document.getElementById('s-saleCommission').value = b.saleCommission || 0;
-            
             calcSaleProfit(); saleModal.show();
         }
 
@@ -407,14 +376,10 @@
                 action: 'updateSale', saleStatus: statusType, rowIdx: document.getElementById('s-rowIdx').value, 
                 soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
                 customerDetail: document.getElementById('s-customer').value, 
-                prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, 
-                bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                transferFee: document.getElementById('s-transferFee').value,
-                ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value,
-                ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value,
-                ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, 
-                finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
+                prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
+                transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value,
+                ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
             };
             document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); location.reload();
         }
@@ -429,9 +394,7 @@
         
         async function deleteBike() { 
             if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
-            document.getElementById('loader').style.display = 'flex'; 
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); 
-            location.reload(); 
+            document.getElementById('loader').style.display = 'flex'; await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value }) }); location.reload(); 
         }
     </script>
 </body>
