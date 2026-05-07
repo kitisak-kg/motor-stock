@@ -12,7 +12,7 @@
         .nav-btn.active { color: #0d6efd; }
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
         .card-finance { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.85rem; }
+        .tab-btn { flex: 1; border: none; background: #eee; padding: 10px; font-weight: bold; font-size: 0.75rem; }
         .tab-btn.active { background: #fff; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         .doc-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ddd; }
@@ -39,13 +39,19 @@
         </div>
 
         <div class="d-flex mb-3 shadow-sm rounded overflow-hidden">
-            <button class="tab-btn active" id="tab-sold" onclick="switchTab('sold')">รถที่ขายแล้ว (อัปเดตเล่ม)</button>
+            <button class="tab-btn active" id="tab-sold" onclick="switchTab('sold')">ขายแล้ว</button>
+            <button class="tab-btn" id="tab-pending" onclick="switchTab('pending')">รอเคลียร์ยอด</button>
             <button class="tab-btn" id="tab-cap" onclick="switchTab('cap')">ประวัติทุน</button>
         </div>
 
         <div id="section-sold">
-            <input type="text" id="search-sold" class="form-control mb-3 shadow-sm" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถที่ขายแล้ว..." onkeyup="filterSold()">
+            <input type="text" id="search-sold" class="form-control mb-3 shadow-sm" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถที่ขายแล้ว..." onkeyup="filterBikes('sold')">
             <div class="accordion shadow-sm" id="accordionSold"></div>
+        </div>
+
+        <div id="section-pending" style="display:none;">
+            <input type="text" id="search-pending" class="form-control mb-3 shadow-sm border-warning" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถรอเคลียร์..." onkeyup="filterBikes('pending')">
+            <div id="list-pending"></div>
         </div>
 
         <div id="section-cap" style="display:none;"><div id="list-capital-history" class="list-group shadow-sm"></div></div>
@@ -65,10 +71,7 @@
                 <div class="modal-body p-4 text-center">
                     <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
                     <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
-                        <button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button>
-                    </div>
+                    <div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div>
                 </div>
             </div>
         </div>
@@ -82,15 +85,17 @@
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 อัปเดตงานโอน / ตีกลับ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-primary text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 อัปเดตงานบัญชี / ปิดจ๊อบการขาย</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-3">
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
+                
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
                     <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm"></div>
                 </div>
+
                 <div class="box-deduct">
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
                     <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
@@ -101,6 +106,7 @@
                         <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
                     </div>
                 </div>
+
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
@@ -111,6 +117,7 @@
                     <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
                     <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
                 </div>
+                
                 <div class="bg-dark text-white p-2 rounded mb-2 shadow-sm">
                     <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
                     <div class="row text-center align-items-center">
@@ -120,6 +127,7 @@
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
                     </div>
                 </div>
+
                 <div class="bg-light p-2 rounded border mb-2">
                     <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน</label>
                     <div class="row g-2 mb-2">
@@ -133,9 +141,10 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-top-0 pt-0">
-                <button class="btn btn-primary w-100 fw-bold shadow-sm py-2 mb-1" onclick="processSale('ขายแล้ว')">💾 อัปเดตข้อมูลเอกสาร</button>
-                <button class="btn btn-outline-danger w-100 btn-sm" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าสต็อก (ลูกค้าไม่เอา)</button>
+            <div class="modal-footer border-top-0 pt-0 d-flex flex-wrap gap-2">
+                <button class="btn btn-info text-white flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')"><i class="bi bi-hourglass-split"></i> บันทึกไว้ก่อน (ยังรอเงิน)</button>
+                <button class="btn btn-success flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ ปิดจ๊อบการขาย (รับรู้กำไร)</button>
+                <button class="btn btn-outline-danger w-100 btn-sm mt-1" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าลานจอด (ไฟแนนซ์ไม่ผ่าน)</button>
             </div>
         </div>
       </div>
@@ -145,24 +154,16 @@
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-success">จัดการยอดเงินทุน</h6>
             <input type="hidden" id="c-rowIdx">
-            <div class="text-start mb-3">
-                <label class="small fw-bold">วันที่รับเงิน</label><input type="text" id="c-date" class="form-control mb-2" placeholder="วว/ดด/ปปปป">
-                <label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control mb-2">
-                <label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control">
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-danger w-25 fw-bold" id="btn-delete-cap" style="display:none;" onclick="deleteCapital()">🗑️ ลบ</button>
-                <button class="btn btn-success flex-grow-1 fw-bold py-2" onclick="saveCapital()">✅ บันทึกยอด</button>
-            </div>
+            <div class="text-start mb-3"><label class="small fw-bold">วันที่รับเงิน</label><input type="text" id="c-date" class="form-control mb-2" placeholder="วว/ดด/ปปปป"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control mb-2"><label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control"></div>
+            <div class="d-flex gap-2"><button class="btn btn-danger w-25 fw-bold" id="btn-delete-cap" style="display:none;" onclick="deleteCapital()">🗑️ ลบ</button><button class="btn btn-success flex-grow-1 fw-bold py-2" onclick="saveCapital()">✅ บันทึกยอด</button></div>
         </div>
     </div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let allSoldBikes = []; let saleModal, capModal, detailsModal;
+        let allBikes = []; let saleModal, capModal, detailsModal;
 
-        // 🔒 ระบบ PIN
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
@@ -198,53 +199,9 @@
             
             document.getElementById('total-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
             document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
-            allSoldBikes = data.bikes.filter(b => b.saleStatus === 'ขายแล้ว');
+            allBikes = data.bikes || [];
             
-            let monthGroups = {};
-            allSoldBikes.forEach(b => {
-                const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
-                if(parts.length === 3) { let y = parseInt(parts[2]); if(y < 2400) y += 543; let m = parts[1].padStart(2, '0'); key = `${y}-${m}`; label = `${parts[1]}/${y}`; }
-                if(!monthGroups[key]) monthGroups[key] = { label: label, bikes: [], totalProfit: 0 };
-                monthGroups[key].bikes.push(b); monthGroups[key].totalProfit += b.profit;
-            });
-
-            let accHtml = ''; let i = 0;
-            Object.keys(monthGroups).sort().reverse().forEach(key => {
-                const group = monthGroups[key]; let listHtml = '';
-                group.bikes.forEach(b => {
-                    const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
-                    listHtml += `<div class="card-finance border-start border-5 border-success sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha}">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
-                            <div class="d-flex align-items-start" style="min-width: 140px;">
-                                <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails(${b.rowIdx})" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
-                                <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
-                            </div>
-                            <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 190px;">
-                                <span class="text-muted">ส่งให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br>
-                                <span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
-                            </div>
-                            <div class="d-flex gap-1" style="font-size:0.65rem;">
-                                <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
-                                <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
-                                <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
-                            </div>
-                            <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> อัปเดต/ตีกลับ</button></div>
-                        </div>
-                        <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
-                            <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b style="font-size:0.75rem;">฿${(b.totalInternal||0).toLocaleString()}</b></div>
-                            <div class="col-3 border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b style="font-size:0.75rem;">฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
-                            <div class="col-3 border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary" style="font-size:0.75rem;">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
-                            <div class="col-3"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
-                        </div>
-                    </div>`;
-                });
-                accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
-                    <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()})</span></button></h2>
-                    <div id="col-${i}" class="accordion-collapse collapse ${i===0?'show':''}" data-bs-parent="#accordionSold"><div class="accordion-body bg-light p-2">${listHtml}</div></div>
-                </div>`;
-                i++;
-            });
-            document.getElementById('accordionSold').innerHTML = accHtml || '<p class="text-center p-4 text-muted">ยังไม่มีรถที่ขายได้</p>';
+            renderBikesList('sold'); renderBikesList('pending');
 
             if (data.capitalHistory) {
                 let capHtml = '';
@@ -259,8 +216,65 @@
             document.getElementById('loader').style.display = 'none';
         }
 
+        function buildBikeCard(b) {
+            const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
+            const isSold = b.saleStatus === 'ขายแล้ว';
+            const borderCol = isSold ? 'border-success' : 'border-warning';
+            
+            return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
+                    <div class="d-flex align-items-start" style="min-width: 140px;">
+                        <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails(${b.rowIdx})" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
+                        <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 190px;">
+                        <span class="text-muted">ส่งให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
+                    </div>
+                    <div class="d-flex gap-1" style="font-size:0.65rem;">
+                        <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
+                        <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
+                        <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
+                    </div>
+                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> เคลียร์ยอด/แก้ไข</button></div>
+                </div>
+                <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
+                    <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b style="font-size:0.75rem;">฿${(b.totalInternal||0).toLocaleString()}</b></div>
+                    <div class="col-3 border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b style="font-size:0.75rem;">฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
+                    <div class="col-3 border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary" style="font-size:0.75rem;">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
+                    <div class="col-3"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
+                </div>
+            </div>`;
+        }
+
+        function renderBikesList(type) {
+            const listBikes = allBikes.filter(b => type === 'sold' ? b.saleStatus === 'ขายแล้ว' : b.saleStatus === 'รอเคลียร์ไฟแนนซ์');
+            if(type === 'pending') {
+                let html = ''; listBikes.forEach(b => html += buildBikeCard(b));
+                document.getElementById('list-pending').innerHTML = html || '<p class="text-center p-4 text-muted">ไม่มีรถรอเคลียร์ยอด</p>';
+                return;
+            }
+            let monthGroups = {};
+            listBikes.forEach(b => {
+                const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
+                if(parts.length === 3) { let y = parseInt(parts[2]); if(y < 2400) y += 543; let m = parts[1].padStart(2, '0'); key = `${y}-${m}`; label = `${parts[1]}/${y}`; }
+                if(!monthGroups[key]) monthGroups[key] = { label: label, bikes: [], totalProfit: 0 };
+                monthGroups[key].bikes.push(b); monthGroups[key].totalProfit += b.profit;
+            });
+            let accHtml = ''; let i = 0;
+            Object.keys(monthGroups).sort().reverse().forEach(key => {
+                const group = monthGroups[key]; let listHtml = '';
+                group.bikes.forEach(b => listHtml += buildBikeCard(b));
+                accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
+                    <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()})</span></button></h2>
+                    <div id="col-${i}" class="accordion-collapse collapse ${i===0?'show':''}" data-bs-parent="#accordionSold"><div class="accordion-body bg-light p-2">${listHtml}</div></div>
+                </div>`;
+                i++;
+            });
+            document.getElementById('accordionSold').innerHTML = accHtml || '<p class="text-center p-4 text-muted">ยังไม่มีรถที่ขายจบแล้ว</p>';
+        }
+
         function showCarDetails(rowIdx) {
-            const b = allSoldBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
+            const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             let html = `
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
@@ -283,9 +297,9 @@
             document.getElementById('detail-content').innerHTML = html; detailsModal.show();
         }
 
-        function filterSold() {
-            const q = document.getElementById('search-sold').value.toLowerCase();
-            document.querySelectorAll('.sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
+        function filterBikes(type) {
+            const q = document.getElementById('search-'+type).value.toLowerCase();
+            document.querySelectorAll('#section-'+type+' .sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
         }
 
         function calcSaleProfit() {
@@ -298,7 +312,7 @@
         }
 
         function openSaleModal(rowIdx) {
-            const b = allSoldBikes.find(x => x.rowIdx === rowIdx);
+            const b = allBikes.find(x => x.rowIdx === rowIdx);
             document.getElementById('s-rowIdx').value = rowIdx; document.getElementById('s-totalInternal').value = b.totalInternal || 0; 
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0; document.getElementById('s-date').value = b.saleDate || ''; document.getElementById('s-customer').value = b.customerDetail || '';
@@ -327,7 +341,7 @@
         }
         
         function revertSale() {
-            if(!confirm('ยืนยันตีกลับรถคันนี้เข้าสต็อก?')) return;
+            if(!confirm('ยืนยันตีกลับรถคันนี้เข้าลานจอด? (ยกเลิกการขาย)')) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex'; 
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
@@ -361,7 +375,7 @@
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
         }
-        function switchTab(tab) { ['sold','cap'].forEach(t => { document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none'; document.getElementById('tab-'+t).classList.toggle('active', t === tab); }); }
+        function switchTab(tab) { ['sold','pending','cap'].forEach(t => { document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none'; document.getElementById('tab-'+t).classList.toggle('active', t === tab); }); }
     </script>
 </body>
 </html>
