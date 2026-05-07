@@ -16,10 +16,9 @@
     <div id="login-screen" class="container mt-5 pt-5 text-center">
         <h3 class="fw-bold text-dark"><i class="bi bi-shield-lock-fill text-primary"></i> ห้องสืบสวน (Audit Log)</h3>
         <p class="text-muted mb-4">ระบบรักษาความปลอดภัย เฉพาะ Admin เท่านั้น</p>
-        
         <div class="card shadow-sm border-0 mx-auto" style="max-width: 350px;">
             <div class="card-body p-4">
-                <input type="password" id="admin-pin" class="form-control form-control-lg text-center fw-bold fs-2 mb-3" style="letter-spacing:10px;" placeholder="****" maxlength="4">
+                <input type="password" id="admin-pin" class="form-control form-control-lg text-center fw-bold fs-2 tracking-widest mb-3" placeholder="****" maxlength="4">
                 <button class="btn btn-primary w-100 fw-bold py-2" onclick="fetchLogs()">เข้าสู่ระบบ</button>
             </div>
         </div>
@@ -55,6 +54,7 @@
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getLogs', pin: pin }) });
                 const data = await res.json();
                 document.getElementById('login-loader').style.display = 'none';
+                
                 if(data.status === 'error') { alert(data.message); } 
                 else {
                     document.getElementById('login-screen').classList.add('d-none');
