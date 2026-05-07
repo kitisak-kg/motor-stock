@@ -45,7 +45,15 @@
     </div>
 
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
-        <div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div>
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
+                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                    <div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;">
@@ -53,7 +61,7 @@
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div>
                 <div class="modal-body p-4">
-                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ (อาจเป็นการลงข้อมูลซ้ำ หรือรับซื้อคืนจากลูกค้า)</p>
+                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ</p>
                     <div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div>
                     <p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p>
                 </div>
@@ -84,6 +92,7 @@
                     <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
                 </div>
+
                 <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
                     <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
                     <div class="row g-2 align-items-end">
@@ -100,6 +109,7 @@
                     </div>
                     <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
                 </div>
+
                 <div class="bg-success bg-opacity-10 p-2 rounded mb-2 border border-success">
                     <div class="fw-bold text-success small mb-1">หน้าร้าน</div>
                     <div class="row g-1 mb-2">
@@ -107,6 +117,7 @@
                         <div class="col-6"><label class="x-small text-success fw-bold">12. ราคาตั้งขาย</label><input type="number" id="m-targetPrice" class="form-control form-control-sm border-success fw-bold text-success"></div>
                     </div>
                 </div>
+
                 <div class="row g-2 mb-2 border-top pt-2">
                     <div class="col-6"><label class="x-small fw-bold text-danger">13. ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
                     <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
@@ -148,7 +159,6 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = []; let bikeModal, saleModal, duplicateModal; let currentFilter = 'all';
-
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
@@ -200,8 +210,6 @@
             document.getElementById(tabId).classList.add('active');
             
             const q = document.getElementById('search').value.toLowerCase(); let html = '';
-            
-            // โชว์เฉพาะรถที่อยู่ในสต็อกเท่านั้น 
             allBikes.filter(b => b.saleStatus === 'สต็อก').forEach(b => {
                 const searchTxt = `${b.plate||''} ${b.model||''} ${b.cha||''}`.toLowerCase();
                 if(searchTxt.includes(q) && (type==='all' || b.status === type)) {
@@ -214,8 +222,7 @@
                             <div class="fw-bold text-dark" style="font-size: 0.85rem;">${b.plate || '-'} ${b.brand||''} ${b.model||''} ปี ${b.year||''} | สี: ${colorShow}</div>
                             <span class="badge ${statusColor}" style="font-size: 0.6rem;">${b.status}</span>
                         </div>
-                        <div class="mt-1" style="font-size: 0.72rem; color: #666;">
-                            เลขถัง: ${b.cha || '-'} | ภาษีหมด: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตรหมด: <span class="text-danger fw-bold">${b.idExp || '-'}</span>
+                        <div class="mt-1" style="font-size: 0.72rem; color: #666;">เลขถัง: ${b.cha || '-'} | ภาษี: <span class="text-danger fw-bold">${b.taxExp || '-'}</span>
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
@@ -229,7 +236,7 @@
                         </div>
                         <div class="d-flex gap-2 mt-2">
                             <button class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold" onclick="openEdit(${b.rowIdx})"><i class="bi bi-pencil"></i> แก้ไขรถ</button>
-                            <button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 จัดการขาย</button>
+                            <button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 ส่งบัญชี/ขาย</button>
                         </div>
                     </div>`;
                 }
@@ -264,17 +271,14 @@
                 if (inputPlate && cleanStr(b.plate) === inputPlate) matchTypes.push('ทะเบียน');
                 if (inputCha && cleanStr(b.cha) === inputCha) matchTypes.push('เลขถัง');
                 if (inputEng && cleanStr(b.eng) === inputEng) matchTypes.push('เลขเครื่อง');
-
                 if (matchTypes.length > 0) {
                     let statusText = b.saleStatus === 'ขายแล้ว' ? 'ขายไปแล้ว' : (b.saleStatus === 'รอเคลียร์ไฟแนนซ์' ? 'อยู่แผนกบัญชี' : b.status);
                     duplicateList.push(`<div class="border-bottom pb-1 mb-1"><b>${b.plate || 'ไม่มีป้าย'}</b> ${b.model||''}<br><span class="text-danger fw-bold">ซ้ำ: ${matchTypes.join(', ')}</span> <span class="text-muted">(สถานะ: ${statusText})</span></div>`);
                 }
             }
 
-            if (duplicateList.length > 0) {
-                document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                bikeModal.hide(); duplicateModal.show();
-            } else { proceedSaveBike(); }
+            if (duplicateList.length > 0) { document.getElementById('duplicate-list').innerHTML = duplicateList.join(''); bikeModal.hide(); duplicateModal.show(); } 
+            else { proceedSaveBike(); }
         }
 
         function forceSaveBike() { duplicateModal.hide(); proceedSaveBike(); }
@@ -303,10 +307,7 @@
 
         function processSendToFinance() {
             executeWithPin(async (pin) => {
-                const payload = { 
-                    action: 'updateSale', saleStatus: 'รอเคลียร์ไฟแนนซ์', pin: pin, rowIdx: document.getElementById('s-rowIdx').value, 
-                    soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value
-                };
+                const payload = { action: 'updateSale', saleStatus: 'รอเคลียร์ไฟแนนซ์', pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value };
                 document.getElementById('loader').style.display = 'flex';
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
@@ -317,18 +318,11 @@
         function openBikeModal() { 
             document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
             document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
-            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
-            calcTotal(); bikeModal.show(); 
+            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; calcTotal(); bikeModal.show(); 
         }
-        
         function deleteBike() { 
             if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
-            executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
-            });
+            executeWithPin(async (pin) => { document.getElementById('loader').style.display = 'flex'; const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); const result = await res.json(); if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); } });
         }
     </script>
 </body>
