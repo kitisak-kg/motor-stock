@@ -32,8 +32,20 @@
         <div class="row g-2 mb-4">
             <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
             <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-warning"><small class="text-muted">🏍️ ทุนจมในสต็อก</small><div class="stat-val text-warning" id="dash-stk">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (แยกส่วน)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
+            
+            <div class="col-12">
+                <div class="card-dash border-start border-4 border-warning">
+                    <small class="text-muted">🏍️ ทุนจมในสต็อก (รถที่จอดในร้าน)</small>
+                    <div class="stat-val text-warning" id="dash-stk">฿0</div>
+                    <div class="row mt-2 pt-2 border-top text-center" style="font-size:0.75rem;">
+                        <div class="col-6 border-end text-muted">ทุนรถ+ค่าใช้จ่าย<br><b class="text-dark" id="dash-stk-base">฿0</b></div>
+                        <div class="col-6 text-muted">ค่าซ่อมสะสม<br><b class="text-danger" id="dash-stk-repair">฿0</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6"><div class="card-dash border-start border-4 border-info"><small class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน</small><div class="stat-val text-info" id="dash-float">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (จบแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
         </div>
 
         <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
@@ -45,18 +57,9 @@
 
         <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
         <div class="row g-3 mb-4">
-            <div class="col-12 col-md-4">
-                <div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div>
-                <div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div>
-                <div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (> 1 เดือน)</div>
-                <div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
-            </div>
+            <div class="col-12 col-md-4"><div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div><div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
+            <div class="col-12 col-md-4"><div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div><div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
+            <div class="col-12 col-md-4"><div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (รอเล่ม/พรบ/ภาษี)</div><div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
         </div>
     </div>
 
@@ -74,16 +77,20 @@
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
+                
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
+                document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
+                document.getElementById('dash-stk-repair').innerText = '฿' + (data.dashboard.stockRepair || 0).toLocaleString();
+                document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0;
                 let alertTax = '', alertId = '', alertDoc = '';
                 
                 data.bikes.forEach(b => {
-                    if(b.saleStatus !== 'ขายแล้ว') {
+                    if(b.saleStatus === 'สต็อก') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
@@ -91,8 +98,7 @@
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
                                 if (diffDays < 0) {
-                                    let absDays = Math.abs(Math.floor(diffDays));
-                                    let years = Math.floor(absDays / 365); let days = absDays % 365;
+                                    let absDays = Math.abs(Math.floor(diffDays)); let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
                                     if (years >= 2) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ยกเลิกเล่ม)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                     else alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
@@ -111,18 +117,18 @@
                             }
                         }
                     }
-                    if (b.saleStatus === 'ขายแล้ว' || b.status === 'รอโอน') {
+                    if (b.saleStatus === 'ขายแล้ว' || b.saleStatus === 'รอเคลียร์ไฟแนนซ์') {
                         if (b.saleDate && b.saleDate !== '-') {
                             let p = b.saleDate.split('/');
                             if(p.length === 3) {
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date() - new Date(y, parseInt(p[1])-1, parseInt(p[0]))) / (1000*60*60*24);
-                                if (diffDays > 30) {
+                                if (diffDays >= 0) {
                                     let missing = '';
                                     if(!b.prbStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">พรบ.</span>';
                                     if(!b.taxStatus.includes('แล้ว')) missing += '<span class="badge bg-danger me-1">ภาษี</span>';
                                     if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
-                                    if(missing !== '') alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วันก่อน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`;
+                                    if(missing !== '') alertDoc += `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วัน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`;
                                 }
                             }
                         }
