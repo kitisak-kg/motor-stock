@@ -29,18 +29,23 @@
             </div>
         </div>
         
-        <div class="row g-2 mb-2">
+        <div class="row g-2 mb-4">
             <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
             <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
-        </div>
-        
-        <div class="row g-2 mb-2">
-            <div class="col-6"><div class="card-dash border-start border-4 border-warning"><small class="text-muted">🏍️ ทุนจม (รถในร้าน)</small><div class="stat-val text-warning" id="dash-stk">฿0</div></div></div>
+            
+            <div class="col-6">
+                <div class="card-dash border-start border-4 border-warning">
+                    <small class="text-muted">🏍️ ทุนจมในสต็อก (จอดในร้าน)</small>
+                    <div class="stat-val text-warning" id="dash-stk">฿0</div>
+                    <div class="row mt-2 pt-2 border-top text-center" style="font-size:0.6rem;">
+                        <div class="col-6 border-end text-muted">ทุนรถ<br><b class="text-dark" id="dash-stk-base">฿0</b></div>
+                        <div class="col-6 text-muted">ค่าซ่อม<br><b class="text-danger" id="dash-stk-repair">฿0</b></div>
+                    </div>
+                </div>
+            </div>
             <div class="col-6"><div class="card-dash border-start border-4 border-info"><small class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน</small><div class="stat-val text-info" id="dash-float">฿0</div></div></div>
-        </div>
-
-        <div class="row g-2 mb-4">
-            <div class="col-6"><div class="card-dash border-start border-4 border-danger"><small class="text-muted">📊 รวมทุนจม (สต็อก+รอโอน)</small><div class="stat-val text-danger" id="dash-stuck">฿0</div></div></div>
+            
+            <div class="col-6"><div class="card-dash border-start border-4 border-secondary"><small class="text-muted">📦 รวมทุนจม (จอด+รอโอน)</small><div class="stat-val text-secondary" id="dash-all-float">฿0</div></div></div>
             <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (จบแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
         </div>
 
@@ -77,32 +82,42 @@
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
+                document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
+                document.getElementById('dash-stk-repair').innerText = '฿' + (data.dashboard.stockRepair || 0).toLocaleString();
                 document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
-                document.getElementById('dash-stuck').innerText = '฿' + ((data.dashboard.stock || 0) + (data.dashboard.floating || 0)).toLocaleString();
+                
+                // คำนวณรวมทุน (จม + รอโอน)
+                const totalAllFloat = (data.dashboard.stock || 0) + (data.dashboard.floating || 0);
+                document.getElementById('dash-all-float').innerText = '฿' + totalAllFloat.toLocaleString();
+                
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0;
                 let alertTax = '', alertId = '', alertDoc = '';
                 
                 data.bikes.forEach(b => {
-                    if(b.saleStatus === 'สต็อก') {
+                    if(b.saleStatus === 'สต็อก' || !b.saleStatus) {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
                             if(p.length === 3) {
-                                let y = parseInt(p[2]); if(y > 2400) y -= 543; let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
                                 if (diffDays < 0) {
                                     let absDays = Math.abs(Math.floor(diffDays)); let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
                                     if (years >= 2) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ยกเลิกเล่ม)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
                                     else alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                } else if (diffDays <= 30) alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                } else if (diffDays <= 30) {
+                                    alertTax += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                }
                             }
                         }
                         if (b.idExp && b.idExp !== '-') {
                             let p = b.idExp.split('/');
                             if(p.length === 3) {
-                                let y = parseInt(p[2]); if(y > 2400) y -= 543; let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
+                                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                                let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
                                 if (diffDays < 0) alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold">หมดอายุแล้ว</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
                                 else if (diffDays <= 30) alertId += `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.idExp}</span></div>`;
                             }
