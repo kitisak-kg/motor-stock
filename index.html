@@ -35,7 +35,7 @@
             
             <div class="col-6">
                 <div class="card-dash border-start border-4 border-warning">
-                    <small class="text-muted" style="font-size:0.75rem;">🏍️ ทุนจมในสต็อก (รถจอดในร้าน)</small>
+                    <small class="text-muted" style="font-size:0.75rem;">🏍️ ทุนจมในสต็อก (จอดในร้าน)</small>
                     <div class="stat-val text-warning" id="dash-stk">฿0</div>
                     <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
                         <span class="text-muted d-block">ทุนรถ+อื่นๆ: <b class="text-dark" id="dash-stk-base">฿0</b></span>
@@ -43,10 +43,25 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-info"><small class="text-muted" style="font-size:0.75rem;">⏳ ทุนรอไฟแนนซ์/โอน</small><div class="stat-val text-info" id="dash-float">฿0</div></div></div>
+            <div class="col-6">
+                <div class="card-dash border-start border-4 border-info">
+                    <small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมของทุน (สต็อก+ไฟแนนซ์)</small>
+                    <div class="stat-val text-secondary" id="dash-total-usage">฿0</div>
+                    <div class="mt-2 pt-2 border-top text-start" style="font-size:0.7rem;">
+                        <span class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน:</span><br>
+                        <b class="text-info" style="font-size:0.95rem;" id="dash-float">฿0</b>
+                    </div>
+                </div>
+            </div>
             
-            <div class="col-6"><div class="card-dash border-start border-4 border-secondary"><small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมของทุน (ที่จะ+กัน)</small><div class="stat-val text-secondary" id="dash-total-usage">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted" style="font-size:0.75rem;">📈 กำไรสะสม (จบแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
+            <div class="col-12">
+                <div class="card-dash border-start border-4 border-success d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted fw-bold" style="font-size:0.9rem;">📈 กำไรสะสม (จบแล้ว)</small>
+                    </div>
+                    <div class="stat-val text-success m-0" id="dash-pro" style="font-size: 1.6rem;">฿0</div>
+                </div>
+            </div>
         </div>
 
         <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
@@ -79,13 +94,17 @@
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
                 
+                // ดึงค่ามาแปะตาม ID ที่จัดหน้าใหม่
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
                 document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
+                
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
                 document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
                 document.getElementById('dash-stk-repair').innerText = '฿' + (data.dashboard.stockRepair || 0).toLocaleString();
-                document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
+                
                 document.getElementById('dash-total-usage').innerText = '฿' + (data.dashboard.totalCapitalUsage || 0).toLocaleString();
+                document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
+                
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0;
