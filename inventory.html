@@ -67,6 +67,23 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ (อาจเป็นการลงข้อมูลซ้ำ หรือรับซื้อคืนจากลูกค้า)</p>
+                    <div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div>
+                    <p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p>
+                </div>
+                <div class="modal-footer d-flex gap-2 border-0 pt-0">
+                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); bikeModal.show();">กลับไปแก้ไข</button>
+                    <button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-bike" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -139,12 +156,13 @@
                     <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
                     <div class="col-6"><label class="x-small fw-bold">15. สถานะรถ</label><select id="m-status" class="form-select form-select-sm"><option>รอส่งซ่อม</option><option>กำลังซ่อม</option><option>พร้อมขาย</option></select></div>
                     <div class="col-6"><label class="x-small fw-bold">16. เล่มรถ</label><select id="m-bookStatus" class="form-select form-select-sm"><option>อยู่ที่ร้าน</option><option>รอชุดโอน</option></select></div>
-                    <div class="col-12"><label class="x-small fw-bold">17. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
+                    <div class="col-12"><label class="x-small fw-bold text-primary">17. ส่งซ่อมอู่</label><input type="text" id="m-repairShop" class="form-control form-control-sm border-primary" placeholder="ระบุชื่ออู่..."></div>
+                    <div class="col-12"><label class="x-small fw-bold">18. หมายเหตุ</label><textarea id="m-stockNote" class="form-control form-control-sm" rows="2"></textarea></div>
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0">
                 <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบ</button>
-                <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="saveBike()">💾 บันทึกสต็อก</button>
+                <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="checkDuplicate()">💾 บันทึกสต็อก</button>
             </div>
         </div>
       </div>
@@ -217,30 +235,25 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let allBikes = []; let allRepairs = []; let bikeModal, saleModal; let currentFilter = 'all';
+        let allBikes = []; let bikeModal, saleModal, duplicateModal; let currentFilter = 'all';
 
-        // 🔒 ระบบ PIN Modal Injection
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
-            document.getElementById('global-pin').value = '';
-            pendingPinAction = callback;
-            pinModalInstance.show();
+            document.getElementById('global-pin').value = ''; pendingPinAction = callback; pinModalInstance.show();
             setTimeout(() => document.getElementById('global-pin').focus(), 500);
         }
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
-            pinModalInstance.hide();
-            if(pendingPinAction) pendingPinAction(pin);
+            pinModalInstance.hide(); if(pendingPinAction) pendingPinAction(pin);
         });
-        document.getElementById('global-pin').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
-        });
+        document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
         window.onload = function() {
             bikeModal = new bootstrap.Modal(document.getElementById('modal-bike'));
             saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
+            duplicateModal = new bootstrap.Modal(document.getElementById('modal-duplicate'));
             document.querySelectorAll('.date-mask').forEach(input => {
                 input.addEventListener('input', function(e) {
                     let v = e.target.value.replace(/\D/g, '').slice(0, 8);
@@ -254,20 +267,15 @@
 
         function toggleSecret(icon) {
             const container = icon.closest('.col-auto').querySelector('.secret-val');
-            if (container.innerText === '***') {
-                container.innerText = container.getAttribute('data-val'); icon.classList.replace('bi-eye-slash', 'bi-eye');
-            } else {
-                container.innerText = '***'; icon.classList.replace('bi-eye', 'bi-eye-slash');
-            }
+            if (container.innerText === '***') { container.innerText = container.getAttribute('data-val'); icon.classList.replace('bi-eye-slash', 'bi-eye'); } 
+            else { container.innerText = '***'; icon.classList.replace('bi-eye', 'bi-eye-slash'); }
         }
 
         async function loadInventory() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
-                allBikes = data.bikes || [];
-                allRepairs = data.repairs || [];
-                filterInventory(currentFilter);
+                allBikes = data.bikes || []; filterInventory(currentFilter);
             } catch(e) {}
             document.getElementById('loader').style.display = 'none';
         }
@@ -276,37 +284,28 @@
             currentFilter = type;
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
             let tabId = 'tab-all';
-            if(type==='รอส่งซ่อม') tabId = 'tab-wait'; 
-            if(type==='กำลังซ่อม') tabId = 'tab-repair'; 
-            if(type==='พร้อมขาย') tabId = 'tab-ready'; 
-            if(type==='ไม่พร้อมขาย') tabId = 'tab-notready'; 
+            if(type==='รอส่งซ่อม') tabId = 'tab-wait'; if(type==='กำลังซ่อม') tabId = 'tab-repair'; 
+            if(type==='พร้อมขาย') tabId = 'tab-ready'; if(type==='ไม่พร้อมขาย') tabId = 'tab-notready'; 
             document.getElementById(tabId).classList.add('active');
             
-            const q = document.getElementById('search').value.toLowerCase();
-            let html = '';
+            const q = document.getElementById('search').value.toLowerCase(); let html = '';
             
-            allBikes.filter(b => b.saleStatus !== 'ขายแล้ว').forEach(b => {
+            allBikes.filter(b => b.saleStatus === 'สต็อก').forEach(b => {
                 const searchTxt = `${b.plate||''} ${b.model||''} ${b.cha||''}`.toLowerCase();
-                
-                // 💡 เงื่อนไขกรองแท็บ "ไม่พร้อมขาย"
-                const matchType = (type === 'all') || 
-                                  (type === 'ไม่พร้อมขาย' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม')) || 
-                                  (b.status === type);
+                const matchType = (type === 'all') || (type === 'ไม่พร้อมขาย' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม')) || (b.status === type);
 
                 if(searchTxt.includes(q) && matchType) {
                     let statusColor = 'bg-danger';
                     if(b.status === 'พร้อมขาย') statusColor = 'bg-success'; if(b.status === 'กำลังซ่อม') statusColor = 'bg-warning text-dark';
                     const colorShow = b.changedColor ? `<span class="text-primary">(ทำสี: ${b.changedColor})</span>` : (b.color||'-');
 
-                    // 💡 ดึงชื่ออู่มาโชว์ถ้ารถยังซ่อมไม่เสร็จ
+                    // 💡 แสดงชื่ออู่จากที่กรอกในช่อง 17
                     let shopBadge = '';
                     if(b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม') {
-                        const myReps = allRepairs.filter(r => r.bikeId === b.id);
-                        const lastShop = myReps.length > 0 ? myReps[myReps.length-1].shop : (b.stockNote ? b.stockNote : 'ยังไม่ระบุอู่');
-                        shopBadge = ` | อู่: <span class="text-primary fw-bold">${lastShop}</span>`;
+                        const shopName = b.repairShop ? b.repairShop : 'ยังไม่ระบุอู่';
+                        shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
                     }
 
-                    // 💡 ใส่ Checkbox ด้านซ้ายสุด
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="d-flex align-items-start">
@@ -357,43 +356,52 @@
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','finTidlor','finOther','saleCommission'];
+            // 💡 เพิ่ม repairShop ในรายการดึงข้อมูล
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
 
-        async function saveBike() {
+        function checkDuplicate() {
             const rowIdxInput = document.getElementById('m-rowIdx').value;
-            const isUpdate = !!rowIdxInput;
-            const cleanStr = (str) => (str || '').replace(/\s+/g, '').toLowerCase();
+            const cleanStr = (str) => { let s = (str || '').replace(/[\s\-\_]/g, '').toLowerCase(); return s.length > 2 ? s : ''; };
             const inputPlate = cleanStr(document.getElementById('m-plate').value);
             const inputCha = cleanStr(document.getElementById('m-cha').value);
             const inputEng = cleanStr(document.getElementById('m-eng').value);
 
-            if (!isUpdate) {
-                let duplicateList = [];
-                for (let b of allBikes) {
-                    let matchTypes = [];
-                    if (inputPlate && cleanStr(b.plate) === inputPlate) matchTypes.push('ทะเบียน');
-                    if (inputCha && cleanStr(b.cha) === inputCha) matchTypes.push('เลขถัง');
-                    if (inputEng && cleanStr(b.eng) === inputEng) matchTypes.push('เลขเครื่อง');
-                    if (matchTypes.length > 0) duplicateList.push(`- ${b.plate || 'ไม่มีทะเบียน'} ${b.model || ''} (สถานะ: ${b.saleStatus === 'ขายแล้ว' ? 'ขายไปแล้ว' : b.status}) [ซ้ำ: ${matchTypes.join(', ')}]`);
-                }
-                if (duplicateList.length > 0) {
-                    if (!confirm(`⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!\n\nรถที่มีอยู่แล้ว:\n${duplicateList.join('\n')}\n\nคุณแน่ใจหรือไม่ว่าต้องการคีย์รถคันนี้เป็น "คันใหม่" อีกครั้ง?\n(ตัวอย่างเช่น เป็นรถที่รับซื้อคืนมาจากลูกค้า)\n\nกด "ตกลง/OK" เพื่อคีย์เป็นคันใหม่\nกด "ยกเลิก/Cancel" เพื่อกลับไปแก้ไข`)) return; 
+            let duplicateList = [];
+            for (let b of allBikes) {
+                if (rowIdxInput && String(b.rowIdx) === String(rowIdxInput)) continue; 
+                let matchTypes = [];
+                if (inputPlate && cleanStr(b.plate) === inputPlate) matchTypes.push('ทะเบียน');
+                if (inputCha && cleanStr(b.cha) === inputCha) matchTypes.push('เลขถัง');
+                if (inputEng && cleanStr(b.eng) === inputEng) matchTypes.push('เลขเครื่อง');
+
+                if (matchTypes.length > 0) {
+                    let statusText = b.saleStatus === 'ขายแล้ว' ? 'ขายไปแล้ว' : (b.saleStatus === 'รอเคลียร์ไฟแนนซ์' ? 'อยู่แผนกบัญชี' : b.status);
+                    duplicateList.push(`<div class="border-bottom pb-1 mb-1"><b>${b.plate || 'ไม่มีป้าย'}</b> ${b.model||''}<br><span class="text-danger fw-bold">ซ้ำ: ${matchTypes.join(', ')}</span> <span class="text-muted">(สถานะ: ${statusText})</span></div>`);
                 }
             }
 
+            if (duplicateList.length > 0) {
+                document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
+                bikeModal.hide(); duplicateModal.show();
+            } else { proceedSaveBike(); }
+        }
+
+        function forceSaveBike() { duplicateModal.hide(); proceedSaveBike(); }
+
+        function proceedSaveBike() {
             executeWithPin(async (pin) => {
-                const payload = { action: rowIdxInput ? 'updateBike' : 'saveBike', pin: pin };
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','finTidlor','finOther','saleCommission'];
+                const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
                 document.getElementById('loader').style.display = 'flex';
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; bikeModal.show(); } 
                 else { location.reload(); }
             });
         }
@@ -403,7 +411,6 @@
             document.getElementById('s-rowIdx').value = rowIdx; document.getElementById('s-totalInternal').value = b.totalInternal || 0; 
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             
-            // 💡 สร้างกล่องโชว์ทุนจม
             let costHtml = `<div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
             <div class="row g-2 align-items-end mb-2">
                 <div class="col-6"><label class="x-small text-muted mb-0">8. ทุนซื้อจริง</label><div class="fw-bold">฿${(b.realCost||0).toLocaleString()}</div></div>
