@@ -25,7 +25,7 @@
             <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
             <div>
                 <a href="log.html" class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm me-1"><i class="bi bi-shield-lock-fill"></i> ระบบ Log</a>
-                <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงานสรุป</a>
+                <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงาน</a>
             </div>
         </div>
         
@@ -35,18 +35,18 @@
             
             <div class="col-6">
                 <div class="card-dash border-start border-4 border-warning">
-                    <small class="text-muted">🏍️ ทุนจมในสต็อก (จอดในร้าน)</small>
+                    <small class="text-muted" style="font-size:0.75rem;">🏍️ ทุนจมในสต็อก (รถจอดในร้าน)</small>
                     <div class="stat-val text-warning" id="dash-stk">฿0</div>
-                    <div class="row mt-2 pt-2 border-top text-center" style="font-size:0.6rem;">
-                        <div class="col-6 border-end text-muted">ทุนรถ<br><b class="text-dark" id="dash-stk-base">฿0</b></div>
-                        <div class="col-6 text-muted">ค่าซ่อม<br><b class="text-danger" id="dash-stk-repair">฿0</b></div>
+                    <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
+                        <span class="text-muted d-block">ทุนรถ+อื่นๆ: <b class="text-dark" id="dash-stk-base">฿0</b></span>
+                        <span class="text-muted d-block">ค่าซ่อมสะสม: <b class="text-danger" id="dash-stk-repair">฿0</b></span>
                     </div>
                 </div>
             </div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-info"><small class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน</small><div class="stat-val text-info" id="dash-float">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-info"><small class="text-muted" style="font-size:0.75rem;">⏳ ทุนรอไฟแนนซ์/โอน</small><div class="stat-val text-info" id="dash-float">฿0</div></div></div>
             
-            <div class="col-6"><div class="card-dash border-start border-4 border-secondary"><small class="text-muted">📦 รวมทุนจม (จอด+รอโอน)</small><div class="stat-val text-secondary" id="dash-all-float">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted">📈 กำไรสะสม (จบแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-secondary"><small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมของทุน (ที่จะ+กัน)</small><div class="stat-val text-secondary" id="dash-total-usage">฿0</div></div></div>
+            <div class="col-6"><div class="card-dash border-start border-4 border-success"><small class="text-muted" style="font-size:0.75rem;">📈 กำไรสะสม (จบแล้ว)</small><div class="stat-val text-success" id="dash-pro">฿0</div></div></div>
         </div>
 
         <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
@@ -85,18 +85,14 @@
                 document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
                 document.getElementById('dash-stk-repair').innerText = '฿' + (data.dashboard.stockRepair || 0).toLocaleString();
                 document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
-                
-                // คำนวณรวมทุน (จม + รอโอน)
-                const totalAllFloat = (data.dashboard.stock || 0) + (data.dashboard.floating || 0);
-                document.getElementById('dash-all-float').innerText = '฿' + totalAllFloat.toLocaleString();
-                
+                document.getElementById('dash-total-usage').innerText = '฿' + (data.dashboard.totalCapitalUsage || 0).toLocaleString();
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0;
                 let alertTax = '', alertId = '', alertDoc = '';
                 
                 data.bikes.forEach(b => {
-                    if(b.saleStatus === 'สต็อก' || !b.saleStatus) {
+                    if(b.saleStatus === 'สต็อก') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
