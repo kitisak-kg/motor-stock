@@ -23,7 +23,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-primary m-0"><i class="bi bi-tools"></i> บันทึกงานซ่อม</h5>
             <div>
-                <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="updateStatus('พร้อมขาย')">✔️ ตั้งเป็นพร้อมขาย</button>
+                <button class="btn btn-success btn-sm shadow-sm fw-bold d-none" id="btn-mark-ready" onclick="triggerMarkReady()">✔️ ตั้งเป็นพร้อมขาย</button>
                 <button class="btn btn-warning btn-sm shadow-sm fw-bold text-dark d-none" id="btn-mark-repair" onclick="updateStatus('กำลังซ่อม')">🛠️ สลับกลับมาซ่อม</button>
             </div>
         </div>
@@ -69,24 +69,58 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div></div>
-
-    <div class="modal fade" id="modal-edit-repair" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-body p-4 text-center">
-            <h6 class="fw-bold mb-3 text-primary">แก้ไขรายการซ่อม</h6>
-            <input type="hidden" id="e-rowIdx">
-            <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-            <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-            <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-            <button class="btn btn-primary w-100 fw-bold py-2" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
-            <button class="btn btn-light w-100 mt-2 text-muted" data-bs-dismiss="modal">ยกเลิก</button>
+    <div class="modal fade" id="modal-pin" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
+                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div></div></div>
+    </div>
+
+    <div class="modal fade" id="modal-edit-repair" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold mb-3 text-primary">แก้ไขรายการซ่อม</h6>
+                    <input type="hidden" id="e-rowIdx">
+                    <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+                    <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+                    <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่" onkeypress="if(event.key === 'Enter') updateRepairItem()">
+                    <button class="btn btn-primary w-100 fw-bold py-2" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
+                    <button class="btn btn-light w-100 mt-2 text-muted" data-bs-dismiss="modal">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-ready-price" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-success mb-3"><i class="bi bi-tag-fill"></i> ตั้งราคาขาย (พร้อมขาย)</h6>
+                    <input type="number" id="ready-price-input" class="form-control text-center fw-bold fs-4 mb-3" placeholder="ระบุราคาตั้งขาย..." autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button class="btn btn-success w-50 fw-bold" onclick="confirmMarkReady()">ยืนยันจบงาน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let tempRepairs = []; let editModal; let allRepairBikes = []; let allReadyBikes = [];
+        let tempRepairs = []; let editModal;
+        let allRepairBikes = []; let allReadyBikes = [];
+        let existingRepairNames = []; 
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -139,12 +173,29 @@
             document.getElementById('selected-bike-id').value = bikeId; loadRepairHistory(bikeId);
         }
 
-        function updateStatus(newStatus) {
+        let readyPriceModalInstance = null;
+        function triggerMarkReady() {
+            if(!readyPriceModalInstance) readyPriceModalInstance = new bootstrap.Modal(document.getElementById('modal-ready-price'));
+            document.getElementById('ready-price-input').value = ''; 
+            readyPriceModalInstance.show();
+            setTimeout(() => document.getElementById('ready-price-input').focus(), 500); 
+        }
+
+        // 💡 แก้บั๊กจอดำ: หน่วงเวลา 400ms ให้กล่องตั้งราคาปิดสนิทก่อน ค่อยเรียกกล่อง PIN
+        function confirmMarkReady() {
+            const price = document.getElementById('ready-price-input').value;
+            readyPriceModalInstance.hide();
+            setTimeout(() => {
+                updateStatus('พร้อมขาย', price); 
+            }, 400); 
+        }
+
+        function updateStatus(newStatus, price = '') {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus, pin: pin }) });
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus, targetPrice: price, pin: pin }) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
@@ -154,12 +205,19 @@
 
         function addTemp() {
             const nameInput = document.getElementById('r-item'); const priceInput = document.getElementById('r-price'); const shopInput = document.getElementById('r-shop');
-            const name = nameInput.value; const priceVal = priceInput.value; const shop = shopInput.value;
+            const name = nameInput.value.trim(); const priceVal = priceInput.value; const shop = shopInput.value;
             if(!name || priceVal === '') return alert("กรุณาใส่รายการและราคา (รอของ/ฟรี ให้พิมพ์เลข 0)");
+            
+            const checkName = name.toLowerCase();
+            if(tempRepairs.some(r => r.name.toLowerCase() === checkName) || existingRepairNames.includes(checkName)) {
+                if(!confirm(`⚠️ แจ้งเตือน: รายการ "${name}" มีเบิกอยู่แล้วในคันนี้!\nคุณแน่ใจหรือไม่ว่าต้องการเพิ่มซ้ำอีกครั้ง?`)) return;
+            }
+
             tempRepairs.push({ name, price: Number(priceVal), shop });
             nameInput.value = ''; priceInput.value = ''; shopInput.value = '';
             renderTemp(); nameInput.focus();
         }
+
         function removeTemp(index) { tempRepairs.splice(index, 1); renderTemp(); }
         
         function renderTemp() {
@@ -168,15 +226,7 @@
             box.classList.remove('d-none');
             let html = ''; let total = 0;
             tempRepairs.forEach((r, i) => {
-                // 💡 แสดงตัวเลขลำดับ 1, 2, 3... ให้พี่แม็กตรวจบิลได้ง่าย
-                html += `
-                <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
-                    <div>
-                        <span class="text-danger cursor-pointer me-2" onclick="removeTemp(${i})"><i class="bi bi-x-circle-fill"></i></span>
-                        <span class="fw-bold text-secondary me-1">${i + 1}.</span>${r.name}
-                    </div>
-                    <span class="fw-bold">฿${r.price.toLocaleString()}</span>
-                </div>`;
+                html += `<div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom"><div><span class="text-danger cursor-pointer me-2" onclick="removeTemp(${i})"><i class="bi bi-x-circle-fill"></i></span><span class="fw-bold text-secondary me-1">${i + 1}.</span>${r.name}</div><span class="fw-bold">฿${r.price.toLocaleString()}</span></div>`;
                 total += r.price;
             });
             document.getElementById('temp-items').innerHTML = html; document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
@@ -200,8 +250,9 @@
             const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
             const list = await res.json();
             let html = ''; let total = 0;
+            existingRepairNames = []; 
             list.forEach((r, i) => { 
-                // 💡 แสดงเลขลำดับในประวัติที่บันทึกแล้วด้วย
+                existingRepairNames.push(r.name.trim().toLowerCase()); 
                 html += `<div class="list-group-item d-flex justify-content-between align-items-center">
                     <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-3">${r.shop}</small></div>
                     <div class="text-end">
@@ -220,15 +271,23 @@
             editModal.show();
         }
 
+        // 💡 แก้บั๊กจอดำ: ซ่อนกล่องแก้ไขและหน่วงเวลา 400ms ก่อนเรียก PIN
         function updateRepairItem() {
-            executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
-                editModal.hide(); await loadRepairHistory(document.getElementById('selected-bike-id').value);
-                document.getElementById('loader').style.display = 'none';
-            });
+            editModal.hide();
+            setTimeout(() => {
+                executeWithPin(async (pin) => {
+                    document.getElementById('loader').style.display = 'flex';
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
+                    const result = await res.json();
+                    if(result.status === 'error') { 
+                        alert(result.message); document.getElementById('loader').style.display = 'none'; 
+                        editModal.show(); // คืนกล่องถ้าใส่รหัสผิด
+                        return; 
+                    }
+                    await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                    document.getElementById('loader').style.display = 'none';
+                });
+            }, 400);
         }
 
         function deleteRepair(rId) {
