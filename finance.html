@@ -39,8 +39,8 @@
         </div>
 
         <div class="d-flex mb-3 shadow-sm rounded overflow-hidden">
-            <button class="tab-btn active" id="tab-sold" onclick="switchTab('sold')">ขายแล้ว(อัปเดทเล่ม)</button>
-            <button class="tab-btn text-warning" id="tab-pending" onclick="switchTab('pending')">รถรอไฟแนนซ์/โอน</button>
+            <button class="tab-btn active" id="tab-sold" onclick="switchTab('sold')">ขายแล้ว</button>
+            <button class="tab-btn" id="tab-pending" onclick="switchTab('pending')">รอเคลียร์ยอด</button>
             <button class="tab-btn" id="tab-cap" onclick="switchTab('cap')">ประวัติทุน</button>
         </div>
 
@@ -50,7 +50,7 @@
         </div>
 
         <div id="section-pending" style="display:none;">
-            <input type="text" id="search-pending" class="form-control mb-3 shadow-sm border-warning" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถรอเคลียร์ไฟแนนซ์..." onkeyup="filterBikes('pending')">
+            <input type="text" id="search-pending" class="form-control mb-3 shadow-sm border-warning" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถรอเคลียร์..." onkeyup="filterBikes('pending')">
             <div id="list-pending"></div>
         </div>
 
@@ -65,27 +65,14 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-body p-4 text-center">
-                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
-                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
-                    <div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div></div>
 
-    <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-3 small" id="detail-content"></div>
-    </div></div></div>
+    <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 small" id="detail-content"></div></div></div></div>
 
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 อัปเดตบัญชี / งานโอน / ไฟแนนซ์</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-primary text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 อัปเดตงานบัญชี / ปิดจ๊อบการขาย</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-3">
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
@@ -99,7 +86,6 @@
                 <div class="box-deduct">
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
                     <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
-                    
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
                     <div class="row g-1">
                         <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
@@ -143,8 +129,8 @@
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0 d-flex flex-wrap gap-2">
-                <button class="btn btn-warning flex-grow-1 fw-bold shadow-sm py-2 text-dark" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')"><i class="bi bi-hourglass-split"></i> อัปเดตข้อมูล (ยังไม่ปิดจ๊อบ)</button>
-                <button class="btn btn-success flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ ได้เงินครบ/ปิดจ๊อบ</button>
+                <button class="btn btn-info text-white flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')"><i class="bi bi-hourglass-split"></i> บันทึกไว้ก่อน (ยังรอเงิน)</button>
+                <button class="btn btn-success flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ ปิดจ๊อบการขาย (รับรู้กำไร)</button>
                 <button class="btn btn-outline-danger w-100 btn-sm mt-1" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าลานจอด (ไฟแนนซ์ไม่ผ่าน)</button>
             </div>
         </div>
@@ -154,7 +140,15 @@
     <div class="modal fade" id="modal-capital" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
         <div class="modal-body p-4 text-center">
             <h6 class="fw-bold mb-3 text-success">จัดการยอดเงินทุน</h6>
-            <input type="hidden" id="c-rowIdx"><div class="text-start mb-3"><label class="small fw-bold">วันที่รับเงิน</label><input type="text" id="c-date" class="form-control mb-2" placeholder="วว/ดด/ปปปป"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control mb-2"><label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control"></div>
+            <input type="hidden" id="c-rowIdx">
+            <div class="text-start mb-3">
+                <label class="small fw-bold">วันที่รับเงิน</label><input type="text" id="c-date" class="form-control mb-2 date-mask" placeholder="วว/ดด/ปปปป">
+                <div class="row g-2 mb-2">
+                    <div class="col-7"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control"></div>
+                    <div class="col-5"><label class="small fw-bold text-primary">เป้าหมาย (คัน)</label><input type="number" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 3"></div>
+                </div>
+                <label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control">
+            </div>
             <div class="d-flex gap-2"><button class="btn btn-danger w-25 fw-bold" id="btn-delete-cap" style="display:none;" onclick="deleteCapital()">🗑️ ลบ</button><button class="btn btn-success flex-grow-1 fw-bold py-2" onclick="saveCapital()">✅ บันทึกยอด</button></div>
         </div>
     </div></div></div>
@@ -201,16 +195,16 @@
             document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
             allBikes = data.bikes || [];
             
-            // 💡 สั่งเรนเดอร์รถทั้ง 2 แท็บ (ขายแล้ว กับ รอเคลียร์)
-            renderBikesList('sold'); 
-            renderBikesList('pending');
+            renderBikesList('sold'); renderBikesList('pending');
 
             if (data.capitalHistory) {
                 let capHtml = '';
                 data.capitalHistory.forEach(c => { 
+                    // 💡 แสดงจำนวนรถที่ตั้งเป้าหมายไว้
+                    const targetStr = c.targetBikes ? `<small class="text-primary">(สำหรับ ${c.targetBikes} คัน)</small>` : '';
                     capHtml += `<div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                        <div><b class="text-dark">${c.date}</b> <small class="text-muted">(${c.note||'-'})</small></div>
-                        <div class="text-end"><span class="text-success fw-bold d-block">= ฿${Number(c.amount).toLocaleString()}</span><button class="btn btn-sm btn-outline-secondary mt-1 py-0 px-2" style="font-size:0.7rem;" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}')"><i class="bi bi-pencil"></i> แก้ไข</button></div>
+                        <div><b class="text-dark">${c.date}</b> ${targetStr}<br><small class="text-muted">${c.note||'-'}</small></div>
+                        <div class="text-end"><span class="text-success fw-bold d-block">= ฿${Number(c.amount).toLocaleString()}</span><button class="btn btn-sm btn-outline-secondary mt-1 py-0 px-2" style="font-size:0.7rem;" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}')"><i class="bi bi-pencil"></i> แก้ไข</button></div>
                     </div>`; 
                 });
                 document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4 text-muted">ไม่มีประวัติรับทุน</p>';
@@ -218,7 +212,6 @@
             document.getElementById('loader').style.display = 'none';
         }
 
-        // ฟังก์ชันสร้างการ์ดรถแบบแคปซูล 2 บรรทัด (ใช้ซ้ำได้ทั้งแท็บขายแล้ว และรอเคลียร์)
         function buildBikeCard(b) {
             const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
             const isSold = b.saleStatus === 'ขายแล้ว';
@@ -231,7 +224,7 @@
                         <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
                     </div>
                     <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 190px;">
-                        <span class="text-muted">ส่งให้/รับเรื่อง:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่งเรื่อง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
+                        <span class="text-muted">ส่งให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
                     </div>
                     <div class="d-flex gap-1" style="font-size:0.65rem;">
                         <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
@@ -249,19 +242,13 @@
             </div>`;
         }
 
-        // 💡 ฟังก์ชันแยกเรนเดอร์รถตามแท็บที่กด
         function renderBikesList(type) {
-            // ดึงข้อมูลรถมาตามประเภท (sold = ขายแล้ว, pending = รอเคลียร์ไฟแนนซ์)
             const listBikes = allBikes.filter(b => type === 'sold' ? b.saleStatus === 'ขายแล้ว' : b.saleStatus === 'รอเคลียร์ไฟแนนซ์');
-            
-            // ถ้าเป็นแท็บ "รอเคลียร์" ให้โชว์เรียงกันลงมาเลย ไม่ต้องจับกลุ่มรายเดือน
             if(type === 'pending') {
                 let html = ''; listBikes.forEach(b => html += buildBikeCard(b));
                 document.getElementById('list-pending').innerHTML = html || '<p class="text-center p-4 text-muted">ไม่มีรถรอเคลียร์ยอด</p>';
                 return;
             }
-
-            // ถ้าเป็นแท็บ "ขายแล้ว" ให้จับกลุ่มรายเดือนตามเดิม
             let monthGroups = {};
             listBikes.forEach(b => {
                 const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
@@ -336,8 +323,7 @@
         function processSale(statusType) {
             executeWithPin(async (pin) => {
                 const payload = { 
-                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, 
-                    soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
                     prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
                     transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
                     finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
@@ -360,17 +346,17 @@
         }
         
         function openAddCapital() {
-            document.getElementById('c-rowIdx').value = ''; document.getElementById('c-date').value = ''; document.getElementById('c-amount').value = ''; document.getElementById('c-note').value = '';
+            document.getElementById('c-rowIdx').value = ''; document.getElementById('c-date').value = ''; document.getElementById('c-amount').value = ''; document.getElementById('c-note').value = ''; document.getElementById('c-targetBikes').value = '';
             document.getElementById('btn-delete-cap').style.display = 'none'; capModal.show();
         }
-        function openEditCapital(rowIdx, date, amount, note) {
-            document.getElementById('c-rowIdx').value = rowIdx; document.getElementById('c-date').value = date; document.getElementById('c-amount').value = amount.replace(/,/g, ''); document.getElementById('c-note').value = note === '-' ? '' : note;
+        function openEditCapital(rowIdx, date, amount, note, target) {
+            document.getElementById('c-rowIdx').value = rowIdx; document.getElementById('c-date').value = date; document.getElementById('c-amount').value = amount.replace(/,/g, ''); document.getElementById('c-note').value = note === '-' ? '' : note; document.getElementById('c-targetBikes').value = target === 'undefined' ? '' : target;
             document.getElementById('btn-delete-cap').style.display = 'block'; capModal.show();
         }
         function saveCapital() {
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, note: document.getElementById('c-note').value }) });
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, note: document.getElementById('c-note').value }) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
