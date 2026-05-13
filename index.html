@@ -29,6 +29,7 @@
             </div>
         </div>
         
+        <h6 class="fw-bold mb-2 text-primary border-bottom pb-2"><i class="bi bi-wallet2"></i> โซนเงินทุน & สต็อก</h6>
         <div class="row g-2 mb-4">
             <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
             <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
@@ -45,7 +46,7 @@
             </div>
             <div class="col-6">
                 <div class="card-dash border-start border-4 border-info">
-                    <small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมของทุน (สต็อก+ไฟแนนซ์)</small>
+                    <small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมทุน (สต็อก+ไฟแนนซ์)</small>
                     <div class="stat-val text-secondary" id="dash-total-usage">฿0</div>
                     <div class="mt-2 pt-2 border-top text-start" style="font-size:0.7rem;">
                         <span class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน:</span><br>
@@ -53,13 +54,28 @@
                     </div>
                 </div>
             </div>
-            
+        </div>
+
+        <h6 class="fw-bold mb-2 text-success border-bottom pb-2"><i class="bi bi-graph-up-arrow"></i> โซนผลประกอบการ</h6>
+        <div class="row g-2 mb-4">
             <div class="col-12">
-                <div class="card-dash border-start border-4 border-success d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted fw-bold" style="font-size:0.9rem;">📈 กำไรสะสม (จบแล้ว)</small>
+                <div class="card-dash border-start border-4 border-success">
+                    <div class="text-center mb-3">
+                        <small class="text-muted fw-bold d-block">📈 กำไรสะสมทั้งหมด (ตั้งแต่เปิดร้าน)</small>
+                        <div class="stat-val text-success" id="dash-pro" style="font-size: 1.8rem;">฿0</div>
                     </div>
-                    <div class="stat-val text-success m-0" id="dash-pro" style="font-size: 1.6rem;">฿0</div>
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-6 border-end">
+                            <small class="text-muted fw-bold d-block mb-1">📅 ขายเดือนนี้</small>
+                            <div style="font-size:0.85rem;">ปล่อยรถ: <b class="text-dark fs-6" id="dash-m-sold">0 คัน</b></div>
+                            <div style="font-size:0.85rem;">ยอดรวม: <b class="text-primary" id="dash-m-rev">฿0</b></div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted fw-bold d-block mb-1">🏆 สะสมปีนี้</small>
+                            <div style="font-size:0.85rem;">ปล่อยรถ: <b class="text-dark fs-6" id="dash-y-sold">0 คัน</b></div>
+                            <div style="font-size:0.85rem;">ยอดรวม: <b class="text-primary" id="dash-y-rev">฿0</b></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,7 +111,7 @@
                 const data = await res.json();
                 
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
-                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
+                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString(); // ไม่รวมกำไรแล้ว
                 
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
                 document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
@@ -106,12 +122,14 @@
                 
                 document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
+                // อัปเดตสถิติ
+                document.getElementById('dash-m-sold').innerText = (data.dashboard.stats.mSold || 0) + ' คัน';
+                document.getElementById('dash-m-rev').innerText = '฿' + (data.dashboard.stats.mRev || 0).toLocaleString();
+                document.getElementById('dash-y-sold').innerText = (data.dashboard.stats.ySold || 0) + ' คัน';
+                document.getElementById('dash-y-rev').innerText = '฿' + (data.dashboard.stats.yRev || 0).toLocaleString();
+
                 let wait=0, repair=0, ready=0;
-                
-                // 💡 สร้าง Array เปล่าๆ เพื่อเก็บข้อมูลเตือนไว้จัดเรียง (Sorting)
-                let taxAlerts = [];
-                let idAlerts = [];
-                let docAlerts = [];
+                let taxAlerts = []; let idAlerts = []; let docAlerts = [];
                 
                 data.bikes.forEach(b => {
                     if(b.saleStatus === 'สต็อก') {
@@ -124,19 +142,15 @@
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
                                 
-                                if (diffDays < 0) { // หมดอายุแล้ว (diffDays จะเป็นเลขติดลบ)
+                                if (diffDays < 0) { // หมดอายุแล้ว (ติดลบ)
                                     let absDays = Math.abs(Math.floor(diffDays)); 
                                     let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
                                     
-                                    let htmlStr = '';
-                                    if (years >= 2) htmlStr = `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr} (ยกเลิกเล่ม)</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                    else htmlStr = `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                    
-                                    taxAlerts.push({ html: htmlStr, days: diffDays }); // เก็บลงตะกร้าพร้อมคะแนนวัน
-                                } else if (diffDays <= 30) { // ใกล้หมด (diffDays เป็นบวก)
-                                    let htmlStr = `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
-                                    taxAlerts.push({ html: htmlStr, days: diffDays });
+                                    let htmlStr = years >= 2 ? `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill"></i> ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>` : `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-danger">ขาด ${expiredStr}</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`;
+                                    taxAlerts.push({ html: htmlStr, days: diffDays }); 
+                                } else if (diffDays <= 30) {
+                                    taxAlerts.push({ html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'}</b><br><span class="text-warning text-dark">เหลือ ${Math.floor(diffDays)} วัน</span></div><span class="badge bg-light text-dark border">${b.taxExp}</span></div>`, days: diffDays });
                                 }
                             }
                         }
@@ -171,7 +185,7 @@
                                     if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
                                     
                                     if(missing !== '') {
-                                        docAlerts.push({ html: `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วัน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`, days: -diffDays }); // ติดลบวันให้คันที่นานที่สุดไปอยู่บนสุด
+                                        docAlerts.push({ html: `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วัน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`, days: -diffDays }); // ติดลบไว้ให้คันที่นานสุดไปอยู่บน
                                     }
                                 }
                             }
@@ -179,7 +193,7 @@
                     }
                 });
                 
-                // 💡 เรียงลำดับ (Sorting) ข้อมูลในตะกร้าจากน้อยไปมาก (ติดลบมากสุด = ขาดนานสุด ขึ้นอันดับ 1)
+                // 💡 เรียงลำดับจากน้อยไปมาก (ขาดนานสุดติดลบเยอะ จะขึ้นอันดับ 1 เสมอ)
                 taxAlerts.sort((a, b) => a.days - b.days);
                 idAlerts.sort((a, b) => a.days - b.days);
                 docAlerts.sort((a, b) => a.days - b.days);
@@ -188,7 +202,6 @@
                 document.getElementById('count-repair').innerText = repair; 
                 document.getElementById('count-ready').innerText = ready;
                 
-                // ปล่อยข้อมูลที่เรียงแล้วลงกล่อง
                 document.getElementById('alert-tax').innerHTML = taxAlerts.length > 0 ? taxAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-id').innerHTML = idAlerts.length > 0 ? idAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-doc').innerHTML = docAlerts.length > 0 ? docAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
