@@ -59,21 +59,17 @@
         <h6 class="fw-bold mb-2 text-success border-bottom pb-2"><i class="bi bi-graph-up-arrow"></i> โซนผลประกอบการ</h6>
         <div class="row g-2 mb-4">
             <div class="col-12">
-                <div class="card-dash border-start border-4 border-success">
-                    <div class="text-center mb-3">
-                        <small class="text-muted fw-bold d-block">📈 กำไรสะสมทั้งหมด (ตั้งแต่เปิดร้าน)</small>
-                        <div class="stat-val text-success" id="dash-pro" style="font-size: 1.8rem;">฿0</div>
-                    </div>
-                    <div class="row text-center border-top pt-3">
+                <div class="card-dash border-start border-4 border-success p-3">
+                    <div class="row text-center">
                         <div class="col-6 border-end">
-                            <small class="text-muted fw-bold d-block mb-1">📅 ขายเดือนนี้</small>
-                            <div style="font-size:0.85rem;">ปล่อยรถ: <b class="text-dark fs-6" id="dash-m-sold">0 คัน</b></div>
-                            <div style="font-size:0.85rem;">ยอดรวม: <b class="text-primary" id="dash-m-rev">฿0</b></div>
+                            <small class="text-muted fw-bold d-block mb-2">📅 ขายเดือนนี้</small>
+                            <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-m-sold">0 คัน</b></div>
+                            <div style="font-size:0.9rem;">กำไรเดือนนี้: <b class="text-success fs-6" id="dash-m-profit">฿0</b></div>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted fw-bold d-block mb-1">🏆 สะสมปีนี้</small>
-                            <div style="font-size:0.85rem;">ปล่อยรถ: <b class="text-dark fs-6" id="dash-y-sold">0 คัน</b></div>
-                            <div style="font-size:0.85rem;">ยอดรวม: <b class="text-primary" id="dash-y-rev">฿0</b></div>
+                            <small class="text-muted fw-bold d-block mb-2">🏆 สะสมปีนี้</small>
+                            <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-y-sold">0 คัน</b></div>
+                            <div style="font-size:0.9rem;">กำไรปีนี้: <b class="text-success fs-6" id="dash-y-profit">฿0</b></div>
                         </div>
                     </div>
                 </div>
@@ -111,7 +107,7 @@
                 const data = await res.json();
                 
                 document.getElementById('dash-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
-                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString(); // ไม่รวมกำไรแล้ว
+                document.getElementById('dash-bal').innerText = '฿' + (data.dashboard.balance || 0).toLocaleString();
                 
                 document.getElementById('dash-stk').innerText = '฿' + (data.dashboard.stock || 0).toLocaleString();
                 document.getElementById('dash-stk-base').innerText = '฿' + (data.dashboard.stockBase || 0).toLocaleString();
@@ -119,14 +115,12 @@
                 
                 document.getElementById('dash-total-usage').innerText = '฿' + (data.dashboard.totalCapitalUsage || 0).toLocaleString();
                 document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
-                
-                document.getElementById('dash-pro').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
 
-                // อัปเดตสถิติ
+                // 💡 นำตัวแปรเข้าหน้าเว็บตามคำสั่ง (ดึงกำไรมาใส่ ไม่ใช่ยอดขายรวม)
                 document.getElementById('dash-m-sold').innerText = (data.dashboard.stats.mSold || 0) + ' คัน';
-                document.getElementById('dash-m-rev').innerText = '฿' + (data.dashboard.stats.mRev || 0).toLocaleString();
+                document.getElementById('dash-m-profit').innerText = '฿' + (data.dashboard.stats.mProfit || 0).toLocaleString();
                 document.getElementById('dash-y-sold').innerText = (data.dashboard.stats.ySold || 0) + ' คัน';
-                document.getElementById('dash-y-rev').innerText = '฿' + (data.dashboard.stats.yRev || 0).toLocaleString();
+                document.getElementById('dash-y-profit').innerText = '฿' + (data.dashboard.stats.yProfit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0;
                 let taxAlerts = []; let idAlerts = []; let docAlerts = [];
@@ -135,14 +129,13 @@
                     if(b.saleStatus === 'สต็อก') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
                         
-                        // 📌 ตรวจสอบภาษี
                         if (b.taxExp && b.taxExp !== '-') {
                             let p = b.taxExp.split('/');
                             if(p.length === 3) {
                                 let y = parseInt(p[2]); if(y > 2400) y -= 543;
                                 let diffDays = (new Date(y, parseInt(p[1])-1, parseInt(p[0])) - new Date()) / (1000*60*60*24);
                                 
-                                if (diffDays < 0) { // หมดอายุแล้ว (ติดลบ)
+                                if (diffDays < 0) { 
                                     let absDays = Math.abs(Math.floor(diffDays)); 
                                     let years = Math.floor(absDays / 365); let days = absDays % 365;
                                     let expiredStr = years > 0 ? `${years} ปี ${days} วัน` : `${days} วัน`;
@@ -155,7 +148,6 @@
                             }
                         }
                         
-                        // 📌 ตรวจสอบบัตร ปชช
                         if (b.idExp && b.idExp !== '-') {
                             let p = b.idExp.split('/');
                             if(p.length === 3) {
@@ -171,7 +163,6 @@
                         }
                     }
                     
-                    // 📌 ตรวจสอบเอกสารค้างส่ง
                     if (b.saleStatus === 'ขายแล้ว' || b.saleStatus === 'รอเคลียร์ไฟแนนซ์') {
                         if (b.saleDate && b.saleDate !== '-') {
                             let p = b.saleDate.split('/');
@@ -185,7 +176,7 @@
                                     if(!b.bookTransferStatus.includes('แล้ว')) missing += '<span class="badge bg-danger">เล่ม</span>';
                                     
                                     if(missing !== '') {
-                                        docAlerts.push({ html: `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วัน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`, days: -diffDays }); // ติดลบไว้ให้คันที่นานสุดไปอยู่บน
+                                        docAlerts.push({ html: `<div class="alert-item"><b>${b.plate||'-'}</b> (ขายไป ${Math.floor(diffDays)} วัน)<br><div class="mt-1">ค้างส่ง: ${missing}</div></div>`, days: -diffDays });
                                     }
                                 }
                             }
@@ -193,7 +184,6 @@
                     }
                 });
                 
-                // 💡 เรียงลำดับจากน้อยไปมาก (ขาดนานสุดติดลบเยอะ จะขึ้นอันดับ 1 เสมอ)
                 taxAlerts.sort((a, b) => a.days - b.days);
                 idAlerts.sort((a, b) => a.days - b.days);
                 docAlerts.sort((a, b) => a.days - b.days);
