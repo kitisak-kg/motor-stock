@@ -54,7 +54,12 @@
             <div id="list-pending"></div>
         </div>
 
-        <div id="section-cap" style="display:none;"><div id="list-capital-history" class="list-group shadow-sm"></div></div>
+        <div id="section-cap" style="display:none;">
+            <div class="row g-2 mb-2" id="cap-summary-row">
+                </div>
+            <div class="row g-2" id="list-capital-history">
+                </div>
+        </div>
     </div>
 
     <div class="nav-bottom">
@@ -137,21 +142,37 @@
       </div>
     </div>
 
-    <div class="modal fade" id="modal-capital" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-body p-4 text-center">
-            <h6 class="fw-bold mb-3 text-success">จัดการยอดเงินทุน</h6>
-            <input type="hidden" id="c-rowIdx">
-            <div class="text-start mb-3">
-                <label class="small fw-bold">วันที่รับเงิน</label><input type="text" id="c-date" class="form-control mb-2 date-mask" placeholder="วว/ดด/ปปปป">
-                <div class="row g-2 mb-2">
-                    <div class="col-7"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control"></div>
-                    <div class="col-5"><label class="small fw-bold text-primary">เป้าหมาย (คัน)</label><input type="number" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 3"></div>
+    <div class="modal fade" id="modal-capital" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold mb-3 text-success">จัดการยอดเงินทุน</h6>
+                    <input type="hidden" id="c-rowIdx">
+                    <div class="text-start mb-3">
+                        <label class="small fw-bold">วันที่รับเงิน</label>
+                        <input type="text" id="c-date" class="form-control mb-2 date-mask" placeholder="วว/ดด/ปปปป">
+                        
+                        <label class="small fw-bold">แหล่งที่มาของทุน</label>
+                        <select id="c-capType" class="form-select mb-2 border-success">
+                            <option value="เงินลงทุน">💸 เงินลงทุน (ควักเนื้อ)</option>
+                            <option value="ลงทุนจากกำไร">🔄 ทุนจากกำไร (เอากำไรมาหมุน)</option>
+                        </select>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-7"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control"></div>
+                            <div class="col-5"><label class="small fw-bold text-primary">เป้าหมาย (คัน)</label><input type="number" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 3"></div>
+                        </div>
+                        <label class="small fw-bold">หมายเหตุ</label>
+                        <input type="text" id="c-note" class="form-control">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger w-25 fw-bold" id="btn-delete-cap" style="display:none;" onclick="deleteCapital()">🗑️ ลบ</button>
+                        <button class="btn btn-success flex-grow-1 fw-bold py-2" onclick="saveCapital()">✅ บันทึกยอด</button>
+                    </div>
                 </div>
-                <label class="small fw-bold">หมายเหตุ</label><input type="text" id="c-note" class="form-control">
             </div>
-            <div class="d-flex gap-2"><button class="btn btn-danger w-25 fw-bold" id="btn-delete-cap" style="display:none;" onclick="deleteCapital()">🗑️ ลบ</button><button class="btn btn-success flex-grow-1 fw-bold py-2" onclick="saveCapital()">✅ บันทึกยอด</button></div>
         </div>
-    </div></div></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -198,16 +219,54 @@
             renderBikesList('sold'); renderBikesList('pending');
 
             if (data.capitalHistory) {
-                let capHtml = '';
+                // 💡 แยกทุนเป็น 2 ฝั่ง ตามคำสั่ง
+                let htmlLeft = ''; let htmlRight = '';
+                let totalLeft = 0; let totalRight = 0;
+
                 data.capitalHistory.forEach(c => { 
-                    // 💡 แสดงจำนวนรถที่ตั้งเป้าหมายไว้
-                    const targetStr = c.targetBikes ? `<small class="text-primary">(สำหรับ ${c.targetBikes} คัน)</small>` : '';
-                    capHtml += `<div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                        <div><b class="text-dark">${c.date}</b> ${targetStr}<br><small class="text-muted">${c.note||'-'}</small></div>
-                        <div class="text-end"><span class="text-success fw-bold d-block">= ฿${Number(c.amount).toLocaleString()}</span><button class="btn btn-sm btn-outline-secondary mt-1 py-0 px-2" style="font-size:0.7rem;" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}')"><i class="bi bi-pencil"></i> แก้ไข</button></div>
-                    </div>`; 
+                    const targetStr = c.targetBikes ? `<small class="text-primary">(เป้า ${c.targetBikes} คัน)</small>` : '';
+                    const box = `
+                        <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
+                            <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
+                                <b>${c.date}</b>
+                                <button class="btn btn-sm btn-light py-0 px-1 text-primary border" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}', '${c.capType}')"><i class="bi bi-pencil"></i></button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted text-truncate" style="max-width: 80px;" title="${c.note||'-'}">${c.note||'-'}</span>
+                                <b class="text-success" style="font-size:0.85rem;">+฿${Number(c.amount).toLocaleString()}</b>
+                            </div>
+                            <div class="mt-1 text-end">${targetStr}</div>
+                        </div>
+                    `;
+
+                    if(c.capType === 'เงินลงทุน') {
+                        htmlLeft += box; totalLeft += Number(c.amount);
+                    } else { // ลงทุนจากกำไร
+                        htmlRight += box; totalRight += Number(c.amount);
+                    }
                 });
-                document.getElementById('list-capital-history').innerHTML = capHtml || '<p class="text-center p-4 text-muted">ไม่มีประวัติรับทุน</p>';
+
+                // ใส่ยอดรวมด้านบน
+                document.getElementById('cap-summary-row').innerHTML = `
+                    <div class="col-6">
+                        <div class="bg-primary text-white p-2 rounded text-center shadow-sm">
+                            <small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small>
+                            <b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-success text-white p-2 rounded text-center shadow-sm">
+                            <small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small>
+                            <b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b>
+                        </div>
+                    </div>
+                `;
+
+                // ใส่รายการประวัติข้างล่าง
+                document.getElementById('list-capital-history').innerHTML = `
+                    <div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
+                    <div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
+                `;
             }
             document.getElementById('loader').style.display = 'none';
         }
@@ -244,11 +303,13 @@
 
         function renderBikesList(type) {
             const listBikes = allBikes.filter(b => type === 'sold' ? b.saleStatus === 'ขายแล้ว' : b.saleStatus === 'รอเคลียร์ไฟแนนซ์');
+            
             if(type === 'pending') {
                 let html = ''; listBikes.forEach(b => html += buildBikeCard(b));
                 document.getElementById('list-pending').innerHTML = html || '<p class="text-center p-4 text-muted">ไม่มีรถรอเคลียร์ยอด</p>';
                 return;
             }
+
             let monthGroups = {};
             listBikes.forEach(b => {
                 const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
@@ -260,8 +321,9 @@
             Object.keys(monthGroups).sort().reverse().forEach(key => {
                 const group = monthGroups[key]; let listHtml = '';
                 group.bikes.forEach(b => listHtml += buildBikeCard(b));
+                // 💡 แทรกจำนวนคันที่ขายได้ ไว้ที่หัวเดือน ตามคำขอ
                 accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
-                    <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()})</span></button></h2>
+                    <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()} | ขาย ${group.bikes.length} คัน)</span></button></h2>
                     <div id="col-${i}" class="accordion-collapse collapse ${i===0?'show':''}" data-bs-parent="#accordionSold"><div class="accordion-body bg-light p-2">${listHtml}</div></div>
                 </div>`;
                 i++;
@@ -345,18 +407,21 @@
             });
         }
         
+        // 💡 ดึงประเภททุนเข้า/ออกป๊อปอัป
         function openAddCapital() {
             document.getElementById('c-rowIdx').value = ''; document.getElementById('c-date').value = ''; document.getElementById('c-amount').value = ''; document.getElementById('c-note').value = ''; document.getElementById('c-targetBikes').value = '';
+            document.getElementById('c-capType').value = 'เงินลงทุน';
             document.getElementById('btn-delete-cap').style.display = 'none'; capModal.show();
         }
-        function openEditCapital(rowIdx, date, amount, note, target) {
+        function openEditCapital(rowIdx, date, amount, note, target, type) {
             document.getElementById('c-rowIdx').value = rowIdx; document.getElementById('c-date').value = date; document.getElementById('c-amount').value = amount.replace(/,/g, ''); document.getElementById('c-note').value = note === '-' ? '' : note; document.getElementById('c-targetBikes').value = target === 'undefined' ? '' : target;
+            document.getElementById('c-capType').value = type || 'เงินลงทุน';
             document.getElementById('btn-delete-cap').style.display = 'block'; capModal.show();
         }
         function saveCapital() {
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, note: document.getElementById('c-note').value }) });
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
