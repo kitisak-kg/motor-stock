@@ -325,7 +325,6 @@
                         shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
                     }
 
-                    // 💡 ทุนหน้าบ้าน (โชว์) + ค่าซ่อมจริง
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -432,7 +431,13 @@
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
+            
+            // 💡 แก้ปัญหาต้นทุนไม่มา: สั่งบวกสดๆ จากตัวแปรตรงนี้เลยครับ!
+            const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
+
             document.getElementById('s-rowIdx').value = rowIdx; 
+            document.getElementById('s-totalInternal').value = manualTotalInternal; // 💡 โยนค่าที่เพิ่งบวกเสร็จเข้าไป
+
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             
             let costHtml = `<div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
@@ -446,7 +451,8 @@
                 if(b.inc2N) costHtml += `<div class="d-flex justify-content-between x-small"><span>${b.inc2N}</span><span>฿${(b.inc2P||0).toLocaleString()}</span></div>`;
                 if(b.inc3N) costHtml += `<div class="d-flex justify-content-between x-small"><span>${b.inc3N}</span><span>฿${(b.inc3P||0).toLocaleString()}</span></div>`;
             } else { costHtml += `<div class="x-small text-muted">- ไม่มี -</div>`; }
-            costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${(b.totalInternal||0).toLocaleString()}</div>`;
+            
+            costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${manualTotalInternal.toLocaleString()}</div>`; // 💡 แสดงยอดที่บวกสด
             document.getElementById('s-cost-breakdown-container').innerHTML = costHtml;
 
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
