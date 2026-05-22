@@ -17,91 +17,160 @@
         .alert-box { max-height: 250px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
         .alert-header { font-size: 0.9rem; padding: 8px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
         .alert-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
-            <div>
-                <a href="log.html" class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm me-1"><i class="bi bi-shield-lock-fill"></i> ระบบ Log</a>
-                <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงาน</a>
-            </div>
-        </div>
-        
-        <h6 class="fw-bold mb-2 text-primary border-bottom pb-2"><i class="bi bi-wallet2"></i> โซนเงินทุน & สต็อก</h6>
-        <div class="row g-2 mb-4">
-            <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
-            <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
-            
-            <div class="col-6">
-                <div class="card-dash border-start border-4 border-warning">
-                    <small class="text-muted" style="font-size:0.75rem;">🏍️ ทุนจมในสต็อก (จอดในร้าน)</small>
-                    <div class="stat-val text-warning" id="dash-stk">฿0</div>
-                    <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
-                        <span class="text-muted d-block">ทุนรถ+อื่นๆ: <b class="text-dark" id="dash-stk-base">฿0</b></span>
-                        <span class="text-muted d-block">ค่าซ่อมสะสม: <b class="text-danger" id="dash-stk-repair">฿0</b></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card-dash border-start border-4 border-info">
-                    <small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมทุน (สต็อก+ไฟแนนซ์)</small>
-                    <div class="stat-val text-secondary" id="dash-total-usage">฿0</div>
-                    <div class="mt-2 pt-2 border-top text-start" style="font-size:0.7rem;">
-                        <span class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน:</span><br>
-                        <b class="text-info" style="font-size:0.95rem;" id="dash-float">฿0</b>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold" id="loader-text">กำลังประมวลผล...</div></div>
 
-        <h6 class="fw-bold mb-2 text-success border-bottom pb-2"><i class="bi bi-graph-up-arrow"></i> โซนผลประกอบการ</h6>
-        <div class="row g-2 mb-4">
-            <div class="col-12">
-                <div class="card-dash border-start border-4 border-success p-3">
-                    <div class="row text-center">
-                        <div class="col-6 border-end">
-                            <small class="text-muted fw-bold d-block mb-2">📅 ขายเดือนนี้</small>
-                            <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-m-sold">0 คัน</b></div>
-                            <div style="font-size:0.9rem;">กำไรเดือนนี้: <b class="text-success fs-6" id="dash-m-profit">฿0</b></div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted fw-bold d-block mb-2">🏆 สะสมปีนี้</small>
-                            <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-y-sold">0 คัน</b></div>
-                            <div style="font-size:0.9rem;">กำไรปีนี้: <b class="text-success fs-6" id="dash-y-profit">฿0</b></div>
-                        </div>
-                    </div>
-                </div>
+    <div id="login-screen" class="container mt-5 pt-5 text-center" style="display: none;">
+        <h3 class="fw-bold text-dark mb-4"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h3>
+        <div class="card shadow-sm border-0 mx-auto" style="max-width: 350px; border-radius: 15px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> กรุณาใส่รหัส PIN ก่อนเข้าใช้งาน</h6>
+                <input type="password" id="login-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="verifyLogin()">เข้าสู่ระบบ</button>
             </div>
-        </div>
-
-        <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
-        <div class="row g-2 mb-4">
-            <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-danger"><div class="h4 fw-bold text-danger mb-0" id="count-wait">0</div><small class="text-muted" style="font-size:0.65rem;">รอส่งซ่อม</small></a></div>
-            <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-warning"><div class="h4 fw-bold text-warning mb-0" id="count-repair">0</div><small class="text-muted" style="font-size:0.65rem;">กำลังซ่อม</small></a></div>
-            <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-success"><div class="h4 fw-bold text-success mb-0" id="count-ready">0</div><small class="text-muted" style="font-size:0.65rem;">พร้อมขาย</small></a></div>
-        </div>
-
-        <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-md-4"><div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div><div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
-            <div class="col-12 col-md-4"><div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div><div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
-            <div class="col-12 col-md-4"><div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (รอเล่ม/พรบ/ภาษี)</div><div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
         </div>
     </div>
 
-    <div class="nav-bottom">
-        <a href="index.html" class="nav-btn active"><i class="bi bi-house-door-fill"></i>หน้าแรก</a>
-        <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
-        <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
-        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
-        <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
+    <div id="main-content" style="display: none;">
+        <div class="container mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
+                <div>
+                    <a href="log.html" class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm me-1"><i class="bi bi-shield-lock-fill"></i> ระบบ Log</a>
+                    <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงาน</a>
+                </div>
+            </div>
+            
+            <h6 class="fw-bold mb-2 text-primary border-bottom pb-2"><i class="bi bi-wallet2"></i> โซนเงินทุน & สต็อก</h6>
+            <div class="row g-2 mb-4">
+                <div class="col-6"><div class="card-dash bg-dark text-white"><small class="opacity-75">💼 ยอดรวมลงทุน</small><div class="stat-val" id="dash-cap">฿0</div></div></div>
+                <div class="col-6"><div class="card-dash bg-primary text-white"><small class="opacity-75">💰 เงินสดคงเหลือ</small><div class="stat-val" id="dash-bal">฿0</div></div></div>
+                
+                <div class="col-6">
+                    <div class="card-dash border-start border-4 border-warning">
+                        <small class="text-muted" style="font-size:0.75rem;">🏍️ ทุนจมในสต็อก (จอดในร้าน)</small>
+                        <div class="stat-val text-warning" id="dash-stk">฿0</div>
+                        <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
+                            <span class="text-muted d-block">ทุนรถ+อื่นๆ: <b class="text-dark" id="dash-stk-base">฿0</b></span>
+                            <span class="text-muted d-block">ค่าซ่อมสะสม: <b class="text-danger" id="dash-stk-repair">฿0</b></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card-dash border-start border-4 border-info">
+                        <small class="text-muted" style="font-size:0.75rem;">📦 ยอดรวมทุน (สต็อก+ไฟแนนซ์)</small>
+                        <div class="stat-val text-secondary" id="dash-total-usage">฿0</div>
+                        <div class="mt-2 pt-2 border-top text-start" style="font-size:0.7rem;">
+                            <span class="text-muted">⏳ ทุนรอไฟแนนซ์/โอน:</span><br>
+                            <b class="text-info" style="font-size:0.95rem;" id="dash-float">฿0</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-2 text-success border-bottom pb-2"><i class="bi bi-graph-up-arrow"></i> โซนผลประกอบการ</h6>
+            <div class="row g-2 mb-4">
+                <div class="col-12">
+                    <div class="card-dash border-start border-4 border-success p-3">
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <small class="text-muted fw-bold d-block mb-2">📅 ขายเดือนนี้</small>
+                                <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-m-sold">0 คัน</b></div>
+                                <div style="font-size:0.9rem;">กำไรเดือนนี้: <b class="text-success fs-6" id="dash-m-profit">฿0</b></div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted fw-bold d-block mb-2">🏆 สะสมปีนี้</small>
+                                <div style="font-size:0.9rem;" class="mb-1">ปล่อยรถ: <b class="text-dark fs-6" id="dash-y-sold">0 คัน</b></div>
+                                <div style="font-size:0.9rem;">กำไรปีนี้: <b class="text-success fs-6" id="dash-y-profit">฿0</b></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
+            <div class="row g-2 mb-4">
+                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-danger"><div class="h4 fw-bold text-danger mb-0" id="count-wait">0</div><small class="text-muted" style="font-size:0.65rem;">รอส่งซ่อม</small></a></div>
+                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-warning"><div class="h4 fw-bold text-warning mb-0" id="count-repair">0</div><small class="text-muted" style="font-size:0.65rem;">กำลังซ่อม</small></a></div>
+                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-success"><div class="h4 fw-bold text-success mb-0" id="count-ready">0</div><small class="text-muted" style="font-size:0.65rem;">พร้อมขาย</small></a></div>
+            </div>
+
+            <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4"><div class="alert-header bg-danger shadow-sm"><i class="bi bi-file-earmark-text"></i> ภาษีรถ</div><div class="alert-box shadow-sm" id="alert-tax"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
+                <div class="col-12 col-md-4"><div class="alert-header bg-warning text-dark shadow-sm"><i class="bi bi-person-vcard"></i> บัตร ปชช.</div><div class="alert-box shadow-sm" id="alert-id"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
+                <div class="col-12 col-md-4"><div class="alert-header bg-info text-dark shadow-sm"><i class="bi bi-exclamation-triangle"></i> เอกสารค้างส่ง (รอเล่ม/พรบ/ภาษี)</div><div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div></div>
+            </div>
+        </div>
+
+        <div class="nav-bottom">
+            <a href="index.html" class="nav-btn active"><i class="bi bi-house-door-fill"></i>หน้าแรก</a>
+            <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
+            <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
+            <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
+            <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
+        </div>
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
+        
+        // 🔒 ฟังก์ชันเช็ครหัสผ่าน
+        async function verifyLogin() {
+            const pin = document.getElementById('login-pin').value;
+            if (!pin) return alert('กรุณากรอกรหัส PIN 4 หลัก');
+
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                // ส่งคำสั่งปลอมไปหลอกถาม PIN ถ้าผิดระบบจะเด้ง Error กลับมา
+                const res = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'verifyPin', pin: pin }) 
+                });
+                const result = await res.json();
+                
+                if (result.status === 'error') {
+                    alert('รหัส PIN ไม่ถูกต้อง!');
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('login-pin').value = '';
+                    document.getElementById('login-pin').focus();
+                } else {
+                    // รหัสถูกต้อง! บันทึกความจำไว้ แล้วเปิดหน้า Dashboard
+                    sessionStorage.setItem('dashboard_logged_in', 'true');
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                    loadDashboard(); 
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        // เช็คการกด Enter เพื่อล็อกอิน
+        document.getElementById('login-pin').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyLogin();
+        });
+
+        // 🚀 โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        window.onload = function() {
+            // เช็คว่าเคยล็อกอินในรอบนี้ไปแล้วหรือยัง
+            if (sessionStorage.getItem('dashboard_logged_in') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                loadDashboard();
+            } else {
+                // ถ้ายังให้โชว์หน้า Login
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('login-pin').focus();
+            }
+        };
+
         async function loadDashboard() {
+            document.getElementById('loader').style.display = 'flex';
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 const data = await res.json();
@@ -116,7 +185,6 @@
                 document.getElementById('dash-total-usage').innerText = '฿' + (data.dashboard.totalCapitalUsage || 0).toLocaleString();
                 document.getElementById('dash-float').innerText = '฿' + (data.dashboard.floating || 0).toLocaleString();
 
-                // 💡 นำตัวแปรเข้าหน้าเว็บตามคำสั่ง (ดึงกำไรมาใส่ ไม่ใช่ยอดขายรวม)
                 document.getElementById('dash-m-sold').innerText = (data.dashboard.stats.mSold || 0) + ' คัน';
                 document.getElementById('dash-m-profit').innerText = '฿' + (data.dashboard.stats.mProfit || 0).toLocaleString();
                 document.getElementById('dash-y-sold').innerText = (data.dashboard.stats.ySold || 0) + ' คัน';
@@ -197,8 +265,8 @@
                 document.getElementById('alert-doc').innerHTML = docAlerts.length > 0 ? docAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
             } catch (e) { console.error(e); }
+            document.getElementById('loader').style.display = 'none';
         }
-        window.onload = loadDashboard;
     </script>
 </body>
 </html>
