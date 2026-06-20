@@ -160,7 +160,7 @@
 
                         <div class="row g-2 mb-2">
                             <div class="col-7"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control"></div>
-                            <div class="col-5"><label class="small fw-bold text-primary">เป้าหมาย (คัน)</label><input type="number" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 3"></div>
+                            <div class="col-5"><label class="small fw-bold text-primary">กำไรคันที่</label><input type="text" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 1, 2"></div>
                         </div>
                         <label class="small fw-bold">หมายเหตุ</label>
                         <input type="text" id="c-note" class="form-control">
@@ -219,12 +219,12 @@
             renderBikesList('sold'); renderBikesList('pending');
 
             if (data.capitalHistory) {
-                // 💡 แยกทุนเป็น 2 ฝั่ง ตามคำสั่ง
                 let htmlLeft = ''; let htmlRight = '';
                 let totalLeft = 0; let totalRight = 0;
 
                 data.capitalHistory.forEach(c => { 
-                    const targetStr = c.targetBikes ? `<small class="text-primary">(เป้า ${c.targetBikes} คัน)</small>` : '';
+                    // 💡 แก้ไขข้อความในวงเล็บให้ตรงตามบรีฟ
+                    const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
                     const box = `
                         <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
                             <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
@@ -241,12 +241,11 @@
 
                     if(c.capType === 'เงินลงทุน') {
                         htmlLeft += box; totalLeft += Number(c.amount);
-                    } else { // ลงทุนจากกำไร
+                    } else { 
                         htmlRight += box; totalRight += Number(c.amount);
                     }
                 });
 
-                // ใส่ยอดรวมด้านบน
                 document.getElementById('cap-summary-row').innerHTML = `
                     <div class="col-6">
                         <div class="bg-primary text-white p-2 rounded text-center shadow-sm">
@@ -262,7 +261,6 @@
                     </div>
                 `;
 
-                // ใส่รายการประวัติข้างล่าง
                 document.getElementById('list-capital-history').innerHTML = `
                     <div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
                     <div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
@@ -321,7 +319,6 @@
             Object.keys(monthGroups).sort().reverse().forEach(key => {
                 const group = monthGroups[key]; let listHtml = '';
                 group.bikes.forEach(b => listHtml += buildBikeCard(b));
-                // 💡 แทรกจำนวนคันที่ขายได้ ไว้ที่หัวเดือน ตามคำขอ
                 accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
                     <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col-${i}">เดือน ${group.label} &nbsp; <span class="text-success">(กำไร +฿${group.totalProfit.toLocaleString()} | ขาย ${group.bikes.length} คัน)</span></button></h2>
                     <div id="col-${i}" class="accordion-collapse collapse ${i===0?'show':''}" data-bs-parent="#accordionSold"><div class="accordion-body bg-light p-2">${listHtml}</div></div>
@@ -365,6 +362,7 @@
             const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
             const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
             const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
+            
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
@@ -407,7 +405,6 @@
             });
         }
         
-        // 💡 ดึงประเภททุนเข้า/ออกป๊อปอัป
         function openAddCapital() {
             document.getElementById('c-rowIdx').value = ''; document.getElementById('c-date').value = ''; document.getElementById('c-amount').value = ''; document.getElementById('c-note').value = ''; document.getElementById('c-targetBikes').value = '';
             document.getElementById('c-capType').value = 'เงินลงทุน';
