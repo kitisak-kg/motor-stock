@@ -8,7 +8,7 @@
     <style>
         body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
         .log-table { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
-        .log-table th { background: #343a40; color: white; padding: 12px; font-size: 0.85rem; }
+        .log-table th { background: #343a40; color: white; padding: 12px; font-size: 0.85rem; white-space: nowrap; }
         .log-table td { padding: 10px; font-size: 0.8rem; border-bottom: 1px solid #eee; vertical-align: middle; }
     </style>
 </head>
@@ -34,12 +34,22 @@
             <a href="index.html" class="btn btn-sm btn-outline-light">กลับหน้าแรก</a>
         </div>
         
-        <div class="container mt-4">
+        <div class="container-fluid mt-4">
             <input type="text" id="search-log" class="form-control form-control-lg shadow-sm mb-3 border-primary" placeholder="🔍 ค้นหา พนักงาน / ทะเบียนรถ / การกระทำ..." onkeyup="filterLogs()">
             
             <div class="log-table table-responsive">
                 <table class="table table-hover m-0">
-                    <thead><tr><th>เวลาที่บันทึก</th><th>พนักงาน</th><th>การกระทำ</th><th>เป้าหมาย</th><th>รายละเอียด (Diff)</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>เวลาที่บันทึก</th>
+                            <th>พนักงาน</th>
+                            <th>การกระทำ</th>
+                            <th>เป้าหมาย</th>
+                            <th>รายละเอียด</th>
+                            <th class="text-end text-warning">ทุนรวม (ณ ตอนนั้น)</th>
+                            <th class="text-end text-success">เงินสดคงเหลือ</th>
+                        </tr>
+                    </thead>
                     <tbody id="log-table-body">
                         </tbody>
                 </table>
@@ -73,17 +83,23 @@
                     
                     const logs = data.logs.slice(1); // ข้ามบรรทัดหัวตาราง
                     let html = '';
-                    // .reverse() เพื่อให้ Log ล่าสุดขึ้นข้างบนเสมอ
+                    
                     logs.reverse().forEach(r => {
+                        // 💡 ดึงค่าเงินในคอลัมน์ที่ 6 และ 7 มาแสดง (ถ้าไม่มีให้แสดงขีด -)
+                        const totalCap = r[5] || '-';
+                        const cashBal = r[6] || '-';
+
                         html += `<tr class="log-row">
                             <td class="text-nowrap text-muted">${r[0]}</td>
                             <td><span class="badge bg-secondary">${r[1]}</span></td>
                             <td class="text-nowrap fw-bold text-dark">${r[2]}</td>
                             <td class="text-primary fw-bold">${r[3]}</td>
-                            <td>${r[4]}</td>
+                            <td style="max-width: 300px; white-space: normal;">${r[4]}</td>
+                            <td class="text-end fw-bold text-warning">${totalCap}</td>
+                            <td class="text-end fw-bold text-success">${cashBal}</td>
                         </tr>`;
                     });
-                    document.getElementById('log-table-body').innerHTML = html || '<tr><td colspan="5" class="text-center py-4">ยังไม่มีประวัติการใช้งาน</td></tr>';
+                    document.getElementById('log-table-body').innerHTML = html || '<tr><td colspan="7" class="text-center py-4">ยังไม่มีประวัติการใช้งาน</td></tr>';
                 }
             } catch(e) {
                 document.getElementById('login-loader').style.display = 'none';
