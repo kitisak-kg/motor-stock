@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    <!-- 💡 ปรับปรุงป๊อปอัปตั้งราคา ให้โชว์ข้อมูลต้นทุนแบบเดียวกับในหน้า Inventory ทุกประการ -->
+    <!-- 💡 ป๊อปอัป อัปเกรด ดึงข้อมูลตาราง 1 และ ตาราง 4 มาอยู่ในที่เดียวกัน -->
     <div class="modal fade" id="modal-ready-price" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -114,11 +114,18 @@
                     <div class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
                         <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
                         <div class="row g-2 mb-2">
-                            <div class="col-6"><label class="x-small text-muted mb-0">ทุนซื้อจริง</label><div class="fw-bold" id="ready-real-cost">฿0</div></div>
-                            <div class="col-6"><label class="x-small text-muted mb-0">ค่าซ่อมสะสม (อู่)</label><div class="fw-bold text-danger" id="ready-repair-cost">฿0</div></div>
-                            <div class="col-12"><label class="x-small text-muted mb-0">ทุนเพิ่มอื่นๆ (ระบุในสต็อก)</label><div class="fw-bold" id="ready-inc-cost">฿0</div></div>
+                            <div class="col-6"><label class="x-small text-muted mb-0">8. ทุนซื้อจริง</label><div class="fw-bold" id="ready-real-cost" data-val="0">฿0</div></div>
+                            <div class="col-6"><label class="x-small text-muted mb-0">9. ค่าซ่อมสะสม (อู่)</label><div class="fw-bold text-danger" id="ready-repair-cost" data-val="0">฿0</div></div>
                         </div>
-                        <div class="mt-2 pt-2 border-top border-primary border-opacity-50 text-end fw-bold text-primary small" id="ready-total-cost">รวมต้นทุนจม: ฿0</div>
+                        <div class="mt-2 border-top pt-2 border-primary border-opacity-50">
+                            <label class="x-small fw-bold text-primary mb-1">ค่าใช้จ่ายที่ "รวมเพิ่มในทุนรถ"</label>
+                            <div class="row g-1 mt-1">
+                                <div class="col-8"><input type="text" id="r-inc1N" class="form-control form-control-sm" placeholder="รายการที่ 1"></div><div class="col-4"><input type="number" id="r-inc1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcReadyTotal()"></div>
+                                <div class="col-8 mt-1"><input type="text" id="r-inc2N" class="form-control form-control-sm" placeholder="รายการที่ 2"></div><div class="col-4 mt-1"><input type="number" id="r-inc2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcReadyTotal()"></div>
+                                <div class="col-8 mt-1"><input type="text" id="r-inc3N" class="form-control form-control-sm" placeholder="รายการที่ 3"></div><div class="col-4 mt-1"><input type="number" id="r-inc3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcReadyTotal()"></div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-end fw-bold text-primary small" id="ready-total-cost">รวมต้นทุนจม: ฿0</div>
                     </div>
 
                     <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
@@ -129,7 +136,7 @@
                                 <input type="number" id="ready-showcost-input" class="form-control form-control-sm" placeholder="เช่น 35000">
                             </div>
                             <div class="col-6">
-                                <label class="x-small fw-bold text-success">ราคาตั้งขายจริง</label>
+                                <label class="x-small fw-bold text-success">12. ราคาตั้งขายจริง</label>
                                 <input type="number" id="ready-price-input" class="form-control form-control-sm border-success text-success fw-bold" placeholder="เช่น 45000">
                             </div>
                         </div>
@@ -210,51 +217,84 @@
             const b = allRepairBikes.find(x => x.id === bikeId) || allReadyBikes.find(x => x.id === bikeId);
             if(!b) return;
 
-            // 💡 โยนข้อมูลสรุปต้นทุนเข้าไปใน Popup
+            // 💡 โยนข้อมูลสรุปต้นทุนเข้าไปใน Popup พร้อมให้แก้ไขได้
             document.getElementById('ready-bike-title').innerText = `${b.plate || '-'} ${b.model || ''}`;
+            
             document.getElementById('ready-real-cost').innerText = `฿${(b.realCost||0).toLocaleString()}`;
+            document.getElementById('ready-real-cost').setAttribute('data-val', b.realCost||0);
+            
             document.getElementById('ready-repair-cost').innerText = `฿${(b.repairSum||0).toLocaleString()}`;
+            document.getElementById('ready-repair-cost').setAttribute('data-val', b.repairSum||0);
             
-            const incTotal = (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
-            document.getElementById('ready-inc-cost').innerText = `฿${incTotal.toLocaleString()}`;
-            
-            const totalSunk = (b.realCost||0) + (b.repairSum||0) + incTotal;
-            document.getElementById('ready-total-cost').innerText = `รวมต้นทุนจม: ฿${totalSunk.toLocaleString()}`;
+            // โหลดค่าใช้จ่ายอื่นๆ ที่อาจจะกรอกค้างไว้ในสต็อก
+            document.getElementById('r-inc1N').value = b.inc1N || '';
+            document.getElementById('r-inc1P').value = b.inc1P || '';
+            document.getElementById('r-inc2N').value = b.inc2N || '';
+            document.getElementById('r-inc2P').value = b.inc2P || '';
+            document.getElementById('r-inc3N').value = b.inc3N || '';
+            document.getElementById('r-inc3P').value = b.inc3P || '';
 
-            // โหลดค่าเก่า (ถ้ามี) มาใส่ช่องไว้ให้ด้วย
+            // โหลดค่าทุนโชว์/ราคาขายเก่า (ถ้ามี)
             document.getElementById('ready-showcost-input').value = b.showCost || '';
             document.getElementById('ready-price-input').value = b.targetPrice || '';
+
+            calcReadyTotal(); // คำนวณยอดเงินรวมให้เห็นสดๆ
 
             if(!readyPriceModalInstance) readyPriceModalInstance = new bootstrap.Modal(document.getElementById('modal-ready-price'));
             readyPriceModalInstance.show();
             setTimeout(() => document.getElementById('ready-price-input').focus(), 500); 
         }
 
+        // 💡 ฟังก์ชันคำนวณยอดรวมในป๊อปอัป แบบสดๆ
+        function calcReadyTotal() {
+            const real = Number(document.getElementById('ready-real-cost').getAttribute('data-val')) || 0;
+            const rep = Number(document.getElementById('ready-repair-cost').getAttribute('data-val')) || 0;
+            const i1 = Number(document.getElementById('r-inc1P').value) || 0;
+            const i2 = Number(document.getElementById('r-inc2P').value) || 0;
+            const i3 = Number(document.getElementById('r-inc3P').value) || 0;
+            const total = real + rep + i1 + i2 + i3;
+            document.getElementById('ready-total-cost').innerText = `รวมต้นทุนจม: ฿${total.toLocaleString()}`;
+        }
+
         function confirmMarkReady() {
-            const price = document.getElementById('ready-price-input').value;
-            const showCost = document.getElementById('ready-showcost-input').value;
+            const payload = {
+                price: document.getElementById('ready-price-input').value,
+                showCost: document.getElementById('ready-showcost-input').value,
+                inc1N: document.getElementById('r-inc1N').value,
+                inc1P: document.getElementById('r-inc1P').value,
+                inc2N: document.getElementById('r-inc2N').value,
+                inc2P: document.getElementById('r-inc2P').value,
+                inc3N: document.getElementById('r-inc3N').value,
+                inc3P: document.getElementById('r-inc3P').value
+            };
             readyPriceModalInstance.hide();
             setTimeout(() => {
-                // 💡 ส่งค่า ทุนโชว์ (showCost) แนบไปด้วย
-                updateStatus('พร้อมขาย', price, showCost); 
+                // 💡 ส่ง Data Package แนบไปให้ฟังก์ชันทำงานต่อ
+                updateStatus('พร้อมขาย', payload); 
             }, 400); 
         }
 
-        function updateStatus(newStatus, price = '', showCost = '') {
+        function updateStatus(newStatus, payload = {}) {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                // 💡 พ่วงค่า showCost ส่งไปให้หลังบ้านจัดการบันทึก
-                const payload = { 
+                // 💡 รวบรวมข้อมูลทุกอย่างจากป๊อปอัปส่งไปให้หลังบ้าน
+                const apiPayload = { 
                     action: 'changeBikeStatus', 
                     bikeId: bikeId, 
                     newStatus: newStatus, 
-                    targetPrice: price, 
-                    showCost: showCost,
+                    targetPrice: payload.price !== undefined ? payload.price : '', 
+                    showCost: payload.showCost !== undefined ? payload.showCost : '',
+                    inc1N: payload.inc1N !== undefined ? payload.inc1N : '', 
+                    inc1P: payload.inc1P !== undefined ? payload.inc1P : '',
+                    inc2N: payload.inc2N !== undefined ? payload.inc2N : '', 
+                    inc2P: payload.inc2P !== undefined ? payload.inc2P : '',
+                    inc3N: payload.inc3N !== undefined ? payload.inc3N : '', 
+                    inc3P: payload.inc3P !== undefined ? payload.inc3P : '',
                     pin: pin 
                 };
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(apiPayload) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
