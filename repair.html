@@ -100,14 +100,43 @@
         </div>
     </div>
 
+    <!-- 💡 ปรับปรุงป๊อปอัปตั้งราคา ให้โชว์ข้อมูลต้นทุนแบบเดียวกับในหน้า Inventory ทุกประการ -->
     <div class="modal fade" id="modal-ready-price" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-body p-4 text-center">
-                    <h6 class="fw-bold text-success mb-3"><i class="bi bi-tag-fill"></i> ตั้งราคาขาย (พร้อมขาย)</h6>
-                    <input type="number" id="ready-price-input" class="form-control text-center fw-bold fs-4 mb-3" placeholder="ระบุราคาตั้งขาย..." autocomplete="off">
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                <div class="modal-header bg-success text-white p-2 px-3 border-0">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-tag-fill"></i> สรุปทุนและตั้งราคาขาย</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <h6 id="ready-bike-title" class="fw-bold text-center text-primary mb-3 border-bottom pb-2"></h6>
+                    
+                    <div class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
+                        <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><label class="x-small text-muted mb-0">ทุนซื้อจริง</label><div class="fw-bold" id="ready-real-cost">฿0</div></div>
+                            <div class="col-6"><label class="x-small text-muted mb-0">ค่าซ่อมสะสม (อู่)</label><div class="fw-bold text-danger" id="ready-repair-cost">฿0</div></div>
+                            <div class="col-12"><label class="x-small text-muted mb-0">ทุนเพิ่มอื่นๆ (ระบุในสต็อก)</label><div class="fw-bold" id="ready-inc-cost">฿0</div></div>
+                        </div>
+                        <div class="mt-2 pt-2 border-top border-primary border-opacity-50 text-end fw-bold text-primary small" id="ready-total-cost">รวมต้นทุนจม: ฿0</div>
+                    </div>
+
+                    <div class="bg-success bg-opacity-10 p-2 rounded mb-3 border border-success">
+                        <div class="fw-bold text-success small mb-2">ตั้งค่าหน้าร้าน</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="x-small fw-bold">ทุนรถหน้าบ้าน (โชว์)</label>
+                                <input type="number" id="ready-showcost-input" class="form-control form-control-sm" placeholder="เช่น 35000">
+                            </div>
+                            <div class="col-6">
+                                <label class="x-small fw-bold text-success">ราคาตั้งขายจริง</label>
+                                <input type="number" id="ready-price-input" class="form-control form-control-sm border-success text-success fw-bold" placeholder="เช่น 45000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-light w-50 fw-bold border" data-bs-dismiss="modal">ยกเลิก</button>
                         <button class="btn btn-success w-50 fw-bold" onclick="confirmMarkReady()">ยืนยันจบงาน</button>
                     </div>
                 </div>
@@ -175,27 +204,57 @@
 
         let readyPriceModalInstance = null;
         function triggerMarkReady() {
+            const bikeId = document.getElementById('selected-bike-id').value;
+            if(!bikeId) return;
+            // ดึงข้อมูลรถมาแสดง
+            const b = allRepairBikes.find(x => x.id === bikeId) || allReadyBikes.find(x => x.id === bikeId);
+            if(!b) return;
+
+            // 💡 โยนข้อมูลสรุปต้นทุนเข้าไปใน Popup
+            document.getElementById('ready-bike-title').innerText = `${b.plate || '-'} ${b.model || ''}`;
+            document.getElementById('ready-real-cost').innerText = `฿${(b.realCost||0).toLocaleString()}`;
+            document.getElementById('ready-repair-cost').innerText = `฿${(b.repairSum||0).toLocaleString()}`;
+            
+            const incTotal = (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
+            document.getElementById('ready-inc-cost').innerText = `฿${incTotal.toLocaleString()}`;
+            
+            const totalSunk = (b.realCost||0) + (b.repairSum||0) + incTotal;
+            document.getElementById('ready-total-cost').innerText = `รวมต้นทุนจม: ฿${totalSunk.toLocaleString()}`;
+
+            // โหลดค่าเก่า (ถ้ามี) มาใส่ช่องไว้ให้ด้วย
+            document.getElementById('ready-showcost-input').value = b.showCost || '';
+            document.getElementById('ready-price-input').value = b.targetPrice || '';
+
             if(!readyPriceModalInstance) readyPriceModalInstance = new bootstrap.Modal(document.getElementById('modal-ready-price'));
-            document.getElementById('ready-price-input').value = ''; 
             readyPriceModalInstance.show();
             setTimeout(() => document.getElementById('ready-price-input').focus(), 500); 
         }
 
-        // 💡 แก้บั๊กจอดำ: หน่วงเวลา 400ms ให้กล่องตั้งราคาปิดสนิทก่อน ค่อยเรียกกล่อง PIN
         function confirmMarkReady() {
             const price = document.getElementById('ready-price-input').value;
+            const showCost = document.getElementById('ready-showcost-input').value;
             readyPriceModalInstance.hide();
             setTimeout(() => {
-                updateStatus('พร้อมขาย', price); 
+                // 💡 ส่งค่า ทุนโชว์ (showCost) แนบไปด้วย
+                updateStatus('พร้อมขาย', price, showCost); 
             }, 400); 
         }
 
-        function updateStatus(newStatus, price = '') {
+        function updateStatus(newStatus, price = '', showCost = '') {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'changeBikeStatus', bikeId: bikeId, newStatus: newStatus, targetPrice: price, pin: pin }) });
+                // 💡 พ่วงค่า showCost ส่งไปให้หลังบ้านจัดการบันทึก
+                const payload = { 
+                    action: 'changeBikeStatus', 
+                    bikeId: bikeId, 
+                    newStatus: newStatus, 
+                    targetPrice: price, 
+                    showCost: showCost,
+                    pin: pin 
+                };
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
             });
@@ -271,7 +330,6 @@
             editModal.show();
         }
 
-        // 💡 แก้บั๊กจอดำ: ซ่อนกล่องแก้ไขและหน่วงเวลา 400ms ก่อนเรียก PIN
         function updateRepairItem() {
             editModal.hide();
             setTimeout(() => {
@@ -281,7 +339,7 @@
                     const result = await res.json();
                     if(result.status === 'error') { 
                         alert(result.message); document.getElementById('loader').style.display = 'none'; 
-                        editModal.show(); // คืนกล่องถ้าใส่รหัสผิด
+                        editModal.show(); 
                         return; 
                     }
                     await loadRepairHistory(document.getElementById('selected-bike-id').value);
