@@ -133,9 +133,11 @@
                 </div>
 
                 <div class="box-finance">
-                    <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
+                    <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-4"><label class="x-small fw-bold text-dark">CIMB</label><input type="number" id="m-finCIMB" class="form-control form-control-sm"></div>
+                        <!-- 💡 ซ่อน CIMB ไว้เบื้องหลัง และเพิ่มช่องเงินดาวน์แทน -->
+                        <input type="hidden" id="m-finCIMB" value="0">
+                        <div class="col-4"><label class="x-small fw-bold text-info">เงินดาวน์</label><input type="number" id="m-downPayment" class="form-control form-control-sm border-info"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm"></div>
                     </div>
@@ -197,9 +199,11 @@
                 </div>
 
                 <div class="box-finance">
-                    <div class="box-finance-title">ยอดจัดไฟแนนซ์ (บันทึกไว้ดู)</div>
+                    <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-4"><label class="x-small fw-bold text-dark">CIMB</label><input type="number" id="s-finCIMB" class="form-control form-control-sm"></div>
+                        <!-- 💡 ซ่อน CIMB ไว้เบื้องหลัง และเพิ่มช่องเงินดาวน์แทน -->
+                        <input type="hidden" id="s-finCIMB" value="0">
+                        <div class="col-4"><label class="x-small fw-bold text-info">เงินดาวน์</label><input type="number" id="s-downPayment" class="form-control form-control-sm border-info"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm"></div>
                         <div class="col-4"><label class="x-small fw-bold text-dark">อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm"></div>
                     </div>
@@ -308,7 +312,7 @@
             let html = '';
             
             allBikes.filter(b => b.saleStatus === 'สต็อก').forEach(b => {
-                const searchTxt = `${b.plate||''} ${b.model||''} ${b.cha||''}`.toLowerCase();
+                const searchTxt = `${b.plate||''} ${b.model||''} ${b.brand||''} ${b.cha||''} ${b.eng||''} ${b.year||''} ${b.appearance||''} ${b.color||''} ${b.changedColor||''}`.toLowerCase();
                 
                 const matchType = (type === 'all') || 
                                   (type === 'ไม่พร้อมขาย' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม')) || 
@@ -380,7 +384,8 @@
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','finTidlor','finOther','saleCommission'];
+            // 💡 เพิ่ม downPayment เข้าไปใน Array ด้วย เพื่อให้ดึงค่า/ส่งค่า ถูกต้อง
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','finTidlor','finOther','saleCommission'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
@@ -418,7 +423,8 @@
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','finTidlor','finOther','saleCommission'];
+                // 💡 เพิ่ม downPayment เข้าไปใน Array ด้วย เพื่อเซฟข้อมูล
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','finTidlor','finOther','saleCommission'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
                 document.getElementById('loader').style.display = 'flex';
@@ -432,11 +438,10 @@
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
             
-            // 💡 แก้ปัญหาต้นทุนไม่มา: สั่งบวกสดๆ จากตัวแปรตรงนี้เลยครับ!
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
-            document.getElementById('s-totalInternal').value = manualTotalInternal; // 💡 โยนค่าที่เพิ่งบวกเสร็จเข้าไป
+            document.getElementById('s-totalInternal').value = manualTotalInternal; 
 
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             
@@ -452,7 +457,7 @@
                 if(b.inc3N) costHtml += `<div class="d-flex justify-content-between x-small"><span>${b.inc3N}</span><span>฿${(b.inc3P||0).toLocaleString()}</span></div>`;
             } else { costHtml += `<div class="x-small text-muted">- ไม่มี -</div>`; }
             
-            costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${manualTotalInternal.toLocaleString()}</div>`; // 💡 แสดงยอดที่บวกสด
+            costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${manualTotalInternal.toLocaleString()}</div>`; 
             document.getElementById('s-cost-breakdown-container').innerHTML = costHtml;
 
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
@@ -460,7 +465,13 @@
             document.getElementById('s-customer').value = b.customerDetail || '';
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
-            document.getElementById('s-finCIMB').value = b.finCIMB || 0; document.getElementById('s-finTidlor').value = b.finTidlor || 0; document.getElementById('s-finOther').value = b.finOther || 0; document.getElementById('s-saleCommission').value = b.saleCommission || 0;
+            
+            // 💡 โหลดข้อมูลเงินดาวน์และไฟแนนซ์มาโชว์ในช่อง
+            document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
+            document.getElementById('s-downPayment').value = b.downPayment || 0; 
+            document.getElementById('s-finTidlor').value = b.finTidlor || 0; 
+            document.getElementById('s-finOther').value = b.finOther || 0; 
+            document.getElementById('s-saleCommission').value = b.saleCommission || 0;
             
             calcSaleProfit(); saleModal.show();
         }
@@ -471,7 +482,8 @@
                     action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
                     prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
                     transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                    finCIMB: document.getElementById('s-finCIMB').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
+                    // 💡 ส่งข้อมูลเงินดาวน์กลับไปด้วย
+                    finCIMB: document.getElementById('s-finCIMB').value, downPayment: document.getElementById('s-downPayment').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
                 };
                 document.getElementById('loader').style.display = 'flex';
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
