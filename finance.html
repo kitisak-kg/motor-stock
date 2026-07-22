@@ -45,12 +45,12 @@
         </div>
 
         <div id="section-sold">
-            <input type="text" id="search-sold" class="form-control mb-3 shadow-sm" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถที่ขายแล้ว..." onkeyup="filterBikes('sold')">
+            <input type="text" id="search-sold" class="form-control mb-3 shadow-sm" placeholder="🔍 ค้นหา ทะเบียน/รุ่น/ลูกค้า..." onkeyup="filterBikes('sold')">
             <div class="accordion shadow-sm" id="accordionSold"></div>
         </div>
 
         <div id="section-pending" style="display:none;">
-            <input type="text" id="search-pending" class="form-control mb-3 shadow-sm border-warning" placeholder="🔍 ค้นหา ทะเบียน/รุ่น รถรอเคลียร์..." onkeyup="filterBikes('pending')">
+            <input type="text" id="search-pending" class="form-control mb-3 shadow-sm border-warning" placeholder="🔍 ค้นหา ทะเบียน/รุ่น/ลูกค้า..." onkeyup="filterBikes('pending')">
             <div id="list-pending"></div>
         </div>
 
@@ -83,7 +83,7 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
-                    <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm"></div>
+                    <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm border-info" placeholder="พิมพ์ชื่อ-เบอร์โทรลูกค้า"></div>
                 </div>
 
                 <div class="box-deduct">
@@ -100,12 +100,10 @@
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <!-- 💡 แบ่งช่องเงินดาวน์เป็น 2 งวด -->
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
-                        <!-- 💡 ซ่อน CIMB ไว้ตามคำสั่งเดิม และโชว์ค่ายอื่นๆ -->
                         <input type="hidden" id="s-finCIMB" value="0">
                         <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm"></div>
                         <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm"></div>
@@ -277,21 +275,30 @@
             const isSold = b.saleStatus === 'ขายแล้ว';
             const borderCol = isSold ? 'border-success' : 'border-warning';
             
-            return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha}">
+            // 💡 นำชื่อลูกค้ามายัดรวมในช่องค้นหาด้วย (data-search)
+            return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.customerDetail || ''}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
                     <div class="d-flex align-items-start" style="min-width: 140px;">
                         <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails(${b.rowIdx})" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
                         <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
                     </div>
-                    <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 190px;">
-                        <span class="text-muted">ส่งให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
+                    
+                    <!-- 💡 เพิ่มกล่องโชว์ชื่อลูกค้า-เบอร์โทร -->
+                    <div class="bg-info bg-opacity-10 border border-info rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 150px;">
+                        <span class="text-muted"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span><br>
+                        <b class="text-dark text-truncate d-block" style="max-width: 140px;">${b.customerDetail || 'ไม่ได้ระบุ'}</b>
                     </div>
+
+                    <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 150px;">
+                        <span class="text-muted">ส่งเล่มให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
+                    </div>
+                    
                     <div class="d-flex gap-1" style="font-size:0.65rem;">
                         <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
                     </div>
-                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> เคลียร์ยอด/แก้ไข</button></div>
+                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
                 </div>
                 <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
                     <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b style="font-size:0.75rem;">฿${(b.totalInternal||0).toLocaleString()}</b></div>
@@ -337,6 +344,7 @@
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
                 <div class="row g-2 mb-3 bg-light p-2 rounded border">
+                    <div class="col-12"><small class="text-muted d-block">ข้อมูลลูกค้า:</small> <b class="text-primary">${b.customerDetail || '-'}</b></div>
                     <div class="col-6"><small class="text-muted d-block">วันที่ซื้อเข้า:</small> <b>${b.buyDate || '-'}</b></div><div class="col-6"><small class="text-muted d-block">แหล่งที่ซื้อ:</small> <b>${b.source || '-'}</b></div>
                     <div class="col-6"><small class="text-muted d-block">เลขถัง:</small> <b>${b.cha || '-'}</b></div><div class="col-6"><small class="text-muted d-block">เลขเครื่อง:</small> <b>${b.eng || '-'}</b></div>
                     <div class="col-6"><small class="text-muted d-block">สีเดิม:</small> <b>${b.color || '-'}</b></div><div class="col-6"><small class="text-muted d-block">ทำสีใหม่:</small> <b>${b.changedColor || '-'}</b></div>
@@ -380,7 +388,6 @@
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
-            // 💡 โหลดข้อมูลเงินดาวน์และไฟแนนซ์มาโชว์ในช่องให้ครบ
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment || 0; 
             document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
@@ -397,7 +404,6 @@
                     action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
                     prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
                     transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                    // 💡 ส่งข้อมูลเงินดาวน์ 2 งวด กลับไปด้วย
                     finCIMB: document.getElementById('s-finCIMB').value, 
                     downPayment: document.getElementById('s-downPayment1').value, 
                     downPayment2: document.getElementById('s-downPayment2').value, 
