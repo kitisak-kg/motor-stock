@@ -180,13 +180,11 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
-                    </div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
-                    <!-- 💡 เพิ่มช่องใส่ชื่อลูกค้า -->
                     <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm border-info" placeholder="พิมพ์ชื่อ-เบอร์โทรลูกค้า"></div>
                 </div>
 
@@ -203,7 +201,6 @@
 
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
-                    <!-- 💡 อัปเดตช่องเงินดาวน์ 2 งวด -->
                     <div class="row g-1 mb-2">
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
@@ -390,7 +387,9 @@
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','finTidlor','finOther','saleCommission'];
+            
+            // 💡 เพิ่ม downPayment และ downPayment2 ให้ดึงข้อมูลมาแสดงตอนแก้ไขให้ครบถ้วน
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','downPayment2','finTidlor','finOther','saleCommission'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
@@ -428,7 +427,9 @@
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','finTidlor','finOther','saleCommission'];
+                
+                // 💡 เพิ่ม downPayment และ downPayment2 เข้าไปใน Array ด้วย เพื่อส่งไปเซฟ
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment','downPayment2','finTidlor','finOther','saleCommission'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
                 document.getElementById('loader').style.display = 'flex';
@@ -466,12 +467,10 @@
 
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
-            // 💡 โหลดข้อมูลลูกค้ามาโชว์ตอนเปิดหน้าจัดการขายด้วย
             document.getElementById('s-customer').value = b.customerDetail || '';
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
-            // 💡 โหลดข้อมูลเงินดาวน์และไฟแนนซ์มาโชว์ให้ครบ
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment || 0; 
             document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
@@ -486,18 +485,30 @@
             executeWithPin(async (pin) => {
                 const payload = { 
                     action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                    prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                    // 💡 แก้บั๊กตรงนี้: ส่งรอดำเนินการไปเลย เพราะในหน้าสต็อกเราไม่มีปุ่มให้เลือกสถานะเล่มตอนขาย
+                    prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
                     transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                    // 💡 ส่งข้อมูลเงินดาวน์กลับไปด้วย
-                    finCIMB: document.getElementById('s-finCIMB').value, 
-                    downPayment: document.getElementById('s-downPayment1').value, 
-                    downPayment2: document.getElementById('s-downPayment2').value, 
-                    finTidlor: document.getElementById('s-finTidlor').value, 
-                    finOther: document.getElementById('s-finOther').value, 
-                    saleCommission: document.getElementById('s-saleCommission').value
+                    finCIMB: document.getElementById('s-finCIMB').value, downPayment: document.getElementById('s-downPayment1').value, downPayment2: document.getElementById('s-downPayment2').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
                 };
-                document.getElementById('loader').style.display = 'flex';
+                document.getElementById('loader').style.display = 'flex'; 
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await res.json();
+                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+            });
+        }
+
+        function openBikeModal() { 
+            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
+            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
+            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
+            calcTotal(); bikeModal.show(); 
+        }
+        
+        function deleteBike() { 
+            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
                 else { location.reload(); }
