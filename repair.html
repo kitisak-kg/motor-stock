@@ -100,7 +100,6 @@
         </div>
     </div>
 
-    <!-- 💡 ป๊อปอัป อัปเกรด ดึงข้อมูลตาราง 1 และ ตาราง 4 มาอยู่ในที่เดียวกัน -->
     <div class="modal fade" id="modal-ready-price" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -173,15 +172,25 @@
 
         async function init() {
             editModal = new bootstrap.Modal(document.getElementById('modal-edit-repair'));
+            await refreshMasterData();
+        }
+
+        // 💡 ฟังก์ชันใหม่เพื่อรีเฟรชข้อมูลตัวแปรหลักโดยไม่ต้องโหลดหน้าเว็บใหม่
+        async function refreshMasterData(filterText = '') {
             const res = await fetch(`${API_URL}?action=getMasterData`);
             const data = await res.json();
             allRepairBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
             allReadyBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && b.status === 'พร้อมขาย');
-            renderDropdowns(''); 
+            renderDropdowns(filterText); 
         }
 
         function renderDropdowns(filterText) {
             const selRepair = document.getElementById('select-bike-repair'); const selReady = document.getElementById('select-bike-ready');
+            
+            // เก็บค่าเดิมที่เลือกไว้ (ถ้ามี) เพื่อให้ระบบไม่ลืมว่าเรากำลังเลือกรถคันไหน
+            const oldRepairVal = selRepair.value;
+            const oldReadyVal = selReady.value;
+
             selRepair.innerHTML = '<option value="">-- เลือกรถ รอส่งซ่อม / กำลังซ่อม --</option>';
             allRepairBikes.forEach(b => {
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
@@ -192,8 +201,12 @@
                 const txt = `${b.plate||'-'} | ${b.model} [${b.status}]`;
                 if(txt.toLowerCase().includes(filterText)) selReady.innerHTML += `<option value="${b.id}">${txt}</option>`;
             });
+
+            // คืนค่าที่เลือกกลับมา
+            if(oldRepairVal) selRepair.value = oldRepairVal;
+            if(oldReadyVal) selReady.value = oldReadyVal;
         }
-        function filterBikes() { renderDropdowns(document.getElementById('search-bike').value.toLowerCase()); }
+        function filterBikes() { refreshMasterData(document.getElementById('search-bike').value.toLowerCase()); }
 
         function handleSelectBike(type) {
             let bikeId = "";
@@ -213,11 +226,9 @@
         function triggerMarkReady() {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
-            // ดึงข้อมูลรถมาแสดง
             const b = allRepairBikes.find(x => x.id === bikeId) || allReadyBikes.find(x => x.id === bikeId);
             if(!b) return;
 
-            // 💡 โยนข้อมูลสรุปต้นทุนเข้าไปใน Popup พร้อมให้แก้ไขได้
             document.getElementById('ready-bike-title').innerText = `${b.plate || '-'} ${b.model || ''}`;
             
             document.getElementById('ready-real-cost').innerText = `฿${(b.realCost||0).toLocaleString()}`;
@@ -226,7 +237,6 @@
             document.getElementById('ready-repair-cost').innerText = `฿${(b.repairSum||0).toLocaleString()}`;
             document.getElementById('ready-repair-cost').setAttribute('data-val', b.repairSum||0);
             
-            // โหลดค่าใช้จ่ายอื่นๆ ที่อาจจะกรอกค้างไว้ในสต็อก
             document.getElementById('r-inc1N').value = b.inc1N || '';
             document.getElementById('r-inc1P').value = b.inc1P || '';
             document.getElementById('r-inc2N').value = b.inc2N || '';
@@ -234,18 +244,16 @@
             document.getElementById('r-inc3N').value = b.inc3N || '';
             document.getElementById('r-inc3P').value = b.inc3P || '';
 
-            // โหลดค่าทุนโชว์/ราคาขายเก่า (ถ้ามี)
             document.getElementById('ready-showcost-input').value = b.showCost || '';
             document.getElementById('ready-price-input').value = b.targetPrice || '';
 
-            calcReadyTotal(); // คำนวณยอดเงินรวมให้เห็นสดๆ
+            calcReadyTotal();
 
             if(!readyPriceModalInstance) readyPriceModalInstance = new bootstrap.Modal(document.getElementById('modal-ready-price'));
             readyPriceModalInstance.show();
             setTimeout(() => document.getElementById('ready-price-input').focus(), 500); 
         }
 
-        // 💡 ฟังก์ชันคำนวณยอดรวมในป๊อปอัป แบบสดๆ
         function calcReadyTotal() {
             const real = Number(document.getElementById('ready-real-cost').getAttribute('data-val')) || 0;
             const rep = Number(document.getElementById('ready-repair-cost').getAttribute('data-val')) || 0;
@@ -269,7 +277,6 @@
             };
             readyPriceModalInstance.hide();
             setTimeout(() => {
-                // 💡 ส่ง Data Package แนบไปให้ฟังก์ชันทำงานต่อ
                 updateStatus('พร้อมขาย', payload); 
             }, 400); 
         }
@@ -279,7 +286,6 @@
             if(!bikeId) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                // 💡 รวบรวมข้อมูลทุกอย่างจากป๊อปอัปส่งไปให้หลังบ้าน
                 const apiPayload = { 
                     action: 'changeBikeStatus', 
                     bikeId: bikeId, 
@@ -339,7 +345,12 @@
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs, pin: pin }) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
-                tempRepairs = []; renderTemp(); await loadRepairHistory(bikeId);
+                
+                tempRepairs = []; renderTemp(); 
+                // 💡 แก้บั๊กค่าซ่อมหาย: รีเฟรชข้อมูลตัวแปรหลัก (ค่าซ่อมจะอัปเดต)
+                await refreshMasterData(); 
+                await loadRepairHistory(bikeId);
+                
                 document.getElementById('loader').style.display = 'none';
             });
         }
@@ -382,6 +393,8 @@
                         editModal.show(); 
                         return; 
                     }
+                    // 💡 แก้บั๊กค่าซ่อมหาย: รีเฟรชข้อมูลตัวแปรหลัก (ค่าซ่อมจะอัปเดต)
+                    await refreshMasterData();
                     await loadRepairHistory(document.getElementById('selected-bike-id').value);
                     document.getElementById('loader').style.display = 'none';
                 });
@@ -395,6 +408,8 @@
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId, pin: pin }) });
                 const result = await res.json();
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
+                // 💡 แก้บั๊กค่าซ่อมหาย: รีเฟรชข้อมูลตัวแปรหลัก (ค่าซ่อมจะอัปเดต)
+                await refreshMasterData();
                 await loadRepairHistory(document.getElementById('selected-bike-id').value);
                 document.getElementById('loader').style.display = 'none';
             });
