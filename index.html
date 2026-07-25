@@ -99,7 +99,6 @@
             </div>
 
             <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
-            <!-- 💡 ปรับปรุงกล่องแจ้งเตือน ให้มี Badge ตัวเลขนับจำนวนคัน -->
             <div class="row g-3 mb-4">
                 <div class="col-12 col-md-4">
                     <div class="alert-header bg-danger shadow-sm d-flex justify-content-between align-items-center">
@@ -123,6 +122,7 @@
                     <div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
                 </div>
                 
+                <!-- 💡 กล่องแจ้งเตือน: เพิ่ม Badge สีแดงเพื่อนับจำนวนรถให้เห็นชัดๆ -->
                 <div class="col-12 col-md-6">
                     <div class="alert-header bg-secondary shadow-sm d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-hourglass-bottom"></i> รถจอดนาน (ค้างสต็อก)</span>
@@ -209,7 +209,7 @@
             return null;
         }
 
-        // ฟังก์ชันช่วยอัปเดต Badge ตัวเลขให้หน้า Dashboard
+        // 💡 ฟังก์ชันช่วยอัปเดต Badge ตัวเลขให้หน้า Dashboard
         function updateBadge(id, count) {
             const el = document.getElementById(id);
             if (count > 0) {
@@ -327,6 +327,7 @@
                 document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-stuck-repair').innerHTML = stuckRepairAlerts.length > 0 ? stuckRepairAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
+                // 💡 เรียกฟังก์ชันอัปเดตตัวเลขจำนวนคันบน Badge
                 updateBadge('badge-tax', taxAlerts.length);
                 updateBadge('badge-id', idAlerts.length);
                 updateBadge('badge-doc', docAlerts.length);
