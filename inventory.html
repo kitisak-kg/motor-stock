@@ -135,15 +135,17 @@
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="m-downPayment1" class="form-control form-control-sm border-info"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="m-downPayment2" class="form-control form-control-sm border-info"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="m-downPayment1" class="form-control form-control-sm border-info" oninput="calcTotal()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="m-downPayment2" class="form-control form-control-sm border-info" oninput="calcTotal()"></div>
+                        <div class="col-12 text-end text-info fw-bold small mb-2" id="m-sum-down">รวมเงินดาวน์: ฿0</div>
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
                         <input type="hidden" id="m-finCIMB" value="0">
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                        <div class="col-12 text-end text-dark fw-bold small" id="m-sum-fin">รวมยอดจัด: ฿0</div>
                     </div>
-                    <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
+                    <label class="x-small fw-bold text-primary border-top pt-2 d-block">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
                     <input type="number" id="m-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold">
                 </div>
 
@@ -172,7 +174,6 @@
       </div>
     </div>
 
-    <!-- 💡 ป๊อปอัปจัดการขายรถ ที่แก้บั๊กอ่านค่าและเพิ่มช่องข้อมูลลูกค้าครบแล้ว -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -181,8 +182,7 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
-                    </div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
@@ -204,16 +204,17 @@
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
+                        <div class="col-12 text-end text-info fw-bold small mb-2" id="s-sum-down">รวมเงินดาวน์: ฿0</div>
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
-                        <!-- 💡 ต้องมีฟิลด์รับค่า s-finCIMB ซ่อนไว้เพื่อส่งค่าด้วย กัน Error -->
                         <input type="hidden" id="s-finCIMB" value="0">
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-12 text-end text-dark fw-bold small" id="s-sum-fin">รวมยอดจัด: ฿0</div>
                     </div>
-                    <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
+                    <label class="x-small fw-bold text-primary border-top pt-2 d-block">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
                     <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
                 </div>
                 
@@ -224,19 +225,6 @@
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนรวมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักค่าโอน+อื่นๆ</small><div id="s-calc-deduct" class="fw-bold text-danger" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
-                    </div>
-                </div>
-
-                <div class="bg-light p-2 rounded border mb-2">
-                    <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน</label>
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="x-small">พรบ.</label><select id="s-prb" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">ภาษี</label><select id="s-tax" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
-                        <div class="col-4"><label class="x-small">เล่มรถ</label><select id="s-book" class="form-select form-select-sm"><option>รอเล่มโอน</option><option>มอบให้แล้ว</option></select></div>
-                    </div>
-                    <div class="row g-2 border-top pt-2">
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มให้ใคร (ผู้รับเรื่อง)</label><input type="text" id="s-transferTo" class="form-control form-control-sm" placeholder="เช่น เฮียทองดี"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                     </div>
                 </div>
             </div>
@@ -384,16 +372,29 @@
             document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
         }
 
+        // 💡 อัปเดตฟังก์ชันนี้ ให้คำนวณยอดเงินดาวน์ และยอดไฟแนนซ์แบบสดๆ
         function calcTotal() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? Number(el.value) || 0 : 0; };
             const repair = getVal('m-repairReal'); const real = getVal('m-realCost'); const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P');
             const totalEl = document.getElementById('m-totalReal'); if(totalEl) totalEl.innerText = `รวมต้นทุนจม: ฿${(real + repair + inc).toLocaleString()}`;
+            
+            const down1 = getVal('m-downPayment1'); const down2 = getVal('m-downPayment2');
+            const finTidlor = getVal('m-finTidlor'); const finOther = getVal('m-finOther');
+            const sumDownEl = document.getElementById('m-sum-down'); if(sumDownEl) sumDownEl.innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
+            const sumFinEl = document.getElementById('m-sum-fin'); if(sumFinEl) sumFinEl.innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
         }
 
+        // 💡 อัปเดตฟังก์ชันนี้ให้คำนวณสรุปเงินดาวน์ในกล่องขาย
         function calcSaleProfit() {
             const getVal = (id) => Number(document.getElementById(id).value) || 0;
             const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
             const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
+            
+            const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
+            const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
+            document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
+            document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
+
             const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
             
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
@@ -432,13 +433,13 @@
 
             if (duplicateList.length > 0) {
                 document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400);
+                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400); // 💡 แก้ไขบั๊กกล่องซ้อนกัน
             } else { 
-                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); 
+                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); // 💡 แก้ไขบั๊กกล่องซ้อนกัน
             }
         }
 
-        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
+        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); } // 💡 แก้ไขบั๊กกล่องซ้อนกัน
 
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
@@ -456,7 +457,6 @@
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
@@ -485,7 +485,6 @@
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
-            // 💡 โหลดข้อมูลหน้าต่างขายให้สมบูรณ์
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
             document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
@@ -495,15 +494,15 @@
             
             calcSaleProfit(); saleModal.show();
         }
-        
-        // 💡 รับประกันว่าจะส่งค่าไปได้ครบถ้วนโดยไม่ติด Error
+
+        // 💡 แก้ไขบั๊กกล่องซ้อนกัน: ซ่อนกล่องบันทึกขายก่อน แล้วหน่วงเวลาเรียกกล่อง PIN ออกมา
         function processSale(statusType) {
-            saleModal.hide();
+            saleModal.hide(); // ซ่อนกล่องเดิมก่อน!
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     const payload = { 
                         action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                        prbStatus: 'รอดำเนินการ', taxStatus: 'รอดำเนินการ', bookTransferStatus: 'รอดำเนินการ', transferTo: '', transferDate: '',
                         transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
                         finCIMB: document.getElementById('s-finCIMB').value, 
                         downPayment1: document.getElementById('s-downPayment1').value, 
@@ -515,7 +514,30 @@
                     document.getElementById('loader').style.display = 'flex';
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        saleModal.show(); // ถ้าผิด ดึงกล่องกลับมาให้แก้ ไม่ค้าง
+                    } 
+                    else { location.reload(); }
+                });
+            }, 400); // 400ms กำลังดีสำหรับการทำแอนิเมชั่นของ Bootstrap
+        }
+        
+        // 💡 แก้ไขบั๊กกล่องซ้อนกันสำหรับตอนลบรถด้วย
+        function deleteBike() { 
+            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
+            bikeModal.hide();
+            setTimeout(() => {
+                executeWithPin(async (pin) => {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
+                    const result = await res.json();
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        bikeModal.show(); // ถ้าผิด ให้ดึงกล่องกลับมา
+                    } 
                     else { location.reload(); }
                 });
             }, 400);
@@ -526,20 +548,6 @@
             document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
             document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
             calcTotal(); bikeModal.show(); 
-        }
-        
-        function deleteBike() { 
-            if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
-            bikeModal.hide();
-            setTimeout(() => {
-                executeWithPin(async (pin) => {
-                    document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
-                    const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
-                    else { location.reload(); }
-                });
-            }, 400);
         }
     </script>
 </body>
