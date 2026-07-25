@@ -68,11 +68,31 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div></div>
+    <div class="modal fade" id="modal-pin">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6>
+                    <input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 small" id="detail-content"></div></div></div></div>
+    <div class="modal fade" id="modal-details">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body p-3 small" id="detail-content"></div>
+            </div>
+        </div>
+    </div>
 
-    <div class="modal fade" id="modal-sale" tabindex="-1">
+    <div class="modal fade" id="modal-sale">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 อัปเดตงานบัญชี / ปิดจ๊อบการขาย</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -144,7 +164,7 @@
       </div>
     </div>
 
-    <div class="modal fade" id="modal-capital" tabindex="-1">
+    <div class="modal fade" id="modal-capital">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-body p-4 text-center">
@@ -183,10 +203,18 @@
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
-            if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
-            document.getElementById('global-pin').value = ''; pendingPinAction = callback; pinModalInstance.show();
-            setTimeout(() => document.getElementById('global-pin').focus(), 500);
+            if(saleModal) saleModal.hide();
+            if(capModal) capModal.hide();
+            
+            setTimeout(() => {
+                if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
+                document.getElementById('global-pin').value = '';
+                pendingPinAction = callback;
+                pinModalInstance.show();
+                setTimeout(() => document.getElementById('global-pin').focus(), 500);
+            }, 500);
         }
+
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
@@ -211,62 +239,64 @@
 
         async function loadFinanceData() {
             document.getElementById('loader').style.display = 'flex';
-            const response = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await response.json();
-            
-            document.getElementById('total-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
-            document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
-            allBikes = data.bikes || [];
-            
-            renderBikesList('sold'); renderBikesList('pending');
+            try {
+                const response = await fetch(`${API_URL}?action=getMasterData`);
+                const data = await response.json();
+                
+                document.getElementById('total-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
+                document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
+                allBikes = data.bikes || [];
+                
+                renderBikesList('sold'); renderBikesList('pending');
 
-            if (data.capitalHistory) {
-                let htmlLeft = ''; let htmlRight = '';
-                let totalLeft = 0; let totalRight = 0;
+                if (data.capitalHistory) {
+                    let htmlLeft = ''; let htmlRight = '';
+                    let totalLeft = 0; let totalRight = 0;
 
-                data.capitalHistory.forEach(c => { 
-                    const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
-                    const box = `
-                        <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
-                            <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
-                                <b>${c.date}</b>
-                                <button class="btn btn-sm btn-light py-0 px-1 text-primary border" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}', '${c.capType}')"><i class="bi bi-pencil"></i></button>
+                    data.capitalHistory.forEach(c => { 
+                        const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
+                        const box = `
+                            <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
+                                <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
+                                    <b>${c.date}</b>
+                                    <button class="btn btn-sm btn-light py-0 px-1 text-primary border" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}', '${c.capType}')"><i class="bi bi-pencil"></i></button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" style="max-width: 80px;" title="${c.note||'-'}">${c.note||'-'}</span>
+                                    <b class="text-success" style="font-size:0.85rem;">+฿${Number(c.amount).toLocaleString()}</b>
+                                </div>
+                                <div class="mt-1 text-end">${targetStr}</div>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted text-truncate" style="max-width: 80px;" title="${c.note||'-'}">${c.note||'-'}</span>
-                                <b class="text-success" style="font-size:0.85rem;">+฿${Number(c.amount).toLocaleString()}</b>
+                        `;
+
+                        if(c.capType === 'เงินลงทุน') {
+                            htmlLeft += box; totalLeft += Number(c.amount);
+                        } else { 
+                            htmlRight += box; totalRight += Number(c.amount);
+                        }
+                    });
+
+                    document.getElementById('cap-summary-row').innerHTML = `
+                        <div class="col-6">
+                            <div class="bg-primary text-white p-2 rounded text-center shadow-sm">
+                                <small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small>
+                                <b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b>
                             </div>
-                            <div class="mt-1 text-end">${targetStr}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-success text-white p-2 rounded text-center shadow-sm">
+                                <small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small>
+                                <b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b>
+                            </div>
                         </div>
                     `;
 
-                    if(c.capType === 'เงินลงทุน') {
-                        htmlLeft += box; totalLeft += Number(c.amount);
-                    } else { 
-                        htmlRight += box; totalRight += Number(c.amount);
-                    }
-                });
-
-                document.getElementById('cap-summary-row').innerHTML = `
-                    <div class="col-6">
-                        <div class="bg-primary text-white p-2 rounded text-center shadow-sm">
-                            <small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small>
-                            <b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="bg-success text-white p-2 rounded text-center shadow-sm">
-                            <small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small>
-                            <b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b>
-                        </div>
-                    </div>
-                `;
-
-                document.getElementById('list-capital-history').innerHTML = `
-                    <div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
-                    <div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
-                `;
-            }
+                    document.getElementById('list-capital-history').innerHTML = `
+                        <div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
+                        <div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
+                    `;
+                }
+            } catch(e) { console.error(e); }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -275,7 +305,6 @@
             const isSold = b.saleStatus === 'ขายแล้ว';
             const borderCol = isSold ? 'border-success' : 'border-warning';
             
-            // 💡 นำชื่อลูกค้ามายัดรวมในช่องค้นหาด้วย (data-search)
             return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.customerDetail || ''}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
                     <div class="d-flex align-items-start" style="min-width: 140px;">
@@ -283,7 +312,6 @@
                         <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
                     </div>
                     
-                    <!-- 💡 เพิ่มกล่องโชว์ชื่อลูกค้า-เบอร์โทร -->
                     <div class="bg-info bg-opacity-10 border border-info rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 150px;">
                         <span class="text-muted"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span><br>
                         <b class="text-dark text-truncate d-block" style="max-width: 140px;">${b.customerDetail || 'ไม่ได้ระบุ'}</b>
@@ -389,7 +417,7 @@
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
-            document.getElementById('s-downPayment1').value = b.downPayment || 0; 
+            document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
             document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
             document.getElementById('s-finTidlor').value = b.finTidlor || 0; 
             document.getElementById('s-finOther').value = b.finOther || 0; 
@@ -400,31 +428,42 @@
         
         function processSale(statusType) {
             executeWithPin(async (pin) => {
-                const payload = { 
-                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                    prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                    transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                    finCIMB: document.getElementById('s-finCIMB').value, 
-                    downPayment: document.getElementById('s-downPayment1').value, 
-                    downPayment2: document.getElementById('s-downPayment2').value, 
-                    finTidlor: document.getElementById('s-finTidlor').value, 
-                    finOther: document.getElementById('s-finOther').value, 
-                    saleCommission: document.getElementById('s-saleCommission').value
-                };
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                try {
+                    const payload = { 
+                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                        finCIMB: document.getElementById('s-finCIMB').value, 
+                        downPayment1: document.getElementById('s-downPayment1').value, 
+                        downPayment2: document.getElementById('s-downPayment2').value, 
+                        finTidlor: document.getElementById('s-finTidlor').value, 
+                        finOther: document.getElementById('s-finOther').value, 
+                        saleCommission: document.getElementById('s-saleCommission').value
+                    };
+                    document.getElementById('loader').style.display = 'flex';
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const result = await res.json();
+                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
+                    else { location.reload(); }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                    document.getElementById('loader').style.display = 'none';
+                }
             });
         }
         
         function revertSale() {
             if(!confirm('ยืนยันตีกลับรถคันนี้เข้าลานจอด? (ยกเลิกการขาย)')) return;
             executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                try {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
+                    const result = await res.json();
+                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                    document.getElementById('loader').style.display = 'none';
+                }
             });
         }
         
@@ -440,19 +479,29 @@
         }
         function saveCapital() {
             executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                try {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
+                    const result = await res.json();
+                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                    document.getElementById('loader').style.display = 'none';
+                }
             });
         }
         function deleteCapital() {
             if(!confirm('ลบยอดเงินทุนนี้?')) return;
             executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                try {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
+                    const result = await res.json();
+                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                    document.getElementById('loader').style.display = 'none';
+                }
             });
         }
         function switchTab(tab) { ['sold','pending','cap'].forEach(t => { document.getElementById('section-'+t).style.display = t === tab ? 'block' : 'none'; document.getElementById('tab-'+t).classList.toggle('active', t === tab); }); }
