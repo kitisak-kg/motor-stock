@@ -122,7 +122,6 @@
                     <div class="alert-box shadow-sm" id="alert-doc"><div class="text-center p-4 text-muted">ไม่มีเตือน</div></div>
                 </div>
                 
-                <!-- 💡 กล่องแจ้งเตือน: เพิ่ม Badge สีแดงเพื่อนับจำนวนรถให้เห็นชัดๆ -->
                 <div class="col-12 col-md-6">
                     <div class="alert-header bg-secondary shadow-sm d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-hourglass-bottom"></i> รถจอดนาน (ค้างสต็อก)</span>
@@ -177,7 +176,7 @@
                     loadDashboard(); 
                 }
             } catch (e) {
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
                 document.getElementById('loader').style.display = 'none';
             }
         }
@@ -209,7 +208,6 @@
             return null;
         }
 
-        // 💡 ฟังก์ชันช่วยอัปเดต Badge ตัวเลขให้หน้า Dashboard
         function updateBadge(id, count) {
             const el = document.getElementById(id);
             if (count > 0) {
@@ -327,7 +325,6 @@
                 document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-stuck-repair').innerHTML = stuckRepairAlerts.length > 0 ? stuckRepairAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
-                // 💡 เรียกฟังก์ชันอัปเดตตัวเลขจำนวนคันบน Badge
                 updateBadge('badge-tax', taxAlerts.length);
                 updateBadge('badge-id', idAlerts.length);
                 updateBadge('badge-doc', docAlerts.length);
