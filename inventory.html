@@ -52,7 +52,8 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
+    <!-- 💡 เอา tabindex="-1" ออกทุกหน้าต่าง ป้องกันจอค้าง -->
+    <div class="modal fade" id="modal-pin">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
                 <div class="modal-body p-4 text-center">
@@ -67,7 +68,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;">
+    <div class="modal fade" id="modal-duplicate">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div>
@@ -77,14 +78,14 @@
                     <p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p>
                 </div>
                 <div class="modal-footer d-flex gap-2 border-0 pt-0">
-                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(),400);">กลับไปแก้ไข</button>
+                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(), 500);">กลับไปแก้ไข</button>
                     <button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-bike" tabindex="-1">
+    <div class="modal fade" id="modal-bike">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">ข้อมูลสต็อกรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -172,7 +173,7 @@
       </div>
     </div>
 
-    <div class="modal fade" id="modal-sale" tabindex="-1">
+    <div class="modal fade" id="modal-sale">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 จัดการขายรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -180,8 +181,7 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
-                    </div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
@@ -248,13 +248,22 @@
         let currentFilter = sessionStorage.getItem('inventoryTab') || 'all';
 
         let pendingPinAction = null; let pinModalInstance = null;
+        
+        // 💡 แก้ไขบั๊กหน้าต่างซ้อนกัน: สั่งบังคับซ่อนหน้าต่างอื่นทั้งหมดก่อนโชว์ PIN 
         function executeWithPin(callback) {
-            if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
-            document.getElementById('global-pin').value = '';
-            pendingPinAction = callback;
-            pinModalInstance.show();
-            setTimeout(() => document.getElementById('global-pin').focus(), 500);
+            if(bikeModal) bikeModal.hide();
+            if(saleModal) saleModal.hide();
+            if(duplicateModal) duplicateModal.hide();
+            
+            setTimeout(() => {
+                if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
+                document.getElementById('global-pin').value = '';
+                pendingPinAction = callback;
+                pinModalInstance.show();
+                setTimeout(() => document.getElementById('global-pin').focus(), 500);
+            }, 500); // 💡 หน่วงเวลา 0.5 วิ เพื่อให้ภาพเฟดหายไปก่อน
         }
+
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
@@ -417,25 +426,36 @@
 
             if (duplicateList.length > 0) {
                 document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400);
+                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 500);
             } else { 
-                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); 
+                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 500); 
             }
         }
 
-        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
+        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 500); }
 
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
-                const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment1','downPayment2','finTidlor','finOther','saleCommission'];
-                fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
-                
-                document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; bikeModal.show(); } 
-                else { location.reload(); }
+                try {
+                    const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
+                    const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment1','downPayment2','finTidlor','finOther','saleCommission'];
+                    fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
+                    
+                    document.getElementById('loader').style.display = 'flex';
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const result = await res.json();
+                    
+                    // 💡 จับ Error ดักไว้ไม่ให้มันค้างหมุนติ้วๆ
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                    } else { 
+                        location.reload(); 
+                    }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                    document.getElementById('loader').style.display = 'none';
+                }
             });
         }
 
@@ -480,34 +500,39 @@
             calcSaleProfit(); saleModal.show();
         }
         
-        // 💡 แก้ไขให้ส่งค่า downPayment1 และ downPayment2 กลับไปหลังบ้านให้ครบถ้วน
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
-                    const payload = { 
-                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                        finCIMB: document.getElementById('s-finCIMB').value, 
-                        downPayment1: document.getElementById('s-downPayment1').value, 
-                        downPayment2: document.getElementById('s-downPayment2').value, 
-                        finTidlor: document.getElementById('s-finTidlor').value, 
-                        finOther: document.getElementById('s-finOther').value, 
-                        saleCommission: document.getElementById('s-saleCommission').value
-                    };
-                    document.getElementById('loader').style.display = 'flex';
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
-                    else { location.reload(); }
+                    try {
+                        const payload = { 
+                            action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                            prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                            transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                            finCIMB: document.getElementById('s-finCIMB').value, 
+                            downPayment1: document.getElementById('s-downPayment1').value, 
+                            downPayment2: document.getElementById('s-downPayment2').value, 
+                            finTidlor: document.getElementById('s-finTidlor').value, 
+                            finOther: document.getElementById('s-finOther').value, 
+                            saleCommission: document.getElementById('s-saleCommission').value
+                        };
+                        document.getElementById('loader').style.display = 'flex';
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                        const result = await res.json();
+                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
+                        else { location.reload(); }
+                    } catch(e) {
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                        document.getElementById('loader').style.display = 'none';
+                    }
                 });
-            }, 400);
+            }, 500);
         }
 
         function openBikeModal() { 
             document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
-            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
+            // 💡 แก้บั๊กข้อมูลหายตอนกดเพิ่มรถ: ล้างแค่ในกรอบเท่านั้น
+            document.querySelectorAll('#modal-bike .modal-body input, #modal-bike .modal-body textarea').forEach(i=>i.value=''); 
             document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
             calcTotal(); bikeModal.show(); 
         }
@@ -517,13 +542,18 @@
             bikeModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
-                    document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
-                    const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
-                    else { location.reload(); }
+                    try {
+                        document.getElementById('loader').style.display = 'flex'; 
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
+                        const result = await res.json();
+                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } 
+                        else { location.reload(); }
+                    } catch(e) {
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                        document.getElementById('loader').style.display = 'none';
+                    }
                 });
-            }, 400);
+            }, 500);
         }
     </script>
 </body>
