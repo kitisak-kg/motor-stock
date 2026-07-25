@@ -99,6 +99,7 @@
             </div>
 
             <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
+            <!-- 💡 ปรับปรุงกล่องแจ้งเตือน ให้มี Badge ตัวเลขนับจำนวนคัน -->
             <div class="row g-3 mb-4">
                 <div class="col-12 col-md-4">
                     <div class="alert-header bg-danger shadow-sm d-flex justify-content-between align-items-center">
@@ -176,7 +177,7 @@
                     loadDashboard(); 
                 }
             } catch (e) {
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
                 document.getElementById('loader').style.display = 'none';
             }
         }
@@ -208,6 +209,7 @@
             return null;
         }
 
+        // ฟังก์ชันช่วยอัปเดต Badge ตัวเลขให้หน้า Dashboard
         function updateBadge(id, count) {
             const el = document.getElementById(id);
             if (count > 0) {
