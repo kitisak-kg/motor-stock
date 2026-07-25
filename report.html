@@ -76,19 +76,23 @@
 
         window.onload = async function() {
             document.getElementById('r-subtitle').innerText = `พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
-            const res = await fetch(`${API_URL}?action=getMasterData`);
-            globalData = await res.json();
-            
-            let months = new Set();
-            globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว' && b.saleDate).forEach(b => {
-                let p = b.saleDate.split('/');
-                if(p.length === 3) months.add(`${p[1]}/${p[2]}`);
-            });
-            let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
-            Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เฉพาะเดือน ${m}</option>`);
-            document.getElementById('report-month').innerHTML = mOptions;
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                globalData = await res.json();
+                
+                let months = new Set();
+                globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว' && b.saleDate).forEach(b => {
+                    let p = b.saleDate.split('/');
+                    if(p.length === 3) months.add(`${p[1]}/${p[2]}`);
+                });
+                let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
+                Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เฉพาะเดือน ${m}</option>`);
+                document.getElementById('report-month').innerHTML = mOptions;
 
-            buildReport(); 
+                buildReport(); 
+            } catch(e) {
+                document.getElementById('r-content').innerHTML = '<div class="text-center p-5 text-danger"><i class="bi bi-wifi-off fs-1"></i><br>ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่</div>';
+            }
         };
 
         function buildReport() {
@@ -166,7 +170,6 @@
                 let subCost = 0; let subTarget = 0;
                 
                 groups[groupName].forEach(b => {
-                    // 💡 หัวใจสำคัญ: ทุนหลอก = (ทุนโชว์หน้าบ้าน + ค่าซ่อม) | ทุนจริง = ทุนจมรวมทั้งหมด
                     let cost = isFake ? ((b.showCost||0) + (b.repairSum||0)) : (b.totalInternal||0);
                     html += `<tr>
                         <td><b>${b.plate||'-'}</b></td>
