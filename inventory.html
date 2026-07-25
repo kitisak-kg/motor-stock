@@ -135,7 +135,6 @@
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <!-- 💡 แก้ไข ID ให้เป็น 1 และ 2 ตามระบบ -->
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="m-downPayment1" class="form-control form-control-sm border-info"></div>
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="m-downPayment2" class="form-control form-control-sm border-info"></div>
                     </div>
@@ -203,7 +202,6 @@
 
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
-                    <!-- 💡 แก้ไข ID ให้เป็น 1 และ 2 ตามระบบ -->
                     <div class="row g-1 mb-2">
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
                         <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000"></div>
@@ -252,15 +250,20 @@
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
-            document.getElementById('global-pin').value = ''; pendingPinAction = callback; pinModalInstance.show();
+            document.getElementById('global-pin').value = '';
+            pendingPinAction = callback;
+            pinModalInstance.show();
             setTimeout(() => document.getElementById('global-pin').focus(), 500);
         }
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
-            pinModalInstance.hide(); if(pendingPinAction) pendingPinAction(pin);
+            pinModalInstance.hide();
+            if(pendingPinAction) pendingPinAction(pin);
         });
-        document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
+        document.getElementById('global-pin').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
+        });
 
         window.onload = function() {
             bikeModal = new bootstrap.Modal(document.getElementById('modal-bike'));
@@ -385,7 +388,6 @@
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            // 💡 อัปเดต fields ให้อ่านค่าลงกล่อง downPayment1 และ downPayment2
             const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment1','downPayment2','finTidlor','finOther','saleCommission'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
@@ -415,20 +417,17 @@
 
             if (duplicateList.length > 0) {
                 document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                // 💡 แก้บั๊กค้าง: สั่งปิดก่อนแล้วค่อยเปิดให้ทำงาน
                 bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400);
             } else { 
                 bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); 
             }
         }
 
-        // 💡 แก้บั๊กค้าง: หน่วงเวลาเวลาซ่อนหน้าต่าง
         function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
 
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
-                // 💡 แก้ไขให้อ่านข้อมูลจาก input 1 และ 2 แบบชัดเจน
                 const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment1','downPayment2','finTidlor','finOther','saleCommission'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
@@ -480,8 +479,8 @@
             
             calcSaleProfit(); saleModal.show();
         }
-
-        // 💡 แก้บั๊กค้าง: หน่วงเวลาเวลาซ่อนหน้าต่าง
+        
+        // 💡 แก้ไขให้ส่งค่า downPayment1 และ downPayment2 กลับไปหลังบ้านให้ครบถ้วน
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
