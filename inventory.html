@@ -135,15 +135,17 @@
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="m-downPayment1" class="form-control form-control-sm border-info"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="m-downPayment2" class="form-control form-control-sm border-info"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="m-downPayment1" class="form-control form-control-sm border-info" oninput="calcTotal()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="m-downPayment2" class="form-control form-control-sm border-info" oninput="calcTotal()"></div>
+                        <div class="col-12 text-end text-info fw-bold small mb-2" id="m-sum-down">รวมเงินดาวน์: ฿0</div>
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
                         <input type="hidden" id="m-finCIMB" value="0">
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm" oninput="calcTotal()"></div>
+                        <div class="col-12 text-end text-dark fw-bold small" id="m-sum-fin">รวมยอดจัด: ฿0</div>
                     </div>
-                    <label class="x-small fw-bold text-primary">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
+                    <label class="x-small fw-bold text-primary border-top pt-2 d-block">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
                     <input type="number" id="m-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold">
                 </div>
 
@@ -247,7 +249,8 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = []; let allRepairs = []; let bikeModal, saleModal, duplicateModal; 
         
-        let currentFilter = sessionStorage.getItem('inventoryTab') || 'all';
+        // 💡 แก้บั๊กกลับหน้า "ทั้งหมด": เปลี่ยนไปใช้ localStorage แทน sessionStorage เพื่อให้จำแท็บได้ข้ามการรีเฟรช 100%
+        let currentFilter = localStorage.getItem('inventoryTab') || 'all';
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -304,7 +307,8 @@
 
         function filterInventory(type) {
             currentFilter = type;
-            sessionStorage.setItem('inventoryTab', type);
+            // 💡 แก้บั๊กกลับหน้า "ทั้งหมด": อัปเดต localStorage
+            localStorage.setItem('inventoryTab', type);
             
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
             let tabId = 'tab-all';
@@ -336,7 +340,6 @@
                     }
 
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
-                    // 💡 แก้ไขดึงค่าใช้จ่ายเพิ่มมาแสดงในตาที่ซ่อนด้วย
                     const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -449,8 +452,10 @@
                 document.getElementById('loader').style.display = 'flex';
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
+                
+                // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": เปลี่ยนเป็นการดึงข้อมูลมาวาดใหม่แทนการรีโหลดทั้งหน้า
                 if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; bikeModal.show(); } 
-                else { location.reload(); }
+                else { await loadInventory(); }
             });
         }
 
@@ -494,7 +499,7 @@
             
             calcSaleProfit(); saleModal.show();
         }
-
+        
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
@@ -513,21 +518,16 @@
                     document.getElementById('loader').style.display = 'flex';
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await res.json();
+                    
+                    // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": ดึงข้อมูลใหม่แทนการรีโหลดทั้งหน้า
                     if(result.status === 'error') { 
                         alert(result.message); 
                         document.getElementById('loader').style.display = 'none'; 
                         saleModal.show();
                     } 
-                    else { location.reload(); }
+                    else { await loadInventory(); }
                 });
             }, 400);
-        }
-
-        function openBikeModal() { 
-            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
-            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
-            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
-            calcTotal(); bikeModal.show(); 
         }
         
         function deleteBike() { 
@@ -538,12 +538,14 @@
                     document.getElementById('loader').style.display = 'flex'; 
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
                     const result = await res.json();
+                    
+                    // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": ดึงข้อมูลใหม่แทนการรีโหลดทั้งหน้า
                     if(result.status === 'error') { 
                         alert(result.message); 
                         document.getElementById('loader').style.display = 'none'; 
                         bikeModal.show();
                     } 
-                    else { location.reload(); }
+                    else { await loadInventory(); }
                 });
             }, 400);
         }
