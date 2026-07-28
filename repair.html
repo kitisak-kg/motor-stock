@@ -156,7 +156,7 @@
         let tempRepairs = []; let editModal;
         let allRepairBikes = []; let allReadyBikes = [];
         let existingRepairNames = []; 
-        let currentActiveRepairTotal = 0; // 💡 ตัวแปรแก้บั๊กค่าซ่อมหาย ให้อ่านจากตารางประวัติซ่อมสดๆ เสมอ!
+        let currentActiveRepairTotal = 0; 
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -177,11 +177,14 @@
         }
 
         async function refreshMasterData(filterText = '') {
-            const res = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await res.json();
-            allRepairBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
-            allReadyBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && b.status === 'พร้อมขาย');
-            renderDropdowns(filterText); 
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                if(!res.ok) throw new Error('Net Error');
+                const data = await res.json();
+                allRepairBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
+                allReadyBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && b.status === 'พร้อมขาย');
+                renderDropdowns(filterText); 
+            } catch(e) { } // เงียบไว้ไม่ให้ตกใจตอนโหลดฉากหลัง
         }
 
         function renderDropdowns(filterText) {
@@ -230,7 +233,6 @@
             document.getElementById('ready-real-cost').innerText = `฿${(b.realCost||0).toLocaleString()}`;
             document.getElementById('ready-real-cost').setAttribute('data-val', b.realCost||0);
             
-            // 💡 แก้บั๊กค่าซ่อมหาย: ดึงจาก currentActiveRepairTotal ที่เพิ่งคำนวณสดๆ มาแทน ป้องกันปัญหาเซิร์ฟเวอร์อัปเดต cache ไม่ทัน
             const freshRepairSum = currentActiveRepairTotal;
             document.getElementById('ready-repair-cost').innerText = `฿${(freshRepairSum).toLocaleString()}`;
             document.getElementById('ready-repair-cost').setAttribute('data-val', freshRepairSum);
@@ -298,13 +300,22 @@
                     inc3P: payload.inc3P !== undefined ? payload.inc3P : '',
                     pin: pin 
                 };
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(apiPayload) });
-                const result = await res.json();
-                if(result.status === 'error') { 
-                    alert(result.message); 
-                    document.getElementById('loader').style.display = 'none'; 
-                    if(newStatus === 'พร้อมขาย') readyPriceModalInstance.show(); 
-                } else { location.reload(); }
+                try {
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(apiPayload) });
+                    if(!res.ok) throw new Error('Net Error');
+                    const result = await res.json();
+                    
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        if(newStatus === 'พร้อมขาย') readyPriceModalInstance.show(); 
+                    } else { await refreshMasterData(); }
+                } catch(e) {
+                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                    document.getElementById('loader').style.display = 'none';
+                    if(newStatus === 'พร้อมขาย') readyPriceModalInstance.show();
+                }
+                document.getElementById('loader').style.display = 'none';
             });
         }
 
@@ -344,37 +355,49 @@
             if(!bikeId) return alert("กรุณาเลือกรถครับ");
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
-                
-                tempRepairs = []; renderTemp(); 
-                await refreshMasterData(); 
-                await loadRepairHistory(bikeId);
+                try {
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs, pin: pin }) });
+                    if(!res.ok) throw new Error('Net Error');
+                    const result = await res.json();
+                    
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        return; 
+                    }
+                    tempRepairs = []; renderTemp(); 
+                    await refreshMasterData(); 
+                    await loadRepairHistory(bikeId);
+                } catch(e) {
+                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                }
                 document.getElementById('loader').style.display = 'none';
             });
         }
 
         async function loadRepairHistory(bikeId) {
             if(!bikeId) return document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
-            const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
-            const list = await res.json();
-            let html = ''; let total = 0;
-            existingRepairNames = []; 
-            list.forEach((r, i) => { 
-                existingRepairNames.push(r.name.trim().toLowerCase()); 
-                html += `<div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-3">${r.shop}</small></div>
-                    <div class="text-end">
-                        <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
-                        <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx})"><i class="bi bi-trash"></i></span></div>
-                    </div>
-                </div>`; 
-                total += r.price; 
-            });
-            currentActiveRepairTotal = total; // 💡 บันทึกยอดรวมสดๆ ไว้ใช้ตอนคำนวณตั้งราคา
-            if(html) html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
-            document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">คันนี้ยังไม่มีประวัติซ่อม</div>';
+            try {
+                const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
+                if(!res.ok) throw new Error();
+                const list = await res.json();
+                let html = ''; let total = 0;
+                existingRepairNames = []; 
+                list.forEach((r, i) => { 
+                    existingRepairNames.push(r.name.trim().toLowerCase()); 
+                    html += `<div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-3">${r.shop}</small></div>
+                        <div class="text-end">
+                            <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
+                            <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx})"><i class="bi bi-trash"></i></span></div>
+                        </div>
+                    </div>`; 
+                    total += r.price; 
+                });
+                currentActiveRepairTotal = total; 
+                if(html) html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
+                document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">คันนี้ยังไม่มีประวัติซ่อม</div>';
+            } catch(e) {}
         }
 
         function openEdit(rId, name, price, shop) {
@@ -383,19 +406,27 @@
         }
 
         function updateRepairItem() {
-            editModal.hide(); // 💡 แก้บั๊กกล่องซ้อนกัน
+            editModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     document.getElementById('loader').style.display = 'flex';
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
-                    const result = await res.json();
-                    if(result.status === 'error') { 
-                        alert(result.message); document.getElementById('loader').style.display = 'none'; 
-                        editModal.show(); 
-                        return; 
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            editModal.show(); 
+                            return; 
+                        }
+                        await refreshMasterData();
+                        await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                    } catch(e) {
+                        alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                        editModal.show();
                     }
-                    await refreshMasterData();
-                    await loadRepairHistory(document.getElementById('selected-bike-id').value);
                     document.getElementById('loader').style.display = 'none';
                 });
             }, 400);
@@ -405,11 +436,21 @@
             if(!confirm('ลบรายการซ่อมนี้?')) return;
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; return; }
-                await refreshMasterData();
-                await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                try {
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId, pin: pin }) });
+                    if(!res.ok) throw new Error('Net Error');
+                    const result = await res.json();
+                    
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        return; 
+                    }
+                    await refreshMasterData();
+                    await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                } catch(e) {
+                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                }
                 document.getElementById('loader').style.display = 'none';
             });
         }
