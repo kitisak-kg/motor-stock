@@ -182,7 +182,8 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
+                    </div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
@@ -301,7 +302,6 @@
                 allRepairs = data.repairs || [];
                 filterInventory(currentFilter);
             } catch(e) {
-                // 💡 ปิดหน้าโหลดแบบเงียบๆ ป้องกันจอดำ
                 document.getElementById('loader').style.display = 'none';
             }
             document.getElementById('loader').style.display = 'none';
@@ -341,6 +341,7 @@
                     }
 
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
+                    // 💡 ทุนลับ: บวกค่าใช้จ่ายเพิ่มแล้ว
                     const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -451,7 +452,6 @@
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
                 document.getElementById('loader').style.display = 'flex';
-                // 💡 เพิ่ม Try...Catch ดักจับปัญหาเน็ตหลุด / Timeout
                 try {
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                     if(!res.ok) throw new Error('Net Error');
@@ -460,18 +460,19 @@
                     if(result.status === 'error') { 
                         alert(result.message); 
                         document.getElementById('loader').style.display = 'none'; 
-                        bikeModal.show(); // คืนกล่องถ้าพลาด
+                        bikeModal.show(); 
                     } else { await loadInventory(); }
                 } catch(e) {
                     alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
                     document.getElementById('loader').style.display = 'none';
-                    bikeModal.show(); // คืนกล่อง ป้องกันจอดำ
+                    bikeModal.show(); 
                 }
             });
         }
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
+            
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
@@ -507,16 +508,28 @@
             document.getElementById('s-finOther').value = b.finOther || 0; 
             document.getElementById('s-saleCommission').value = b.saleCommission || 0;
             
+            // 💡 อัปเดตเช็คลิสต์ที่หน้าสต็อกไม่มีกล่องให้กรอก ก็ยึดค่าเริ่มต้น
+            if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
+            if(document.getElementById('s-tax')) document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ';
+            if(document.getElementById('s-book')) document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
+            if(document.getElementById('s-transferTo')) document.getElementById('s-transferTo').value = b.transferTo || '';
+            if(document.getElementById('s-transferDate')) document.getElementById('s-transferDate').value = b.transferDate || '';
+            
             calcSaleProfit(); saleModal.show();
         }
-
+        
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
+                    // 💡 แก้บั๊กหน้าสต็อกค้างเพราะหากล่องเช็คเอกสารไม่เจอ (ใช้การดักจับค่าแทน)
                     const payload = { 
                         action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                        prbStatus: document.getElementById('s-prb') ? document.getElementById('s-prb').value : 'รอดำเนินการ', 
+                        taxStatus: document.getElementById('s-tax') ? document.getElementById('s-tax').value : 'รอดำเนินการ', 
+                        bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
+                        transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
+                        transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
                         transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
                         finCIMB: document.getElementById('s-finCIMB').value, 
                         downPayment1: document.getElementById('s-downPayment1').value, 
@@ -526,7 +539,6 @@
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
                     document.getElementById('loader').style.display = 'flex';
-                    // 💡 เพิ่ม Try...Catch ดักจับปัญหาเน็ตหลุด / Timeout
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                         if(!res.ok) throw new Error('Net Error');
@@ -535,7 +547,7 @@
                         if(result.status === 'error') { 
                             alert(result.message); 
                             document.getElementById('loader').style.display = 'none'; 
-                            saleModal.show();
+                            saleModal.show(); 
                         } else { await loadInventory(); }
                     } catch(e) {
                         alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
@@ -569,13 +581,6 @@
                     }
                 });
             }, 400);
-        }
-        
-        function openBikeModal() { 
-            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
-            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
-            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
-            calcTotal(); bikeModal.show(); 
         }
     </script>
 </body>
