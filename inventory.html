@@ -67,18 +67,17 @@
         </div>
     </div>
 
-    <!-- 💡 แก้ไขบั๊กหน้าจอซ้อน: ปรับการหน่วงเวลาในปุ่มย้อนกลับให้สมูทขึ้น -->
     <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div>
                 <div class="modal-body p-4">
-                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ</p>
+                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ (อาจเป็นการลงข้อมูลซ้ำ หรือรับซื้อคืนจากลูกค้า)</p>
                     <div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div>
                     <p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p>
                 </div>
                 <div class="modal-footer d-flex gap-2 border-0 pt-0">
-                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="handleDuplicateCancel()">กลับไปแก้ไข</button>
+                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(),400);">กลับไปแก้ไข</button>
                     <button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button>
                 </div>
             </div>
@@ -168,7 +167,7 @@
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0">
-                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="triggerDeleteBike()">🗑️ ลบ</button>
+                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบ</button>
                 <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="checkDuplicate()">💾 บันทึกสต็อก</button>
             </div>
         </div>
@@ -233,10 +232,10 @@
             <div class="modal-footer border-top-0 pt-0">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
-                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="triggerProcessSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
+                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
                     </div>
                     <div class="col-6 p-0 ps-1">
-                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="triggerProcessSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
+                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
                     </div>
                 </div>
             </div>
@@ -252,8 +251,6 @@
         let currentFilter = localStorage.getItem('inventoryTab') || 'all';
 
         let pendingPinAction = null; let pinModalInstance = null;
-        
-        // 💡 อัปเกรดระบบเรียกกล่อง PIN ให้รอการปิดหน้าต่างอื่นๆ จนเสร็จ 100%
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
             document.getElementById('global-pin').value = '';
@@ -261,21 +258,12 @@
             pinModalInstance.show();
             setTimeout(() => document.getElementById('global-pin').focus(), 500);
         }
-        
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
             pinModalInstance.hide();
-            
-            // ใช้ Event listener เพื่อให้ชัวร์ว่ากล่อง PIN ปิดสนิทแล้ว ค่อยรันฟังก์ชันต่อไป ป้องกันการค้าง
-            const modalEl = document.getElementById('modal-pin');
-            const handler = function () {
-                if(pendingPinAction) pendingPinAction(pin);
-                modalEl.removeEventListener('hidden.bs.modal', handler);
-            };
-            modalEl.addEventListener('hidden.bs.modal', handler);
+            if(pendingPinAction) pendingPinAction(pin);
         });
-
         document.getElementById('global-pin').addEventListener('keypress', (e) => {
             if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
         });
@@ -307,11 +295,15 @@
         async function loadInventory() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
+                if(!res.ok) throw new Error('Network Error');
                 const data = await res.json();
                 allBikes = data.bikes || [];
                 allRepairs = data.repairs || [];
                 filterInventory(currentFilter);
-            } catch(e) {}
+            } catch(e) {
+                // 💡 ปิดหน้าโหลดแบบเงียบๆ ป้องกันจอดำ
+                document.getElementById('loader').style.display = 'none';
+            }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -421,7 +413,6 @@
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
 
-        // 💡 แก้บั๊กหน้าค้างด้วย Event Listener
         function checkDuplicate() {
             const rowIdxInput = document.getElementById('m-rowIdx').value;
             const cleanStr = (str) => { let s = (str || '').replace(/[\s\-\_]/g, '').toLowerCase(); return s.length > 2 ? s : ''; };
@@ -445,44 +436,13 @@
 
             if (duplicateList.length > 0) {
                 document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                bikeModal.hide(); 
-                
-                const modalEl = document.getElementById('modal-bike');
-                const handler = function () {
-                    duplicateModal.show();
-                    modalEl.removeEventListener('hidden.bs.modal', handler);
-                };
-                modalEl.addEventListener('hidden.bs.modal', handler);
+                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400);
             } else { 
-                bikeModal.hide(); 
-                const modalEl = document.getElementById('modal-bike');
-                const handler = function () {
-                    proceedSaveBike();
-                    modalEl.removeEventListener('hidden.bs.modal', handler);
-                };
-                modalEl.addEventListener('hidden.bs.modal', handler);
+                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); 
             }
         }
 
-        function handleDuplicateCancel() {
-            duplicateModal.hide();
-            const modalEl = document.getElementById('modal-duplicate');
-            const handler = function () {
-                bikeModal.show();
-                modalEl.removeEventListener('hidden.bs.modal', handler);
-            };
-            modalEl.addEventListener('hidden.bs.modal', handler);
-        }
-
-        function forceSaveBike() { 
-            duplicateModal.hide(); 
-            const modalEl = document.getElementById('modal-duplicate');
-            const handler = function () {
-                proceedSaveBike();
-                modalEl.removeEventListener('hidden.bs.modal', handler);
-            };
-            modalEl.addEventListener('hidden.bs.modal', handler);
-        }
+        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
 
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
@@ -491,21 +451,27 @@
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
                 
                 document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await res.json();
-                
-                if(result.status === 'error') { 
-                    alert(result.message); 
-                    document.getElementById('loader').style.display = 'none'; 
-                    bikeModal.show(); 
-                } 
-                else { await loadInventory(); }
+                // 💡 เพิ่ม Try...Catch ดักจับปัญหาเน็ตหลุด / Timeout
+                try {
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    if(!res.ok) throw new Error('Net Error');
+                    const result = await res.json();
+                    
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        bikeModal.show(); // คืนกล่องถ้าพลาด
+                    } else { await loadInventory(); }
+                } catch(e) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
+                    document.getElementById('loader').style.display = 'none';
+                    bikeModal.show(); // คืนกล่อง ป้องกันจอดำ
+                }
             });
         }
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
@@ -544,68 +510,72 @@
             calcSaleProfit(); saleModal.show();
         }
 
-        // 💡 แก้ไขบั๊กหน้าค้างด้วย Event Listener
-        function triggerProcessSale(statusType) {
-            saleModal.hide();
-            const modalEl = document.getElementById('modal-sale');
-            const handler = function () {
-                processSale(statusType);
-                modalEl.removeEventListener('hidden.bs.modal', handler);
-            };
-            modalEl.addEventListener('hidden.bs.modal', handler);
-        }
-
         function processSale(statusType) {
-            executeWithPin(async (pin) => {
-                const payload = { 
-                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                    prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                    transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                    finCIMB: document.getElementById('s-finCIMB').value, 
-                    downPayment1: document.getElementById('s-downPayment1').value, 
-                    downPayment2: document.getElementById('s-downPayment2').value, 
-                    finTidlor: document.getElementById('s-finTidlor').value, 
-                    finOther: document.getElementById('s-finOther').value, 
-                    saleCommission: document.getElementById('s-saleCommission').value
-                };
-                document.getElementById('loader').style.display = 'flex';
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await res.json();
-                
-                if(result.status === 'error') { 
-                    alert(result.message); 
-                    document.getElementById('loader').style.display = 'none'; 
-                    saleModal.show(); 
-                } 
-                else { await loadInventory(); }
-            });
+            saleModal.hide();
+            setTimeout(() => {
+                executeWithPin(async (pin) => {
+                    const payload = { 
+                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                        finCIMB: document.getElementById('s-finCIMB').value, 
+                        downPayment1: document.getElementById('s-downPayment1').value, 
+                        downPayment2: document.getElementById('s-downPayment2').value, 
+                        finTidlor: document.getElementById('s-finTidlor').value, 
+                        finOther: document.getElementById('s-finOther').value, 
+                        saleCommission: document.getElementById('s-saleCommission').value
+                    };
+                    document.getElementById('loader').style.display = 'flex';
+                    // 💡 เพิ่ม Try...Catch ดักจับปัญหาเน็ตหลุด / Timeout
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            saleModal.show();
+                        } else { await loadInventory(); }
+                    } catch(e) {
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        saleModal.show();
+                    }
+                });
+            }, 400);
         }
         
-        // 💡 แก้ไขบั๊กหน้าค้าง
-        function triggerDeleteBike() {
+        function deleteBike() { 
             if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
             bikeModal.hide();
-            const modalEl = document.getElementById('modal-bike');
-            const handler = function () {
-                deleteBike();
-                modalEl.removeEventListener('hidden.bs.modal', handler);
-            };
-            modalEl.addEventListener('hidden.bs.modal', handler);
+            setTimeout(() => {
+                executeWithPin(async (pin) => {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            bikeModal.show();
+                        } else { await loadInventory(); }
+                    } catch(e) {
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        bikeModal.show();
+                    }
+                });
+            }, 400);
         }
-
-        function deleteBike() { 
-            executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
-                const result = await res.json();
-                
-                if(result.status === 'error') { 
-                    alert(result.message); 
-                    document.getElementById('loader').style.display = 'none'; 
-                    bikeModal.show();
-                } 
-                else { await loadInventory(); }
-            });
+        
+        function openBikeModal() { 
+            document.getElementById('m-rowIdx').value = ""; document.getElementById('btn-delete').style.display = 'none'; 
+            document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(i=>i.value=''); 
+            document.getElementById('m-status').value='รอส่งซ่อม'; document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
+            calcTotal(); bikeModal.show(); 
         }
     </script>
 </body>
