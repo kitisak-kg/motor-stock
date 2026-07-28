@@ -67,17 +67,18 @@
         </div>
     </div>
 
+    <!-- 💡 แก้ไขบั๊กหน้าจอซ้อน: ปรับการหน่วงเวลาในปุ่มย้อนกลับให้สมูทขึ้น -->
     <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div>
                 <div class="modal-body p-4">
-                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ (อาจเป็นการลงข้อมูลซ้ำ หรือรับซื้อคืนจากลูกค้า)</p>
+                    <p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ</p>
                     <div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div>
                     <p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p>
                 </div>
                 <div class="modal-footer d-flex gap-2 border-0 pt-0">
-                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(),400);">กลับไปแก้ไข</button>
+                    <button class="btn btn-light flex-grow-1 fw-bold border" onclick="handleDuplicateCancel()">กลับไปแก้ไข</button>
                     <button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button>
                 </div>
             </div>
@@ -167,7 +168,7 @@
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0">
-                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="deleteBike()">🗑️ ลบ</button>
+                <button class="btn btn-danger btn-sm fw-bold w-25 py-2 shadow-sm" id="btn-delete" style="display:none;" onclick="triggerDeleteBike()">🗑️ ลบ</button>
                 <button class="btn btn-primary btn-sm fw-bold flex-grow-1 py-2 shadow-sm" onclick="checkDuplicate()">💾 บันทึกสต็อก</button>
             </div>
         </div>
@@ -182,8 +183,7 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
-                    </div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
@@ -233,10 +233,10 @@
             <div class="modal-footer border-top-0 pt-0">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
-                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
+                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="triggerProcessSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
                     </div>
                     <div class="col-6 p-0 ps-1">
-                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
+                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="triggerProcessSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
                     </div>
                 </div>
             </div>
@@ -249,10 +249,11 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = []; let allRepairs = []; let bikeModal, saleModal, duplicateModal; 
         
-        // 💡 แก้บั๊กกลับหน้า "ทั้งหมด": เปลี่ยนไปใช้ localStorage แทน sessionStorage เพื่อให้จำแท็บได้ข้ามการรีเฟรช 100%
         let currentFilter = localStorage.getItem('inventoryTab') || 'all';
 
         let pendingPinAction = null; let pinModalInstance = null;
+        
+        // 💡 อัปเกรดระบบเรียกกล่อง PIN ให้รอการปิดหน้าต่างอื่นๆ จนเสร็จ 100%
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
             document.getElementById('global-pin').value = '';
@@ -260,12 +261,21 @@
             pinModalInstance.show();
             setTimeout(() => document.getElementById('global-pin').focus(), 500);
         }
+        
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
             pinModalInstance.hide();
-            if(pendingPinAction) pendingPinAction(pin);
+            
+            // ใช้ Event listener เพื่อให้ชัวร์ว่ากล่อง PIN ปิดสนิทแล้ว ค่อยรันฟังก์ชันต่อไป ป้องกันการค้าง
+            const modalEl = document.getElementById('modal-pin');
+            const handler = function () {
+                if(pendingPinAction) pendingPinAction(pin);
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+            };
+            modalEl.addEventListener('hidden.bs.modal', handler);
         });
+
         document.getElementById('global-pin').addEventListener('keypress', (e) => {
             if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
         });
@@ -307,7 +317,6 @@
 
         function filterInventory(type) {
             currentFilter = type;
-            // 💡 แก้บั๊กกลับหน้า "ทั้งหมด": อัปเดต localStorage
             localStorage.setItem('inventoryTab', type);
             
             document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
@@ -412,6 +421,7 @@
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
 
+        // 💡 แก้บั๊กหน้าค้างด้วย Event Listener
         function checkDuplicate() {
             const rowIdxInput = document.getElementById('m-rowIdx').value;
             const cleanStr = (str) => { let s = (str || '').replace(/[\s\-\_]/g, '').toLowerCase(); return s.length > 2 ? s : ''; };
@@ -435,13 +445,44 @@
 
             if (duplicateList.length > 0) {
                 document.getElementById('duplicate-list').innerHTML = duplicateList.join('');
-                bikeModal.hide(); setTimeout(() => duplicateModal.show(), 400);
+                bikeModal.hide(); 
+                
+                const modalEl = document.getElementById('modal-bike');
+                const handler = function () {
+                    duplicateModal.show();
+                    modalEl.removeEventListener('hidden.bs.modal', handler);
+                };
+                modalEl.addEventListener('hidden.bs.modal', handler);
             } else { 
-                bikeModal.hide(); setTimeout(() => proceedSaveBike(), 400); 
+                bikeModal.hide(); 
+                const modalEl = document.getElementById('modal-bike');
+                const handler = function () {
+                    proceedSaveBike();
+                    modalEl.removeEventListener('hidden.bs.modal', handler);
+                };
+                modalEl.addEventListener('hidden.bs.modal', handler);
             }
         }
 
-        function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
+        function handleDuplicateCancel() {
+            duplicateModal.hide();
+            const modalEl = document.getElementById('modal-duplicate');
+            const handler = function () {
+                bikeModal.show();
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+            };
+            modalEl.addEventListener('hidden.bs.modal', handler);
+        }
+
+        function forceSaveBike() { 
+            duplicateModal.hide(); 
+            const modalEl = document.getElementById('modal-duplicate');
+            const handler = function () {
+                proceedSaveBike();
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+            };
+            modalEl.addEventListener('hidden.bs.modal', handler);
+        }
 
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
@@ -453,8 +494,11 @@
                 const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
                 
-                // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": เปลี่ยนเป็นการดึงข้อมูลมาวาดใหม่แทนการรีโหลดทั้งหน้า
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; bikeModal.show(); } 
+                if(result.status === 'error') { 
+                    alert(result.message); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    bikeModal.show(); 
+                } 
                 else { await loadInventory(); }
             });
         }
@@ -499,55 +543,69 @@
             
             calcSaleProfit(); saleModal.show();
         }
-        
-        function processSale(statusType) {
+
+        // 💡 แก้ไขบั๊กหน้าค้างด้วย Event Listener
+        function triggerProcessSale(statusType) {
             saleModal.hide();
-            setTimeout(() => {
-                executeWithPin(async (pin) => {
-                    const payload = { 
-                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
-                        prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
-                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                        finCIMB: document.getElementById('s-finCIMB').value, 
-                        downPayment1: document.getElementById('s-downPayment1').value, 
-                        downPayment2: document.getElementById('s-downPayment2').value, 
-                        finTidlor: document.getElementById('s-finTidlor').value, 
-                        finOther: document.getElementById('s-finOther').value, 
-                        saleCommission: document.getElementById('s-saleCommission').value
-                    };
-                    document.getElementById('loader').style.display = 'flex';
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    const result = await res.json();
-                    
-                    // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": ดึงข้อมูลใหม่แทนการรีโหลดทั้งหน้า
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        saleModal.show();
-                    } 
-                    else { await loadInventory(); }
-                });
-            }, 400);
+            const modalEl = document.getElementById('modal-sale');
+            const handler = function () {
+                processSale(statusType);
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+            };
+            modalEl.addEventListener('hidden.bs.modal', handler);
+        }
+
+        function processSale(statusType) {
+            executeWithPin(async (pin) => {
+                const payload = { 
+                    action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                    prbStatus: document.getElementById('s-prb').value, taxStatus: document.getElementById('s-tax').value, bookTransferStatus: document.getElementById('s-book').value, transferTo: document.getElementById('s-transferTo').value, transferDate: document.getElementById('s-transferDate').value,
+                    transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                    finCIMB: document.getElementById('s-finCIMB').value, 
+                    downPayment1: document.getElementById('s-downPayment1').value, 
+                    downPayment2: document.getElementById('s-downPayment2').value, 
+                    finTidlor: document.getElementById('s-finTidlor').value, 
+                    finOther: document.getElementById('s-finOther').value, 
+                    saleCommission: document.getElementById('s-saleCommission').value
+                };
+                document.getElementById('loader').style.display = 'flex';
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await res.json();
+                
+                if(result.status === 'error') { 
+                    alert(result.message); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    saleModal.show(); 
+                } 
+                else { await loadInventory(); }
+            });
         }
         
-        function deleteBike() { 
+        // 💡 แก้ไขบั๊กหน้าค้าง
+        function triggerDeleteBike() {
             if(!confirm('⚠️ ยืนยันการลบรถคันนี้?\n\nกด "ตกลง/OK" เพื่อลบถาวร (กู้คืนไม่ได้)')) return; 
             bikeModal.hide();
-            setTimeout(() => {
-                executeWithPin(async (pin) => {
-                    document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
-                    const result = await res.json();
-                    
-                    // 💡 แก้บั๊กหน้าเว็บกระตุก/รีเฟรชกลับไปที่ "ทั้งหมด": ดึงข้อมูลใหม่แทนการรีโหลดทั้งหน้า
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        bikeModal.show();
-                    } 
-                    else { await loadInventory(); }
-                });
-            }, 400);
+            const modalEl = document.getElementById('modal-bike');
+            const handler = function () {
+                deleteBike();
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+            };
+            modalEl.addEventListener('hidden.bs.modal', handler);
+        }
+
+        function deleteBike() { 
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex'; 
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBike', rowIdx: document.getElementById('m-rowIdx').value, pin: pin }) }); 
+                const result = await res.json();
+                
+                if(result.status === 'error') { 
+                    alert(result.message); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    bikeModal.show();
+                } 
+                else { await loadInventory(); }
+            });
         }
     </script>
 </body>
