@@ -114,7 +114,7 @@
                     <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
                 </div>
                 
-                <div class="bg-dark text-white p-2 rounded mb-2 shadow-sm">
+                <div class="bg-dark text-white p-2 rounded mb-3 shadow-sm">
                     <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
                     <div class="row text-center align-items-center">
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">รับจริง(รวมคอม)</small><div id="s-calc-revenue" class="fw-bold text-success" style="font-size:0.8rem;">฿0</div></div>
@@ -213,62 +213,48 @@
 
         async function loadFinanceData() {
             document.getElementById('loader').style.display = 'flex';
-            const response = await fetch(`${API_URL}?action=getMasterData`);
-            const data = await response.json();
-            
-            document.getElementById('total-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
-            document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
-            allBikes = data.bikes || [];
-            
-            renderBikesList('sold'); renderBikesList('pending');
+            try {
+                const response = await fetch(`${API_URL}?action=getMasterData`);
+                if(!response.ok) throw new Error('Net Error');
+                const data = await response.json();
+                
+                document.getElementById('total-cap').innerText = '฿' + (data.dashboard.totalCap || 0).toLocaleString();
+                document.getElementById('total-profit').innerText = '฿' + (data.dashboard.profit || 0).toLocaleString();
+                allBikes = data.bikes || [];
+                
+                renderBikesList('sold'); renderBikesList('pending');
 
-            if (data.capitalHistory) {
-                let htmlLeft = ''; let htmlRight = '';
-                let totalLeft = 0; let totalRight = 0;
+                if (data.capitalHistory) {
+                    let htmlLeft = ''; let htmlRight = '';
+                    let totalLeft = 0; let totalRight = 0;
 
-                data.capitalHistory.forEach(c => { 
-                    const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
-                    const box = `
-                        <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
-                            <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
-                                <b>${c.date}</b>
-                                <button class="btn btn-sm btn-light py-0 px-1 text-primary border" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}', '${c.capType}')"><i class="bi bi-pencil"></i></button>
+                    data.capitalHistory.forEach(c => { 
+                        const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
+                        const box = `
+                            <div class="bg-white p-2 rounded border mb-2 shadow-sm" style="font-size:0.75rem;">
+                                <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
+                                    <b>${c.date}</b>
+                                    <button class="btn btn-sm btn-light py-0 px-1 text-primary border" onclick="openEditCapital(${c.rowIdx}, '${c.date}', '${c.amount}', '${c.note}', '${c.targetBikes}', '${c.capType}')"><i class="bi bi-pencil"></i></button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" style="max-width: 80px;" title="${c.note||'-'}">${c.note||'-'}</span>
+                                    <b class="text-success" style="font-size:0.85rem;">+฿${Number(c.amount).toLocaleString()}</b>
+                                </div>
+                                <div class="mt-1 text-end">${targetStr}</div>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted text-truncate" style="max-width: 80px;" title="${c.note||'-'}">${c.note||'-'}</span>
-                                <b class="text-success" style="font-size:0.85rem;">+฿${Number(c.amount).toLocaleString()}</b>
-                            </div>
-                            <div class="mt-1 text-end">${targetStr}</div>
-                        </div>
+                        `;
+
+                        if(c.capType === 'เงินลงทุน') { htmlLeft += box; totalLeft += Number(c.amount); } 
+                        else { htmlRight += box; totalRight += Number(c.amount); }
+                    });
+
+                    document.getElementById('cap-summary-row').innerHTML = `
+                        <div class="col-6"><div class="bg-primary text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small><b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b></div></div>
+                        <div class="col-6"><div class="bg-success text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small><b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b></div></div>
                     `;
-
-                    if(c.capType === 'เงินลงทุน') {
-                        htmlLeft += box; totalLeft += Number(c.amount);
-                    } else { 
-                        htmlRight += box; totalRight += Number(c.amount);
-                    }
-                });
-
-                document.getElementById('cap-summary-row').innerHTML = `
-                    <div class="col-6">
-                        <div class="bg-primary text-white p-2 rounded text-center shadow-sm">
-                            <small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small>
-                            <b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="bg-success text-white p-2 rounded text-center shadow-sm">
-                            <small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small>
-                            <b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b>
-                        </div>
-                    </div>
-                `;
-
-                document.getElementById('list-capital-history').innerHTML = `
-                    <div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
-                    <div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>
-                `;
-            }
+                    document.getElementById('list-capital-history').innerHTML = `<div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div><div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>`;
+                }
+            } catch(e) { document.getElementById('loader').style.display = 'none'; }
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -404,7 +390,7 @@
             calcSaleProfit(); saleModal.show();
         }
         
-        // 💡 แก้บั๊กกล่องซ้อนกัน: ซ่อนกล่องเดิมก่อน!
+        // 💡 ใส่ Try...Catch ป้องกันค้างเวลาดึงข้อมูลไม่ได้
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
@@ -420,26 +406,49 @@
                         finOther: document.getElementById('s-finOther').value, 
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
-                    document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    const result = await res.json();
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        saleModal.show(); // ดึงกล่องกลับมาถ้าพลาด
-                    } else { location.reload(); }
+                    document.getElementById('loader').style.display = 'flex';
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            saleModal.show();
+                        } else { await loadFinanceData(); }
+                    } catch(e) {
+                        alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        saleModal.show();
+                    }
                 });
             }, 400);
         }
         
         function revertSale() {
             if(!confirm('ยืนยันตีกลับรถคันนี้เข้าลานจอด? (ยกเลิกการขาย)')) return;
-            executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex'; 
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
-                const result = await res.json();
-                if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; } else { location.reload(); }
-            });
+            saleModal.hide();
+            setTimeout(() => {
+                executeWithPin(async (pin) => {
+                    document.getElementById('loader').style.display = 'flex'; 
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            saleModal.show();
+                        } else { await loadFinanceData(); }
+                    } catch(e) {
+                        alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        saleModal.show();
+                    }
+                });
+            }, 400);
         }
         
         function openAddCapital() {
@@ -452,28 +461,52 @@
             document.getElementById('c-capType').value = type || 'เงินลงทุน';
             document.getElementById('btn-delete-cap').style.display = 'block'; capModal.show();
         }
-        // 💡 แก้บั๊กกล่องซ้อนกัน
+        
         function saveCapital() {
             capModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
-                    const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; capModal.show(); } else { location.reload(); }
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            capModal.show(); 
+                        } else { await loadFinanceData(); }
+                    } catch(e) {
+                        alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        capModal.show();
+                    }
                 });
             }, 400);
         }
-        // 💡 แก้บั๊กกล่องซ้อนกัน
+        
         function deleteCapital() {
             if(!confirm('ลบยอดเงินทุนนี้?')) return;
             capModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     document.getElementById('loader').style.display = 'flex'; 
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
-                    const result = await res.json();
-                    if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; capModal.show(); } else { location.reload(); }
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
+                        if(!res.ok) throw new Error('Net Error');
+                        const result = await res.json();
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            capModal.show(); 
+                        } else { await loadFinanceData(); }
+                    } catch(e) {
+                        alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                        document.getElementById('loader').style.display = 'none';
+                        capModal.show();
+                    }
                 });
             }, 400);
         }
