@@ -254,20 +254,15 @@
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
             if(!pinModalInstance) pinModalInstance = new bootstrap.Modal(document.getElementById('modal-pin'));
-            document.getElementById('global-pin').value = '';
-            pendingPinAction = callback;
-            pinModalInstance.show();
+            document.getElementById('global-pin').value = ''; pendingPinAction = callback; pinModalInstance.show();
             setTimeout(() => document.getElementById('global-pin').focus(), 500);
         }
         document.getElementById('btn-confirm-pin').addEventListener('click', () => {
             const pin = document.getElementById('global-pin').value;
             if(!pin) return alert('กรุณาใส่รหัส PIN 4 หลัก');
-            pinModalInstance.hide();
-            if(pendingPinAction) pendingPinAction(pin);
+            pinModalInstance.hide(); if(pendingPinAction) pendingPinAction(pin);
         });
-        document.getElementById('global-pin').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
-        });
+        document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
         window.onload = function() {
             bikeModal = new bootstrap.Modal(document.getElementById('modal-bike'));
@@ -296,7 +291,7 @@
         async function loadInventory() {
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
-                if(!res.ok) throw new Error('Network Error');
+                if(!res.ok) throw new Error('Net Error');
                 const data = await res.json();
                 allBikes = data.bikes || [];
                 allRepairs = data.repairs || [];
@@ -341,7 +336,6 @@
                     }
 
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
-                    // 💡 ทุนลับ: บวกค่าใช้จ่ายเพิ่มแล้ว
                     const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -448,8 +442,13 @@
         function proceedSaveBike() {
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
+                
+                // 💡 แก้ไขบั๊กค้าง: หากล่องรับค่าให้เจอ ถ้าไม่มีให้ส่งค่าว่าง ป้องกันโค้ดหยุดทำงาน
                 const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee','ex1N','ex1P','ex2N','ex2P','ex3N','ex3P','finCIMB','downPayment1','downPayment2','finTidlor','finOther','saleCommission'];
-                fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
+                fields.forEach(id => { 
+                    const el = document.getElementById('m-'+id); 
+                    payload[id] = el ? el.value : ''; // ถ้าเจอกล่องให้เอาค่ามา ถ้าไม่เจอให้ส่งค่าว่าง
+                });
                 
                 document.getElementById('loader').style.display = 'flex';
                 try {
@@ -472,7 +471,6 @@
 
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
-            
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
@@ -507,13 +505,6 @@
             document.getElementById('s-finTidlor').value = b.finTidlor || 0; 
             document.getElementById('s-finOther').value = b.finOther || 0; 
             document.getElementById('s-saleCommission').value = b.saleCommission || 0;
-            
-            // 💡 อัปเดตเช็คลิสต์ที่หน้าสต็อกไม่มีกล่องให้กรอก ก็ยึดค่าเริ่มต้น
-            if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
-            if(document.getElementById('s-tax')) document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ';
-            if(document.getElementById('s-book')) document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
-            if(document.getElementById('s-transferTo')) document.getElementById('s-transferTo').value = b.transferTo || '';
-            if(document.getElementById('s-transferDate')) document.getElementById('s-transferDate').value = b.transferDate || '';
             
             calcSaleProfit(); saleModal.show();
         }
