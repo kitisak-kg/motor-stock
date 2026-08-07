@@ -38,7 +38,6 @@
 
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <!-- 💡 อัปเดตคำใบ้ในช่องค้นหาให้รวมลูกค้า และ บัตรประชาชน -->
             <input type="text" id="search" class="form-control form-control-sm w-75 shadow-sm" placeholder="🔍 ทะเบียน/รุ่น/ลูกค้า/เลข ปชช..." onkeyup="filterInventory(currentFilter)">
             <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" onclick="openBikeModal()">+ เพิ่มรถ</button>
         </div>
@@ -130,7 +129,6 @@
                     </div>
                 </div>
 
-                <!-- 💡 กล่องข้อมูลลูกค้า (หน้าสต็อก) แยก 3 ช่องชัดเจน และเซฟได้แล้ว -->
                 <div class="bg-info bg-opacity-10 p-2 rounded mb-2 border border-info">
                     <div class="fw-bold text-info small mb-1"><i class="bi bi-person-lines-fill"></i> ข้อมูลลูกค้าผู้ซื้อ / ผู้ครอบครอง</div>
                     <div class="row g-2">
@@ -157,7 +155,6 @@
       </div>
     </div>
 
-    <!-- 💡 ป๊อปอัปจัดการขาย ก็แยกเป็น 3 ช่องเหมือนกัน -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -171,8 +168,6 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
-                    
-                    <!-- 💡 ข้อมูลลูกค้า (หน้าขาย) ก็แยกเป็น 3 ช่อง -->
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-lines-fill"></i> ชื่อ-นามสกุล / เบอร์โทร</label><input type="text" id="s-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล ลูกค้า"></div>
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-vcard"></i> เลขบัตร ปชช.</label><input type="text" id="s-cusId" class="form-control form-control-sm border-info" placeholder="เลขบัตรประชาชน"></div>
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-house"></i> ที่อยู่</label><textarea id="s-cusAddress" class="form-control form-control-sm border-info" rows="2" placeholder="ที่อยู่..."></textarea></div>
@@ -284,12 +279,17 @@
             loadInventory();
         };
 
+        // 💡 อัปเดตฟังก์ชันกดซ่อน/เปิดข้อมูล ให้รองรับทั้งตัวลูกค้าและยอดเงิน 
         function toggleSecret(icon) {
-            const container = icon.closest('.col-auto').querySelector('.secret-val');
+            const parent = icon.closest('.secret-wrapper') || icon.closest('.col-auto');
+            if(!parent) return;
+            const container = parent.querySelector('.secret-val');
             if (container.innerText === '***') {
-                container.innerText = container.getAttribute('data-val'); icon.classList.replace('bi-eye-slash', 'bi-eye');
+                container.innerText = container.getAttribute('data-val'); 
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
             } else {
-                container.innerText = '***'; icon.classList.replace('bi-eye', 'bi-eye-slash');
+                container.innerText = '***'; 
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
             }
         }
 
@@ -323,7 +323,6 @@
             let html = '';
             
             allBikes.filter(b => b.saleStatus === 'สต็อก').forEach(b => {
-                // 💡 เอาข้อมูลลูกค้าทั้ง 3 ช่อง มารวมในคำค้นหาด้วย ค้นด้วยชื่อ หรือ ปชช. ก็เจอ
                 const searchTxt = `${b.plate||''} ${b.model||''} ${b.brand||''} ${b.cha||''} ${b.eng||''} ${b.year||''} ${b.appearance||''} ${b.color||''} ${b.changedColor||''} ${b.cusName||''} ${b.cusId||''} ${b.cusAddress||''}`.toLowerCase();
                 
                 const matchType = (type === 'all') || 
@@ -341,16 +340,19 @@
                         shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
                     }
 
+                    // 💡 แสดงข้อมูลลูกค้าแบบซ่อน (มีรูปตาเปิด/ปิด) ต่อท้ายแถวบน
+                    let cusDataString = [];
+                    if (b.cusName) cusDataString.push(b.cusName);
+                    if (b.cusId) cusDataString.push('ปชช: ' + b.cusId);
+                    if (b.cusAddress) cusDataString.push('ที่อยู่: ' + b.cusAddress);
+                    let cusBadge = '';
+                    if (cusDataString.length > 0) {
+                        let fullCusInfo = cusDataString.join(' | ').replace(/"/g, '&quot;');
+                        cusBadge = `<span class="secret-wrapper ms-2">| <span class="text-info text-dark"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span> <i class="bi bi-eye-slash ms-1 text-primary" style="cursor:pointer;" onclick="toggleSecret(this)"></i> <span class="fw-bold text-primary secret-val" data-val="${fullCusInfo}">***</span></span>`;
+                    }
+
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
                     const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
-
-                    // 💡 แสดงข้อมูลลูกค้าบนการ์ดในหน้าสต็อกด้วย (ถ้ามี)
-                    const customerHtml = (b.cusName || b.cusId || b.cusAddress) ? `
-                        <div class="bg-info bg-opacity-10 border border-info rounded p-2 mb-2" style="font-size:0.65rem;">
-                            <span class="text-muted"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span> <b class="text-dark">${b.cusName || '-'}</b>
-                            ${b.cusId ? `<br><span class="text-muted"><i class="bi bi-person-vcard"></i> ปชช:</span> <b class="text-dark">${b.cusId}</b>` : ''}
-                            ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
-                        </div>` : '';
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
                         <div class="d-flex justify-content-between align-items-start">
@@ -361,12 +363,9 @@
                             <span class="badge ${statusColor} ms-1" style="font-size: 0.6rem; white-space:nowrap;">${b.status}</span>
                         </div>
                         <div class="mt-1 mb-2" style="font-size: 0.72rem; color: #666; padding-left: 28px;">
-                            เลขถัง: ${b.cha || '-'} | ภาษี: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตร: <span class="text-danger fw-bold">${b.idExp || '-'}</span>${shopBadge}
+                            เลขถัง: ${b.cha || '-'} | ภาษี: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตร: <span class="text-danger fw-bold">${b.idExp || '-'}</span>${shopBadge}${cusBadge}
                             ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                         </div>
-                        
-                        ${customerHtml}
-                        
                         <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
@@ -374,7 +373,7 @@
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">รวม</div><div class="fw-bold text-primary">฿${safeTotalCost.toLocaleString()}</div></div>
                             
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ราคาตั้งขาย</div><div class="fw-bold text-success" style="font-size:0.85rem;">฿${(b.targetPrice||0).toLocaleString()}</div></div>
-                            <div class="col-auto border-start ps-2 pe-1"><div class="text-muted" style="font-size:0.55rem;">อื่นๆ <i class="bi bi-eye-slash ms-1" style="cursor:pointer;" onclick="toggleSecret(this)"></i></div>
+                            <div class="col-auto border-start ps-2 pe-1 secret-wrapper"><div class="text-muted" style="font-size:0.55rem;">อื่นๆ <i class="bi bi-eye-slash ms-1" style="cursor:pointer;" onclick="toggleSecret(this)"></i></div>
                                 <div class="fw-bold text-secondary secret-val" data-val="฿${secretCost.toLocaleString()}" style="font-size:0.8rem;">***</div>
                             </div>
                         </div>
@@ -415,7 +414,6 @@
             document.getElementById('m-rowIdx').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
             
-            // 💡 เคลียร์ข้อมูลช่องทั้งหมด (เพิ่มช่อง 3 อันของลูกค้าเข้าไปล้างค่าด้วย)
             const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-cusName','m-cusId','m-cusAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
             clearFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             
@@ -430,7 +428,6 @@
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
             
-            // 💡 ดึงข้อมูลลูกค้า 3 ช่องมาแสดงในหน้าตั้งค่ารถ
             const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             
@@ -473,7 +470,6 @@
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
                 
-                // 💡 กวาดข้อมูล 3 ช่องส่งไปหลังบ้าน
                 const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
 
@@ -524,7 +520,6 @@
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
             
-            // 💡 โหลดข้อมูลลูกค้าจากระบบมาโชว์ในกล่องปิดการขาย
             document.getElementById('s-cusName').value = b.cusName || '';
             document.getElementById('s-cusId').value = b.cusId || '';
             document.getElementById('s-cusAddress').value = b.cusAddress || '';
@@ -555,7 +550,6 @@
                     const payload = { 
                         action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
                         
-                        // 💡 ส่งข้อมูลลูกค้า 3 ช่องไปอัปเดตทับ
                         cusName: document.getElementById('s-cusName').value, 
                         cusId: document.getElementById('s-cusId').value, 
                         cusAddress: document.getElementById('s-cusAddress').value, 
