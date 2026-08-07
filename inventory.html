@@ -38,7 +38,8 @@
 
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <input type="text" id="search" class="form-control form-control-sm w-75 shadow-sm" placeholder="🔍 ทะเบียน/รุ่น/ลูกค้า..." onkeyup="filterInventory(currentFilter)">
+            <!-- 💡 อัปเดตคำใบ้ในช่องค้นหาให้รวมลูกค้า และ บัตรประชาชน -->
+            <input type="text" id="search" class="form-control form-control-sm w-75 shadow-sm" placeholder="🔍 ทะเบียน/รุ่น/ลูกค้า/เลข ปชช..." onkeyup="filterInventory(currentFilter)">
             <button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" onclick="openBikeModal()">+ เพิ่มรถ</button>
         </div>
         <div id="list-inventory"></div>
@@ -129,13 +130,13 @@
                     </div>
                 </div>
 
-                <!-- 💡 กล่องข้อมูลลูกค้า (ใหม่) เพิ่มตามคำขอ -->
+                <!-- 💡 กล่องข้อมูลลูกค้า (หน้าสต็อก) แยก 3 ช่องชัดเจน และเซฟได้แล้ว -->
                 <div class="bg-info bg-opacity-10 p-2 rounded mb-2 border border-info">
                     <div class="fw-bold text-info small mb-1"><i class="bi bi-person-lines-fill"></i> ข้อมูลลูกค้าผู้ซื้อ / ผู้ครอบครอง</div>
                     <div class="row g-2">
-                        <div class="col-12">
-                            <textarea id="m-customer" class="form-control form-control-sm" rows="3" placeholder="ระบุ ชื่อ-นามสกุล, เลขบัตรประชาชน, ที่อยู่ตามบัตร หรือข้อมูลติดต่อ..."></textarea>
-                        </div>
+                        <div class="col-12"><input type="text" id="m-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล / เบอร์โทรลูกค้า"></div>
+                        <div class="col-12"><input type="text" id="m-cusId" class="form-control form-control-sm border-info" placeholder="เลขบัตรประชาชน"></div>
+                        <div class="col-12"><textarea id="m-cusAddress" class="form-control form-control-sm border-info" rows="2" placeholder="ที่อยู่ตามบัตรประชาชน..."></textarea></div>
                     </div>
                 </div>
 
@@ -156,6 +157,7 @@
       </div>
     </div>
 
+    <!-- 💡 ป๊อปอัปจัดการขาย ก็แยกเป็น 3 ช่องเหมือนกัน -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -164,13 +166,16 @@
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
-                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary">
-                    </div>
+                <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
-                    <div class="col-12"><label class="small fw-bold">ข้อมูลลูกค้า / เบอร์ติดต่อ</label><input type="text" id="s-customer" class="form-control form-control-sm border-info" placeholder="พิมพ์ชื่อ-เบอร์โทรลูกค้า"></div>
+                    
+                    <!-- 💡 ข้อมูลลูกค้า (หน้าขาย) ก็แยกเป็น 3 ช่อง -->
+                    <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-lines-fill"></i> ชื่อ-นามสกุล / เบอร์โทร</label><input type="text" id="s-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล ลูกค้า"></div>
+                    <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-vcard"></i> เลขบัตร ปชช.</label><input type="text" id="s-cusId" class="form-control form-control-sm border-info" placeholder="เลขบัตรประชาชน"></div>
+                    <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-house"></i> ที่อยู่</label><textarea id="s-cusAddress" class="form-control form-control-sm border-info" rows="2" placeholder="ที่อยู่..."></textarea></div>
                 </div>
 
                 <div class="box-deduct">
@@ -208,6 +213,19 @@
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักทุนรวมรถ</small><div id="s-calc-cost" class="fw-bold text-warning" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">หักค่าโอน+อื่นๆ</small><div id="s-calc-deduct" class="fw-bold text-danger" style="font-size:0.8rem;">฿0</div></div>
                         <div class="col-3"><small class="text-white-50" style="font-size:0.55rem;">กำไรสุทธิเป๊ะๆ</small><div id="s-calc-profit" class="fw-bold text-info" style="font-size:0.9rem;">฿0</div></div>
+                    </div>
+                </div>
+
+                <div class="bg-light p-2 rounded border mb-2">
+                    <label class="fw-bold small mb-2">เช็คลิสต์เอกสาร / งานโอน</label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label class="x-small">พรบ.</label><select id="s-prb" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
+                        <div class="col-4"><label class="x-small">ภาษี</label><select id="s-tax" class="form-select form-select-sm"><option>รอดำเนินการ</option><option>มอบให้แล้ว</option></select></div>
+                        <div class="col-4"><label class="x-small">เล่มรถ</label><select id="s-book" class="form-select form-select-sm"><option>รอเล่มโอน</option><option>มอบให้แล้ว</option></select></div>
+                    </div>
+                    <div class="row g-2 border-top pt-2">
+                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มให้ใคร (ผู้รับเรื่อง)</label><input type="text" id="s-transferTo" class="form-control form-control-sm" placeholder="เช่น เฮียทองดี"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                     </div>
                 </div>
             </div>
@@ -305,8 +323,8 @@
             let html = '';
             
             allBikes.filter(b => b.saleStatus === 'สต็อก').forEach(b => {
-                // 💡 นำ customerDetail มารวมในข้อความค้นหา (searchTxt)
-                const searchTxt = `${b.plate||''} ${b.model||''} ${b.brand||''} ${b.cha||''} ${b.eng||''} ${b.year||''} ${b.appearance||''} ${b.color||''} ${b.changedColor||''} ${b.customerDetail||''}`.toLowerCase();
+                // 💡 เอาข้อมูลลูกค้าทั้ง 3 ช่อง มารวมในคำค้นหาด้วย ค้นด้วยชื่อ หรือ ปชช. ก็เจอ
+                const searchTxt = `${b.plate||''} ${b.model||''} ${b.brand||''} ${b.cha||''} ${b.eng||''} ${b.year||''} ${b.appearance||''} ${b.color||''} ${b.changedColor||''} ${b.cusName||''} ${b.cusId||''} ${b.cusAddress||''}`.toLowerCase();
                 
                 const matchType = (type === 'all') || 
                                   (type === 'ไม่พร้อมขาย' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม')) || 
@@ -326,10 +344,12 @@
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
                     const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
 
-                    // 💡 แสดงกล่องลูกค้าสีฟ้าอ่อน ใต้ข้อมูลรถ
-                    const customerHtml = b.customerDetail ? `
+                    // 💡 แสดงข้อมูลลูกค้าบนการ์ดในหน้าสต็อกด้วย (ถ้ามี)
+                    const customerHtml = (b.cusName || b.cusId || b.cusAddress) ? `
                         <div class="bg-info bg-opacity-10 border border-info rounded p-2 mb-2" style="font-size:0.65rem;">
-                            <span class="text-muted"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span> <b class="text-dark">${b.customerDetail}</b>
+                            <span class="text-muted"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span> <b class="text-dark">${b.cusName || '-'}</b>
+                            ${b.cusId ? `<br><span class="text-muted"><i class="bi bi-person-vcard"></i> ปชช:</span> <b class="text-dark">${b.cusId}</b>` : ''}
+                            ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
                         </div>` : '';
 
                     html += `<div class="card-bike border-start border-5 ${b.status==='พร้อมขาย'?'border-success':'border-warning'}">
@@ -347,7 +367,7 @@
                         
                         ${customerHtml}
                         
-                        <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
+                        <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                             <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                             <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
                             
@@ -395,8 +415,8 @@
             document.getElementById('m-rowIdx').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
             
-            // 💡 เคลียร์ข้อมูลทั้งหมดในกล่องรวมถึงข้อมูลลูกค้า
-            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-customer','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
+            // 💡 เคลียร์ข้อมูลช่องทั้งหมด (เพิ่มช่อง 3 อันของลูกค้าเข้าไปล้างค่าด้วย)
+            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-cusName','m-cusId','m-cusAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
             clearFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             
             document.getElementById('m-status').value='รอส่งซ่อม'; 
@@ -410,10 +430,9 @@
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
             
-            // 💡 โหลดข้อมูลลูกค้าจากระบบมาโชว์ในกล่องแก้ไข (ส่งผ่าน m-customer แต่ตอนเซฟให้ไปลง customerDetail)
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P'];
+            // 💡 ดึงข้อมูลลูกค้า 3 ช่องมาแสดงในหน้าตั้งค่ารถ
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
-            document.getElementById('m-customer').value = b.customerDetail || '';
             
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
@@ -454,11 +473,9 @@
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
                 
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P'];
+                // 💡 กวาดข้อมูล 3 ช่องส่งไปหลังบ้าน
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
-                
-                // 💡 แอบเพิ่มตัวแปร customerDetail จากกล่องลูกค้าส่งไปหลังบ้าน
-                payload.customerDetail = document.getElementById('m-customer').value;
 
                 document.getElementById('loader').style.display = 'flex';
                 try {
@@ -506,7 +523,12 @@
 
             document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
             const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
-            document.getElementById('s-customer').value = b.customerDetail || '';
+            
+            // 💡 โหลดข้อมูลลูกค้าจากระบบมาโชว์ในกล่องปิดการขาย
+            document.getElementById('s-cusName').value = b.cusName || '';
+            document.getElementById('s-cusId').value = b.cusId || '';
+            document.getElementById('s-cusAddress').value = b.cusAddress || '';
+
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
@@ -517,6 +539,12 @@
             document.getElementById('s-finOther').value = b.finOther || 0; 
             document.getElementById('s-saleCommission').value = b.saleCommission || 0;
             
+            if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
+            if(document.getElementById('s-tax')) document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ';
+            if(document.getElementById('s-book')) document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
+            if(document.getElementById('s-transferTo')) document.getElementById('s-transferTo').value = b.transferTo || '';
+            if(document.getElementById('s-transferDate')) document.getElementById('s-transferDate').value = b.transferDate || '';
+            
             calcSaleProfit(); saleModal.show();
         }
 
@@ -525,7 +553,13 @@
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     const payload = { 
-                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, customerDetail: document.getElementById('s-customer').value, 
+                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
+                        
+                        // 💡 ส่งข้อมูลลูกค้า 3 ช่องไปอัปเดตทับ
+                        cusName: document.getElementById('s-cusName').value, 
+                        cusId: document.getElementById('s-cusId').value, 
+                        cusAddress: document.getElementById('s-cusAddress').value, 
+
                         prbStatus: document.getElementById('s-prb') ? document.getElementById('s-prb').value : 'รอดำเนินการ', 
                         taxStatus: document.getElementById('s-tax') ? document.getElementById('s-tax').value : 'รอดำเนินการ', 
                         bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
