@@ -241,6 +241,10 @@
                 let taxAlerts = []; let idAlerts = []; let docAlerts = [];
                 let agingAlerts = []; let stuckRepairAlerts = [];
                 
+                // 💡 ตัวแปรช่วยนับเพื่อทำแถบสรุป
+                let age1_3 = 0, age4_6 = 0, age6_12 = 0, age12_plus = 0;
+                let stuckRepCount = 0;
+                
                 data.bikes.forEach(b => {
                     if(b.saleStatus === 'สต็อก') {
                         if(b.status === 'รอส่งซ่อม') wait++; if(b.status === 'กำลังซ่อม') repair++; if(b.status === 'พร้อมขาย') ready++;
@@ -270,15 +274,27 @@
                         let buyDiffDays = getDiffDays(b.buyDate);
                         if (buyDiffDays !== null && buyDiffDays >= 30) { 
                             let months = Math.floor(buyDiffDays / 30);
+                            
                             if (b.status === 'พร้อมขาย') {
-                                let badgeColor = 'bg-secondary';
-                                if (months >= 6) badgeColor = 'bg-danger';
-                                else if (months >= 4) badgeColor = 'bg-warning text-dark';
-                                agingAlerts.push({ html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'} ${b.model||''}</b><br><span class="text-muted">ซื้อ: ${b.buyDate}</span></div><span class="badge ${badgeColor}">จอดมา ${months} เดือน</span></div>`, days: buyDiffDays });
+                                let badgeColor = 'bg-info text-dark';
+                                // 💡 เก็บยอดนับเข้าตามกลุ่มที่ต้องการ
+                                if (months >= 12) { badgeColor = 'bg-dark text-white'; age12_plus++; }
+                                else if (months >= 6) { badgeColor = 'bg-danger text-white'; age6_12++; }
+                                else if (months >= 4) { badgeColor = 'bg-warning text-dark'; age4_6++; }
+                                else { age1_3++; }
+                                
+                                agingAlerts.push({ 
+                                    html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'} ${b.model||''}</b><br><span class="text-muted">ซื้อ: ${b.buyDate}</span></div><span class="badge ${badgeColor}">จอดมา ${months} เดือน</span></div>`, 
+                                    days: buyDiffDays 
+                                });
                             } 
                             else if ((b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม') && months >= 2) {
+                                stuckRepCount++; // นับยอดคันรถซ่อมนาน
                                 let shopInfo = b.repairShop ? `อู่: ${b.repairShop}` : 'ยังไม่ระบุอู่';
-                                stuckRepairAlerts.push({ html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'} ${b.model||''}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> ติดสถานะ "${b.status}"</span><br><span class="text-muted" style="font-size:0.7rem;">ซื้อ: ${b.buyDate} | ${shopInfo}</span></div><span class="badge bg-dark">${months} เดือน</span></div>`, days: buyDiffDays });
+                                stuckRepairAlerts.push({
+                                    html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'} ${b.model||''}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> ติดสถานะ "${b.status}"</span><br><span class="text-muted" style="font-size:0.7rem;">ซื้อ: ${b.buyDate} | ${shopInfo}</span></div><span class="badge bg-dark">${months} เดือน</span></div>`,
+                                    days: buyDiffDays
+                                });
                             }
                         }
                     }
@@ -308,8 +324,29 @@
                 document.getElementById('alert-tax').innerHTML = taxAlerts.length > 0 ? taxAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-id').innerHTML = idAlerts.length > 0 ? idAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-doc').innerHTML = docAlerts.length > 0 ? docAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
-                document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
-                document.getElementById('alert-stuck-repair').innerHTML = stuckRepairAlerts.length > 0 ? stuckRepairAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
+                
+                // 💡 แทรกแถบสรุปยอดไว้ด้านบนสุดของกล่อง Aging Alerts
+                let agingSummaryHtml = '';
+                if (agingAlerts.length > 0) {
+                    agingSummaryHtml = `
+                    <div class="d-flex justify-content-around p-2 bg-light border-bottom text-center small fw-bold">
+                        <div class="text-info text-dark">1-3 ด.<br><span class="fs-5">${age1_3}</span></div>
+                        <div class="text-warning text-dark border-start border-secondary ps-2">4-6 ด.<br><span class="fs-5">${age4_6}</span></div>
+                        <div class="text-danger border-start border-secondary ps-2">6-12 ด.<br><span class="fs-5">${age6_12}</span></div>
+                        <div class="text-dark border-start border-secondary ps-2">> 1 ปี<br><span class="fs-5">${age12_plus}</span></div>
+                    </div>`;
+                }
+                document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingSummaryHtml + agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
+                
+                // 💡 แทรกแถบสรุปยอดไว้ด้านบนสุดของกล่อง รถซ่อมนานผิดปกติ
+                let repairSummaryHtml = '';
+                if (stuckRepairAlerts.length > 0) {
+                    repairSummaryHtml = `
+                    <div class="p-2 bg-light border-bottom text-center small fw-bold text-danger">
+                        รวมรถจอดซ่อมนานกว่า 2 เดือน: <span class="fs-5">${stuckRepCount}</span> คัน
+                    </div>`;
+                }
+                document.getElementById('alert-stuck-repair').innerHTML = stuckRepairAlerts.length > 0 ? repairSummaryHtml + stuckRepairAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
                 updateBadge('badge-tax', taxAlerts.length);
                 updateBadge('badge-id', idAlerts.length);
