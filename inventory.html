@@ -98,8 +98,9 @@
                     <div class="col-12"><label class="x-small fw-bold">5. แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
                     <div class="col-5"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
-                    <div class="col-3"><label class="x-small fw-bold">7. ปีรถ</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
-                    <div class="col-4"><label class="x-small fw-bold">6. โฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
+                    <!-- 💡 เปลี่ยนคำตามคำขอ -->
+                    <div class="col-3"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+                    <div class="col-4"><label class="x-small fw-bold">6. ปีโฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
                 </div>
@@ -119,6 +120,18 @@
                         </div>
                     </div>
                     <div class="mt-2 text-end fw-bold text-primary small" id="m-totalReal">รวมต้นทุนจม: ฿0</div>
+                </div>
+
+                <div class="box-deduct">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="box-deduct-title m-0">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" onclick="addExRow('m')" style="font-size:0.7rem;">+ เพิ่มรายการหัก</button>
+                    </div>
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="m-transferFee" class="form-control form-control-sm mb-2">
+                    <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
+                    <div class="row g-1" id="m-ex-container">
+                        <!-- โค้ดสร้างช่องจะมาโผล่ตรงนี้ -->
+                    </div>
                 </div>
 
                 <div class="bg-success bg-opacity-10 p-2 rounded mb-2 border border-success">
@@ -174,13 +187,14 @@
                 </div>
 
                 <div class="box-deduct">
-                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="box-deduct-title m-0">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" onclick="addExRow('s')" style="font-size:0.7rem;">+ เพิ่มรายการหัก</button>
+                    </div>
                     <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
-                    <div class="row g-1">
-                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                    <div class="row g-1" id="s-ex-container">
+                        <!-- โค้ดสร้างช่องจะมาโผล่ตรงนี้ -->
                     </div>
                 </div>
 
@@ -242,9 +256,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let allBikes = []; let allRepairs = []; let bikeModal, saleModal, duplicateModal; 
+        let allBikes = []; let bikeModal, saleModal, duplicateModal; 
         
         let currentFilter = localStorage.getItem('inventoryTab') || 'all';
+
+        let mExCount = 3; let sExCount = 3;
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -279,7 +295,6 @@
             loadInventory();
         };
 
-        // 💡 อัปเดตฟังก์ชันกดซ่อน/เปิดข้อมูล ให้รองรับทั้งตัวลูกค้าและยอดเงิน 
         function toggleSecret(icon) {
             const parent = icon.closest('.secret-wrapper') || icon.closest('.col-auto');
             if(!parent) return;
@@ -299,7 +314,6 @@
                 if(!res.ok) throw new Error('Network Error');
                 const data = await res.json();
                 allBikes = data.bikes || [];
-                allRepairs = data.repairs || [];
                 filterInventory(currentFilter);
             } catch(e) {
                 document.getElementById('loader').style.display = 'none';
@@ -340,7 +354,7 @@
                         shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
                     }
 
-                    // 💡 แสดงข้อมูลลูกค้าแบบซ่อน (มีรูปตาเปิด/ปิด) ต่อท้ายแถวบน
+                    // 💡 ข้อมูลลูกค้าถูกย้ายมาซ่อนไว้ข้างๆ "อู่"
                     let cusDataString = [];
                     if (b.cusName) cusDataString.push(b.cusName);
                     if (b.cusId) cusDataString.push('ปชช: ' + b.cusId);
@@ -348,7 +362,7 @@
                     let cusBadge = '';
                     if (cusDataString.length > 0) {
                         let fullCusInfo = cusDataString.join(' | ').replace(/"/g, '&quot;');
-                        cusBadge = `<span class="secret-wrapper ms-2">| <span class="text-info text-dark"><i class="bi bi-person-lines-fill"></i> ลูกค้า:</span> <i class="bi bi-eye-slash ms-1 text-primary" style="cursor:pointer;" onclick="toggleSecret(this)"></i> <span class="fw-bold text-primary secret-val" data-val="${fullCusInfo}">***</span></span>`;
+                        cusBadge = `<span class="secret-wrapper ms-1">| <span class="text-info text-dark"><i class="bi bi-person-lines-fill"></i> ลค:</span> <i class="bi bi-eye-slash ms-1 text-primary" style="cursor:pointer;" onclick="toggleSecret(this)"></i> <span class="fw-bold text-primary secret-val" data-val="${fullCusInfo}">***</span></span>`;
                     }
 
                     const safeTotalCost = (b.showCost||0) + (b.repairSum||0);
@@ -388,6 +402,42 @@
             document.getElementById('list-inventory').innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
         }
 
+        function renderExRows(prefix, count, dataList = []) {
+            let container = document.getElementById(`${prefix}-ex-container`);
+            let html = '';
+            for(let i=1; i<=count; i++) {
+                let dName = dataList[i-1] ? dataList[i-1].name : '';
+                let dPrice = dataList[i-1] ? dataList[i-1].price : '';
+                let funcCall = prefix === 'm' ? '' : 'oninput="calcSaleProfit()"';
+                html += `
+                    <div class="col-8 mt-1"><input type="text" id="${prefix}-ex${i}N" class="form-control form-control-sm" placeholder="รายการหัก ${i}" value="${dName}"></div>
+                    <div class="col-4 mt-1"><input type="number" id="${prefix}-ex${i}P" class="form-control form-control-sm ${prefix}-ex-price" placeholder="ราคา" value="${dPrice}" ${funcCall}></div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function addExRow(prefix) {
+            if(prefix === 'm' && mExCount < 10) {
+                mExCount++;
+                let old = [];
+                for(let i=1; i<mExCount; i++) {
+                    old.push({ name: document.getElementById(`m-ex${i}N`).value, price: document.getElementById(`m-ex${i}P`).value });
+                }
+                renderExRows('m', mExCount, old);
+            }
+            if(prefix === 's' && sExCount < 10) {
+                sExCount++;
+                let old = [];
+                for(let i=1; i<sExCount; i++) {
+                    old.push({ name: document.getElementById(`s-ex${i}N`).value, price: document.getElementById(`s-ex${i}P`).value });
+                }
+                renderExRows('s', sExCount, old);
+            }
+            if(prefix === 'm' && mExCount === 10) alert('เพิ่มรายการหักได้สูงสุด 10 ช่องครับ');
+            if(prefix === 's' && sExCount === 10) alert('เพิ่มรายการหักได้สูงสุด 10 ช่องครับ');
+        }
+
         function calcTotal() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? Number(el.value) || 0 : 0; };
             const repair = getVal('m-repairReal'); const real = getVal('m-realCost'); const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P');
@@ -397,14 +447,18 @@
         function calcSaleProfit() {
             const getVal = (id) => Number(document.getElementById(id).value) || 0;
             const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
-            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
+            
+            let exTotal = 0;
+            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += Number(el.value) || 0);
+
+            const totalInternal = getVal('s-totalInternal'); 
             
             const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
             const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
             document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
             document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
 
-            const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; const deduct = transferFee + exTotal; const profit = revenue - totalInternal - deduct;
             
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
@@ -414,9 +468,12 @@
             document.getElementById('m-rowIdx').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
             
-            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-cusName','m-cusId','m-cusAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
+            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-transferFee','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
             clearFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             
+            mExCount = 3; 
+            renderExRows('m', mExCount); 
+
             document.getElementById('m-status').value='รอส่งซ่อม'; 
             document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
             
@@ -428,9 +485,13 @@
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
             
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','transferFee','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             
+            let activeEx = (b.exList || []).filter(ex => ex.name || ex.price > 0);
+            mExCount = activeEx.length < 3 ? 3 : activeEx.length; 
+            renderExRows('m', mExCount, activeEx);
+
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
@@ -470,8 +531,16 @@
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
                 
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','cusName','cusId','cusAddress'];
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','transferFee'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
+
+                let exList = [];
+                for(let i=1; i<=mExCount; i++) {
+                    let n = document.getElementById(`m-ex${i}N`) ? document.getElementById(`m-ex${i}N`).value : '';
+                    let p = document.getElementById(`m-ex${i}P`) ? document.getElementById(`m-ex${i}P`).value : 0;
+                    exList.push({name: n, price: p});
+                }
+                payload.exList = exList;
 
                 document.getElementById('loader').style.display = 'flex';
                 try {
@@ -524,8 +593,11 @@
             document.getElementById('s-cusId').value = b.cusId || '';
             document.getElementById('s-cusAddress').value = b.cusAddress || '';
 
-            document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
-            document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
+            document.getElementById('s-transferFee').value = b.transferFee || 0; 
+            
+            let activeEx = (b.exList || []).filter(ex => ex.name || ex.price > 0);
+            sExCount = activeEx.length < 3 ? 3 : activeEx.length; 
+            renderExRows('s', sExCount, activeEx);
             
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
@@ -559,7 +631,8 @@
                         bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
-                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                        transferFee: document.getElementById('s-transferFee').value, 
+                        
                         finCIMB: document.getElementById('s-finCIMB').value, 
                         downPayment1: document.getElementById('s-downPayment1').value, 
                         downPayment2: document.getElementById('s-downPayment2').value, 
@@ -567,6 +640,15 @@
                         finOther: document.getElementById('s-finOther').value, 
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
+
+                    let exList = [];
+                    for(let i=1; i<=sExCount; i++) {
+                        let n = document.getElementById(`s-ex${i}N`) ? document.getElementById(`s-ex${i}N`).value : '';
+                        let p = document.getElementById(`s-ex${i}P`) ? document.getElementById(`s-ex${i}P`).value : 0;
+                        exList.push({name: n, price: p});
+                    }
+                    payload.exList = exList;
+
                     document.getElementById('loader').style.display = 'flex';
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
