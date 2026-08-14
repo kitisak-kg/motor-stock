@@ -277,7 +277,7 @@
                             
                             if (b.status === 'พร้อมขาย') {
                                 let badgeColor = 'bg-info text-dark';
-                                // 💡 เก็บยอดนับเข้าตามกลุ่มที่ต้องการ
+                                // 💡 แยกอายุรถค้างสต็อก
                                 if (months >= 12) { badgeColor = 'bg-dark text-white'; age12_plus++; }
                                 else if (months >= 6) { badgeColor = 'bg-danger text-white'; age6_12++; }
                                 else if (months >= 4) { badgeColor = 'bg-warning text-dark'; age4_6++; }
@@ -289,7 +289,7 @@
                                 });
                             } 
                             else if ((b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม') && months >= 2) {
-                                stuckRepCount++; // นับยอดคันรถซ่อมนาน
+                                stuckRepCount++; 
                                 let shopInfo = b.repairShop ? `อู่: ${b.repairShop}` : 'ยังไม่ระบุอู่';
                                 stuckRepairAlerts.push({
                                     html: `<div class="alert-item d-flex justify-content-between align-items-center"><div><b>${b.plate||'-'} ${b.model||''}</b><br><span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> ติดสถานะ "${b.status}"</span><br><span class="text-muted" style="font-size:0.7rem;">ซื้อ: ${b.buyDate} | ${shopInfo}</span></div><span class="badge bg-dark">${months} เดือน</span></div>`,
@@ -325,7 +325,7 @@
                 document.getElementById('alert-id').innerHTML = idAlerts.length > 0 ? idAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-doc').innerHTML = docAlerts.length > 0 ? docAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
-                // 💡 แทรกแถบสรุปยอดไว้ด้านบนสุดของกล่อง Aging Alerts
+                // 💡 แสดงแถบสรุปยอดรถจอดนาน
                 let agingSummaryHtml = '';
                 if (agingAlerts.length > 0) {
                     agingSummaryHtml = `
@@ -338,7 +338,7 @@
                 }
                 document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingSummaryHtml + agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
-                // 💡 แทรกแถบสรุปยอดไว้ด้านบนสุดของกล่อง รถซ่อมนานผิดปกติ
+                // 💡 แสดงแถบสรุปยอดรถจอดซ่อมนาน
                 let repairSummaryHtml = '';
                 if (stuckRepairAlerts.length > 0) {
                     repairSummaryHtml = `
