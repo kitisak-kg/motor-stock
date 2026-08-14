@@ -98,8 +98,10 @@
                     <div class="col-12"><label class="x-small fw-bold">5. แหล่งที่ซื้อ</label><input type="text" id="m-source" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
                     <div class="col-5"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
-                    <div class="col-3"><label class="x-small fw-bold">7. ปีรถ</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
-                    <div class="col-4"><label class="x-small fw-bold">6. โฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
+                    
+                    <div class="col-3"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
+                    <div class="col-4"><label class="x-small fw-bold">6. ปีโฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm"></div>
+                    
                     <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
                 </div>
@@ -129,15 +131,6 @@
                     </div>
                 </div>
 
-                <div class="bg-info bg-opacity-10 p-2 rounded mb-2 border border-info">
-                    <div class="fw-bold text-info small mb-1"><i class="bi bi-person-lines-fill"></i> ข้อมูลลูกค้าผู้ซื้อ / ผู้ครอบครอง</div>
-                    <div class="row g-2">
-                        <div class="col-12"><input type="text" id="m-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล / เบอร์โทรลูกค้า"></div>
-                        <div class="col-12"><input type="text" id="m-cusId" class="form-control form-control-sm border-info" placeholder="เลขบัตรประชาชน"></div>
-                        <div class="col-12"><textarea id="m-cusAddress" class="form-control form-control-sm border-info" rows="2" placeholder="ที่อยู่ตามบัตรประชาชน..."></textarea></div>
-                    </div>
-                </div>
-
                 <div class="row g-2 mb-2 border-top pt-2">
                     <div class="col-6"><label class="x-small fw-bold text-danger">13. ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
                     <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
@@ -155,6 +148,7 @@
       </div>
     </div>
 
+    <!-- ป๊อปอัปจัดการขาย -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -168,6 +162,7 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
+                    
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-lines-fill"></i> ชื่อ-นามสกุล / เบอร์โทร</label><input type="text" id="s-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล ลูกค้า"></div>
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-vcard"></i> เลขบัตร ปชช.</label><input type="text" id="s-cusId" class="form-control form-control-sm border-info" placeholder="เลขบัตรประชาชน"></div>
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-house"></i> ที่อยู่</label><textarea id="s-cusAddress" class="form-control form-control-sm border-info" rows="2" placeholder="ที่อยู่..."></textarea></div>
@@ -279,7 +274,6 @@
             loadInventory();
         };
 
-        // 💡 อัปเดตฟังก์ชันกดซ่อน/เปิดข้อมูล ให้รองรับทั้งตัวลูกค้าและยอดเงิน 
         function toggleSecret(icon) {
             const parent = icon.closest('.secret-wrapper') || icon.closest('.col-auto');
             if(!parent) return;
@@ -340,7 +334,7 @@
                         shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
                     }
 
-                    // 💡 แสดงข้อมูลลูกค้าแบบซ่อน (มีรูปตาเปิด/ปิด) ต่อท้ายแถวบน
+                    // 💡 ข้อมูลลูกค้าจะถูกแสดงแบบลับ (ถ้ามี) ต่อท้ายบรรทัดอู่
                     let cusDataString = [];
                     if (b.cusName) cusDataString.push(b.cusName);
                     if (b.cusId) cusDataString.push('ปชช: ' + b.cusId);
