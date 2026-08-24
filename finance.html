@@ -90,13 +90,13 @@
                 </div>
 
                 <div class="box-deduct">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="box-deduct-title m-0">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                        <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" onclick="addExRow('s')" style="font-size:0.7rem;">+ เพิ่มรายการหัก</button>
-                    </div>
+                    <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
                     <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
-                    <div class="row g-1" id="s-ex-container">
+                    <div class="row g-1">
+                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
                     </div>
                 </div>
 
@@ -140,10 +140,16 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-top-0 pt-0 d-flex flex-wrap gap-2">
-                <button class="btn btn-info text-white flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')"><i class="bi bi-hourglass-split"></i> บันทึกไว้ก่อน (ยังรอเงิน)</button>
-                <button class="btn btn-success flex-grow-1 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')"><i class="bi bi-check-circle"></i> ✅ ปิดจ๊อบการขาย (รับรู้กำไร)</button>
-                <button class="btn btn-outline-danger w-100 btn-sm mt-1" onclick="revertSale()"><i class="bi bi-arrow-return-left"></i> ตีกลับรถเข้าลานจอด (ไฟแนนซ์ไม่ผ่าน)</button>
+
+            <div class="modal-footer border-top-0 pt-0">
+                <div class="row w-100 g-2 m-0">
+                    <div class="col-6 p-0 pe-1">
+                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
+                    </div>
+                    <div class="col-6 p-0 ps-1">
+                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
+                    </div>
+                </div>
             </div>
         </div>
       </div>
@@ -185,7 +191,6 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = []; let saleModal, capModal, detailsModal;
-        let sExCount = 3;
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -337,16 +342,6 @@
         function showCarDetails(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             
-            let ownerBadge = '';
-            if (b.ownerName || b.ownerId || b.ownerAddress) {
-                let ownerData = [];
-                if (b.ownerName) ownerData.push(b.ownerName);
-                if (b.ownerPhone) ownerData.push('เบอร์: ' + b.ownerPhone);
-                if (b.ownerId) ownerData.push('ปชช: ' + b.ownerId);
-                if (b.ownerAddress) ownerData.push('ที่อยู่: ' + b.ownerAddress);
-                ownerBadge = ` | <span class="text-secondary"><i class="bi bi-file-earmark-person"></i> ผู้ถือกรรมสิทธิ์เดิม:</span> <b class="text-dark">${ownerData.join(' | ')}</b>`;
-            }
-
             let html = `
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
@@ -358,7 +353,7 @@
                     
                     <div class="col-12"><small class="text-muted d-block">ประวัติการซื้อรถเข้า:</small> 
                         <div class="bg-white p-2 border rounded mt-1" style="font-size:0.75rem;">
-                            <span class="text-muted">ซื้อจาก:</span> <b class="text-dark">${b.source || '-'}</b>${ownerBadge}<br>
+                            <span class="text-muted">ซื้อจาก:</span> <b class="text-dark">${b.source || '-'}</b><br>
                             <span class="text-muted">วันที่รับรถ:</span> <b class="text-dark">${b.buyDate || '-'}</b> | <span class="text-muted">ทุนซื้อเข้า:</span> <b class="text-danger">฿${(b.realCost||0).toLocaleString()}</b>
                         </div>
                     </div>
@@ -385,49 +380,17 @@
             document.querySelectorAll('#section-'+type+' .sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
         }
 
-        // 💡 วาดกล่องหักเงิน
-        function renderExRows(prefix, count, dataList = []) {
-            let container = document.getElementById(`${prefix}-ex-container`);
-            let html = '';
-            for(let i=1; i<=count; i++) {
-                let dName = dataList[i-1] ? dataList[i-1].name : '';
-                let dPrice = dataList[i-1] ? dataList[i-1].price : '';
-                let funcCall = prefix === 'm' ? '' : 'oninput="calcSaleProfit()"';
-                html += `
-                    <div class="col-8 mt-1"><input type="text" id="${prefix}-ex${i}N" class="form-control form-control-sm" placeholder="รายการหัก ${i}" value="${dName}"></div>
-                    <div class="col-4 mt-1"><input type="number" id="${prefix}-ex${i}P" class="form-control form-control-sm ${prefix}-ex-price" placeholder="ราคา" value="${dPrice}" ${funcCall}></div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
-        function addExRow(prefix) {
-            if(prefix === 's' && sExCount < 10) {
-                sExCount++;
-                let old = [];
-                for(let i=1; i<sExCount; i++) {
-                    old.push({ name: document.getElementById(`s-ex${i}N`).value, price: document.getElementById(`s-ex${i}P`).value });
-                }
-                renderExRows('s', sExCount, old);
-            }
-            if(prefix === 's' && sExCount === 10) alert('เพิ่มรายการหักได้สูงสุด 10 ช่องครับ');
-        }
-
         function calcSaleProfit() {
             const getVal = (id) => Number(document.getElementById(id).value) || 0;
             const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
-            
-            let exTotal = 0;
-            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += Number(el.value) || 0);
-
-            const totalInternal = getVal('s-totalInternal'); 
+            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
             
             const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
             const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
             document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
             document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
 
-            const revenue = soldPrice + comm; const deduct = transferFee + exTotal; const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
             
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
@@ -465,11 +428,8 @@
             document.getElementById('s-cusId').value = b.cusId || '';
             document.getElementById('s-cusAddress').value = b.cusAddress || '';
 
-            document.getElementById('s-transferFee').value = b.transferFee || 0; 
-            
-            let activeEx = (b.exList || []).filter(ex => ex.name || ex.price > 0);
-            sExCount = activeEx.length < 3 ? 3 : activeEx.length;
-            renderExRows('s', sExCount, activeEx);
+            document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
+            document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
@@ -487,6 +447,7 @@
             calcSaleProfit(); saleModal.show();
         }
 
+        // 💡 แก้ไขบั๊กกล่องค้างเวลาเซฟ: ใส่ try catch ป้องกันระบบล่ม
         function processSale(statusType) {
             saleModal.hide();
             setTimeout(() => {
@@ -503,8 +464,7 @@
                         bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
-                        transferFee: document.getElementById('s-transferFee').value, 
-                        
+                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
                         finCIMB: document.getElementById('s-finCIMB').value, 
                         downPayment1: document.getElementById('s-downPayment1').value, 
                         downPayment2: document.getElementById('s-downPayment2').value, 
@@ -512,15 +472,6 @@
                         finOther: document.getElementById('s-finOther').value, 
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
-
-                    let exList = [];
-                    for(let i=1; i<=sExCount; i++) {
-                        let n = document.getElementById(`s-ex${i}N`) ? document.getElementById(`s-ex${i}N`).value : '';
-                        let p = document.getElementById(`s-ex${i}P`) ? document.getElementById(`s-ex${i}P`).value : 0;
-                        exList.push({name: n, price: p});
-                    }
-                    payload.exList = exList;
-
                     document.getElementById('loader').style.display = 'flex';
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
