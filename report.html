@@ -49,6 +49,10 @@
             <div class="col-12" id="month-filter-box" style="display:none;">
                 <select id="report-month" class="form-select border-success shadow-sm" onchange="buildReport()"></select>
             </div>
+            <!-- 💡 เพิ่มกล่องค้นหาข้อมูลในหน้ารายงาน -->
+            <div class="col-12 mt-2">
+                <input type="text" id="report-search" class="form-control border-info shadow-sm" placeholder="🔍 ค้นหาจาก ทะเบียน / รุ่นรถ..." onkeyup="filterReportTable()">
+            </div>
         </div>
 
         <div class="report-box" id="print-area">
@@ -76,31 +80,67 @@
 
         window.onload = async function() {
             document.getElementById('r-subtitle').innerText = `พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
-            const res = await fetch(`${API_URL}?action=getMasterData`);
-            globalData = await res.json();
-            
-            let months = new Set();
-            globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว' && b.saleDate).forEach(b => {
-                let p = b.saleDate.split('/');
-                if(p.length === 3) months.add(`${p[1]}/${p[2]}`);
-            });
-            let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
-            Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เฉพาะเดือน ${m}</option>`);
-            document.getElementById('report-month').innerHTML = mOptions;
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                globalData = await res.json();
+                
+                let months = new Set();
+                globalData.bikes.filter(b => b.saleStatus === 'ขายแล้ว' && b.saleDate).forEach(b => {
+                    let p = b.saleDate.split('/');
+                    if(p.length === 3) months.add(`${p[1]}/${p[2]}`);
+                });
+                let mOptions = '<option value="all">-- พิมพ์ยอดขายรวมทั้งหมด --</option>';
+                Array.from(months).sort().reverse().forEach(m => mOptions += `<option value="${m}">เฉพาะเดือน ${m}</option>`);
+                document.getElementById('report-month').innerHTML = mOptions;
 
-            buildReport(); 
+                buildReport(); 
+            } catch(e) {
+                document.getElementById('r-content').innerHTML = '<div class="text-center p-5 text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณารีเฟรชหน้าเว็บ</div>';
+            }
         };
 
         function buildReport() {
             if(!globalData) return;
             const type = document.getElementById('report-type').value;
             document.getElementById('month-filter-box').style.display = (type === 'sales') ? 'block' : 'none';
+            // เคลียร์ช่องค้นหาทุกครั้งที่เปลี่ยนประเภทรายงาน
+            document.getElementById('report-search').value = ''; 
             
             if(type === 'stock') renderStockReport();
             else if(type === 'repairing') renderRepairingReport();
             else if(type === 'ready_fake') renderReadyGrouped('fake');
             else if(type === 'ready_real') renderReadyGrouped('real');
             else if(type === 'sales') renderSalesReport();
+        }
+
+        // 💡 ฟังก์ชันใหม่สำหรับคัดกรองข้อมูลในตารางรายงาน (ทำงานตอนพิมพ์ช่องค้นหา)
+        function filterReportTable() {
+            const query = document.getElementById('report-search').value.toLowerCase();
+            const type = document.getElementById('report-type').value;
+            
+            // ถ้ารายงานเป็นแบบ Grouped (รายการ 3 และ 4) ต้องหา tr ข้างใน tbody
+            const rows = document.querySelectorAll('#r-content table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+
+            // ซ่อนชื่อกลุ่ม (h6) ถ้าตารางข้างในโดนซ่อนหมด สำหรับรายงานแบบ Grouped
+            if(type === 'ready_fake' || type === 'ready_real') {
+                const tables = document.querySelectorAll('#r-content table');
+                tables.forEach(table => {
+                    const visibleRows = table.querySelectorAll('tbody tr[style=""]');
+                    const heading = table.previousElementSibling; // h6 tag ก่อนหน้า table
+                    if (visibleRows.length === 0) {
+                        table.style.display = 'none';
+                        if(heading && heading.tagName === 'H6') heading.style.display = 'none';
+                    } else {
+                        table.style.display = '';
+                        if(heading && heading.tagName === 'H6') heading.style.display = '';
+                    }
+                });
+            }
         }
 
         // 1. รายงานสรุปสต็อกรวม (เฉพาะรถในลานจอด)
@@ -116,7 +156,7 @@
                 <td class="text-center">${b.status}</td><td class="text-right fw-bold text-dark">฿${(b.totalInternal||0).toLocaleString()}</td></tr>`;
                 totalCost += b.totalInternal;
             });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมสต็อกทั้งหมด (${bikes.length} คัน)</td><td class="text-right text-danger">฿${totalCost.toLocaleString()}</td></tr></tfoot></table>`;
+            html += `</tbody><tfoot class="no-print-search"><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมสต็อกทั้งหมด (${bikes.length} คัน)</td><td class="text-right text-danger">฿${totalCost.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
 
@@ -135,7 +175,7 @@
                 <td class="text-right text-danger fw-bold">฿${(b.repairSum||0).toLocaleString()}</td></tr>`;
                 totalRepair += b.repairSum; totalInternal += b.totalInternal;
             });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมค่าซ่อมที่จมไปกับอู่ขณะนี้ (${bikes.length} คัน)</td><td class="text-right text-danger h6 m-0">฿${totalRepair.toLocaleString()}</td></tr></tfoot></table>`;
+            html += `</tbody><tfoot class="no-print-search"><tr class="fw-bold bg-light"><td colspan="3" class="text-right">รวมค่าซ่อมที่จมไปกับอู่ขณะนี้ (${bikes.length} คัน)</td><td class="text-right text-danger h6 m-0">฿${totalRepair.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
 
@@ -166,7 +206,6 @@
                 let subCost = 0; let subTarget = 0;
                 
                 groups[groupName].forEach(b => {
-                    // 💡 หัวใจสำคัญ: ทุนหลอก = (ทุนโชว์หน้าบ้าน + ค่าซ่อม) | ทุนจริง = ทุนจมรวมทั้งหมด
                     let cost = isFake ? ((b.showCost||0) + (b.repairSum||0)) : (b.totalInternal||0);
                     html += `<tr>
                         <td><b>${b.plate||'-'}</b></td>
@@ -177,7 +216,7 @@
                     subCost += cost; subTarget += (b.targetPrice||0);
                 });
                 
-                html += `</tbody><tfoot><tr class="bg-light fw-bold" style="font-size:0.8rem;">
+                html += `</tbody><tfoot class="no-print-search"><tr class="bg-light fw-bold" style="font-size:0.8rem;">
                     <td colspan="2" class="text-right text-muted">รวมรุ่น ${groupName}</td>
                     <td class="text-right ${isFake ? '' : 'text-danger'}">฿${subCost.toLocaleString()}</td>
                     <td class="text-right text-success">฿${subTarget.toLocaleString()}</td>
@@ -187,7 +226,7 @@
             });
 
             if(Object.keys(groups).length > 0) {
-                html += `<div class="mt-4 p-3 bg-dark text-white rounded text-center shadow-sm">
+                html += `<div class="mt-4 p-3 bg-dark text-white rounded text-center shadow-sm no-print-search">
                     <h6 class="fw-bold mb-2">สรุปรถพร้อมขายทั้งหมด (${bikes.length} คัน)</h6>
                     <div class="row">
                         <div class="col-6 border-end border-secondary">รวมต้นทุน${isFake?'โชว์':'จริง'}: <br><b class="${isFake?'text-warning':'text-danger'} h5 m-0">฿${grandTotalCost.toLocaleString()}</b></div>
@@ -220,7 +259,7 @@
                 <td class="text-right fw-bold text-dark">฿${revenue.toLocaleString()}</td><td class="text-right text-success fw-bold">฿${(b.profit||0).toLocaleString()}</td></tr>`;
                 sumCost += b.totalInternal; sumRevenue += revenue; sumProfit += b.profit;
             });
-            html += `</tbody><tfoot><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1.1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
+            html += `</tbody><tfoot class="no-print-search"><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1.1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
     </script>
