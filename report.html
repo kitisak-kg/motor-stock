@@ -44,14 +44,18 @@
                     <option value="ready_fake">3. 🟢 รายงานสินค้าพร้อมขาย (ทุนโชว์หน้าร้าน) แยกตามรุ่น</option>
                     <option value="ready_real">4. 🔴 รายงานสินค้าพร้อมขาย (ทุนจริง/เถ้าแก่) แยกตามรุ่น</option>
                     <option value="sales">5. 💰 รายงานยอดขายและกำไรสุทธิ (รายเดือน)</option>
+                    <!-- 💡 เพิ่มตัวเลือกรายงานประวัติยอดจัดไฟแนนซ์ -->
+                    <option value="finance_history">6. 📊 ประวัติยอดจัดไฟแนนซ์ (ใช้อ้างอิง)</option>
                 </select>
             </div>
             <div class="col-12" id="month-filter-box" style="display:none;">
                 <select id="report-month" class="form-select border-success shadow-sm" onchange="buildReport()"></select>
             </div>
-            <!-- 💡 เพิ่มกล่องค้นหาข้อมูลในหน้ารายงาน -->
             <div class="col-12 mt-2">
-                <input type="text" id="report-search" class="form-control border-info shadow-sm" placeholder="🔍 ค้นหาจาก ทะเบียน / รุ่นรถ..." onkeyup="filterReportTable()">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-info text-info"><i class="bi bi-search"></i></span>
+                    <input type="text" id="report-search" class="form-control border-info" placeholder="ค้นหาจาก ทะเบียน / รุ่นรถ / ปี..." onkeyup="filterReportTable()">
+                </div>
             </div>
         </div>
 
@@ -103,7 +107,6 @@
             if(!globalData) return;
             const type = document.getElementById('report-type').value;
             document.getElementById('month-filter-box').style.display = (type === 'sales') ? 'block' : 'none';
-            // เคลียร์ช่องค้นหาทุกครั้งที่เปลี่ยนประเภทรายงาน
             document.getElementById('report-search').value = ''; 
             
             if(type === 'stock') renderStockReport();
@@ -111,14 +114,13 @@
             else if(type === 'ready_fake') renderReadyGrouped('fake');
             else if(type === 'ready_real') renderReadyGrouped('real');
             else if(type === 'sales') renderSalesReport();
+            else if(type === 'finance_history') renderFinanceHistory(); // 💡 เรียกฟังก์ชันรายงานยอดจัด
         }
 
-        // 💡 ฟังก์ชันใหม่สำหรับคัดกรองข้อมูลในตารางรายงาน (ทำงานตอนพิมพ์ช่องค้นหา)
         function filterReportTable() {
             const query = document.getElementById('report-search').value.toLowerCase();
             const type = document.getElementById('report-type').value;
             
-            // ถ้ารายงานเป็นแบบ Grouped (รายการ 3 และ 4) ต้องหา tr ข้างใน tbody
             const rows = document.querySelectorAll('#r-content table tbody tr');
             
             rows.forEach(row => {
@@ -126,12 +128,11 @@
                 row.style.display = text.includes(query) ? '' : 'none';
             });
 
-            // ซ่อนชื่อกลุ่ม (h6) ถ้าตารางข้างในโดนซ่อนหมด สำหรับรายงานแบบ Grouped
             if(type === 'ready_fake' || type === 'ready_real') {
                 const tables = document.querySelectorAll('#r-content table');
                 tables.forEach(table => {
                     const visibleRows = table.querySelectorAll('tbody tr[style=""]');
-                    const heading = table.previousElementSibling; // h6 tag ก่อนหน้า table
+                    const heading = table.previousElementSibling;
                     if (visibleRows.length === 0) {
                         table.style.display = 'none';
                         if(heading && heading.tagName === 'H6') heading.style.display = 'none';
@@ -143,7 +144,6 @@
             }
         }
 
-        // 1. รายงานสรุปสต็อกรวม (เฉพาะรถในลานจอด)
         function renderStockReport() {
             document.getElementById('r-title').innerText = "📦 1. รายงานสรุปตามที่ลง (เหมือนหน้าสต็อก)";
             const bikes = globalData.bikes.filter(b => b.saleStatus === 'สต็อก' || !b.saleStatus);
@@ -160,7 +160,6 @@
             document.getElementById('r-content').innerHTML = html;
         }
 
-        // 2. รายงานรถกำลังซ่อม
         function renderRepairingReport() {
             document.getElementById('r-title').innerText = "🛠️ 2. รายงานสรุปรถที่กำลังซ่อมอยู่";
             const bikes = globalData.bikes.filter(b => b.saleStatus === 'สต็อก' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
@@ -179,7 +178,6 @@
             document.getElementById('r-content').innerHTML = html;
         }
 
-        // 3. & 4. รายงานรถพร้อมขาย แยกกลุ่มตามรุ่น (ทุนหลอก / ทุนจริง)
         function renderReadyGrouped(costType) {
             const isFake = costType === 'fake';
             const titleIcon = isFake ? '🟢' : '🔴';
@@ -240,7 +238,6 @@
             document.getElementById('r-content').innerHTML = html;
         }
 
-        // 5. รายงานยอดขาย
         function renderSalesReport() {
             const filterMonth = document.getElementById('report-month').value;
             let title = "💰 5. รายงานยอดขายและกำไรสุทธิ";
@@ -260,6 +257,51 @@
                 sumCost += b.totalInternal; sumRevenue += revenue; sumProfit += b.profit;
             });
             html += `</tbody><tfoot class="no-print-search"><tr class="fw-bold bg-light"><td colspan="2" class="text-right">ยอดสรุปรวม (${bikes.length} คัน)</td><td class="text-right text-danger">฿${sumCost.toLocaleString()}</td><td class="text-right fw-bold">฿${sumRevenue.toLocaleString()}</td><td class="text-right text-success fw-bold" style="font-size:1.1rem;">฿${sumProfit.toLocaleString()}</td></tr></tfoot></table>`;
+            document.getElementById('r-content').innerHTML = html;
+        }
+
+        // 💡 ฟังก์ชันสร้างตารางรายงานประวัติยอดจัดไฟแนนซ์
+        function renderFinanceHistory() {
+            document.getElementById('r-title').innerText = "📊 6. ประวัติยอดจัดไฟแนนซ์ (ใช้อ้างอิง)";
+            
+            // กรองเอารถที่ขายไปแล้ว และมียอดจัดไฟแนนซ์ (CIMB, ติดล้อ, หรืออื่นๆ)
+            const bikes = globalData.bikes.filter(b => (b.saleStatus === 'ขายแล้ว' || b.saleStatus === 'รอเคลียร์ไฟแนนซ์') && ((b.finCIMB||0) > 0 || (b.finTidlor||0) > 0 || (b.finOther||0) > 0));
+            
+            if(bikes.length === 0) {
+                document.getElementById('r-content').innerHTML = '<div class="text-center p-5 text-muted">ไม่พบประวัติยอดจัดไฟแนนซ์ในระบบ</div>';
+                return;
+            }
+
+            let html = `<table><thead>
+                <tr>
+                    <th class="text-center">วันที่เช็คยอด (ขาย)</th>
+                    <th>รถรุ่น / ปีจดทะเบียน</th>
+                    <th>ป้ายทะเบียน / สี</th>
+                    <th class="text-right text-primary">ยอดจัด (ที่ได้)</th>
+                </tr>
+            </thead><tbody>`;
+            
+            bikes.forEach(b => {
+                let financeSources = [];
+                if(b.finTidlor > 0) financeSources.push(`ติดล้อ: ฿${b.finTidlor.toLocaleString()}`);
+                if(b.finCIMB > 0) financeSources.push(`CIMB: ฿${b.finCIMB.toLocaleString()}`);
+                if(b.finOther > 0) financeSources.push(`อื่นๆ: ฿${b.finOther.toLocaleString()}`);
+                
+                let totalFinance = (b.finCIMB||0) + (b.finTidlor||0) + (b.finOther||0);
+                const colorShow = b.changedColor ? `สีทำใหม่: ${b.changedColor}` : `สี: ${b.color||'-'}`;
+
+                html += `<tr>
+                    <td class="text-center text-muted" style="font-size:0.75rem;">${b.saleDate || '-'}</td>
+                    <td><b>${b.model||'-'}</b><br><span class="text-muted" style="font-size:0.75rem;">ปี: ${b.year || '-'}</span></td>
+                    <td><b>${b.plate || '-'}</b><br><span class="text-muted" style="font-size:0.75rem;">${colorShow}</span></td>
+                    <td class="text-right">
+                        <b class="text-primary fs-6">฿${totalFinance.toLocaleString()}</b><br>
+                        <span class="text-muted" style="font-size:0.65rem;">${financeSources.join(' | ')}</span>
+                    </td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table>`;
             document.getElementById('r-content').innerHTML = html;
         }
     </script>
