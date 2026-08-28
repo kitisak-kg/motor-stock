@@ -36,13 +36,16 @@
 
     <div id="main-content" style="display: none;">
         <div class="container mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold m-0 text-dark"><i class="bi bi-speedometer2 text-primary"></i> MOTOR MASTER</h4>
                 <div>
                     <a href="log.html" class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm me-1"><i class="bi bi-shield-lock-fill"></i> ระบบ Log</a>
                     <a href="report.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> พิมพ์รายงาน</a>
                 </div>
             </div>
+            
+            <!-- 💡 เพิ่มปุ่มลัดเข้าไปหน้า สมุดจดประมูล/ไฟแนนซ์ -->
+            <a href="auction_finance.html" class="btn btn-info text-dark w-100 fw-bold shadow-sm mb-4"><i class="bi bi-journal-bookmark-fill"></i> สมุดอ้างอิง: ข้อมูลประมูล & เช็คยอดไฟแนนซ์</a>
             
             <h6 class="fw-bold mb-2 text-primary border-bottom pb-2"><i class="bi bi-wallet2"></i> โซนเงินทุน & สต็อก</h6>
             <div class="row g-2 mb-4">
@@ -241,7 +244,6 @@
                 let taxAlerts = []; let idAlerts = []; let docAlerts = [];
                 let agingAlerts = []; let stuckRepairAlerts = [];
                 
-                // 💡 ตัวแปรช่วยนับเพื่อทำแถบสรุป
                 let age1_3 = 0, age4_6 = 0, age6_12 = 0, age12_plus = 0;
                 let stuckRepCount = 0;
                 
@@ -277,7 +279,6 @@
                             
                             if (b.status === 'พร้อมขาย') {
                                 let badgeColor = 'bg-info text-dark';
-                                // 💡 แยกอายุรถค้างสต็อก
                                 if (months >= 12) { badgeColor = 'bg-dark text-white'; age12_plus++; }
                                 else if (months >= 6) { badgeColor = 'bg-danger text-white'; age6_12++; }
                                 else if (months >= 4) { badgeColor = 'bg-warning text-dark'; age4_6++; }
@@ -325,7 +326,6 @@
                 document.getElementById('alert-id').innerHTML = idAlerts.length > 0 ? idAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-doc').innerHTML = docAlerts.length > 0 ? docAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
-                // 💡 แสดงแถบสรุปยอดรถจอดนาน
                 let agingSummaryHtml = '';
                 if (agingAlerts.length > 0) {
                     agingSummaryHtml = `
@@ -338,7 +338,6 @@
                 }
                 document.getElementById('alert-aging').innerHTML = agingAlerts.length > 0 ? agingSummaryHtml + agingAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 
-                // 💡 แสดงแถบสรุปยอดรถจอดซ่อมนาน
                 let repairSummaryHtml = '';
                 if (stuckRepairAlerts.length > 0) {
                     repairSummaryHtml = `
