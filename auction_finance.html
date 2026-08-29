@@ -31,22 +31,27 @@
             <button class="tab-btn" id="tab-auc" onclick="switchTab('auc')"><i class="bi bi-hammer"></i> ประวัติประมูลรถ</button>
         </div>
 
-        <!-- โซนเช็คยอดไฟแนนซ์ -->
+        <!-- 💡 โซนยอดจัดไฟแนนซ์ -->
         <div id="section-fin">
             <div class="d-flex gap-2 mb-3">
-                <input type="text" id="search-fin" class="form-control form-control-sm shadow-sm" placeholder="🔍 ค้นหา รุ่นรถ / ปี..." onkeyup="filterFin()">
+                <input type="text" id="search-fin" class="form-control form-control-sm shadow-sm border-primary" placeholder="🔍 ค้นหา รุ่นรถ / ปี..." onkeyup="filterFin()">
+                <select id="sort-fin" class="form-select form-select-sm shadow-sm text-secondary fw-bold" style="width: auto;" onchange="filterFin()">
+                    <option value="newest">เช็คใหม่สุด</option>
+                    <option value="model">รุ่นรถ A-Z</option>
+                    <option value="amount">ยอดจัด สูง-ต่ำ</option>
+                </select>
                 <button class="btn btn-primary btn-sm rounded-pill fw-bold shadow-sm" style="white-space: nowrap;" onclick="openFinModal()">+ บันทึกยอด</button>
             </div>
             <div id="list-fin"></div>
         </div>
 
-        <!-- โซนประวัติประมูล -->
+        <!-- 💡 โซนประวัติประมูล (แยกกลุ่มตามรอบวันที่/สถานที่) -->
         <div id="section-auc" style="display:none;">
             <div class="d-flex gap-2 mb-3">
                 <input type="text" id="search-auc" class="form-control form-control-sm shadow-sm border-warning" placeholder="🔍 ค้นหา รุ่นรถ / ปี / สถานที่..." onkeyup="filterAuc()">
                 <button class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm text-dark" style="white-space: nowrap;" onclick="openAucModal()">+ บันทึกประมูล</button>
             </div>
-            <div id="list-auc"></div>
+            <div class="accordion shadow-sm" id="accordionAuc"></div>
         </div>
     </div>
 
@@ -89,7 +94,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button class="btn btn-danger btn-sm fw-bold w-25" id="btn-del-fin" style="display:none;" onclick="deleteRecord('FinanceCheck', 'f-rowIdx')">ลบ</button>
-                    <button class="btn btn-primary btn-sm fw-bold flex-grow-1" onclick="saveFinanceCheck()">💾 บันทึกยอดจัด</button>
+                    <button class="btn btn-primary btn-sm fw-bold flex-grow-1" onclick="saveFinanceCheck(false)">💾 บันทึกยอดจัด</button>
                 </div>
             </div>
         </div>
@@ -102,9 +107,11 @@
                 <div class="modal-header bg-warning text-dark p-2 px-3 border-0"><h6 class="modal-title fw-bold">จดบันทึกประวัติลานประมูล</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body p-3">
                     <input type="hidden" id="a-rowIdx">
+                    <div id="auc-alert" class="alert alert-success py-1 px-2 small d-none mb-2 fw-bold text-center">✅ บันทึกคันล่าสุดเรียบร้อยแล้ว เพิ่มคันต่อไปได้เลย!</div>
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="small fw-bold">วันที่ประมูล</label><input type="text" id="a-date" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
-                        <div class="col-6"><label class="small fw-bold">สถานที่ / ลานประมูล</label><input type="text" id="a-loc" class="form-control form-control-sm" placeholder="เช่น ลานชลบุรี"></div>
+                        <div class="col-6"><label class="small fw-bold">วันที่ประมูล</label><input type="text" id="a-date" class="form-control form-control-sm date-mask border-warning" placeholder="วว/ดด/ปปปป"></div>
+                        <div class="col-6"><label class="small fw-bold">สถานที่ / ลานประมูล</label><input type="text" id="a-loc" class="form-control form-control-sm border-warning" placeholder="เช่น ลานชลบุรี"></div>
+                        <div class="col-12 mt-2"><hr class="m-0 border-secondary"></div>
                         <div class="col-8"><label class="small fw-bold text-dark">รุ่นรถ</label><input type="text" id="a-model" class="form-control form-control-sm border-dark" placeholder="เช่น HONDA Click125i"></div>
                         <div class="col-4"><label class="small fw-bold">ปีรถ</label><input type="number" id="a-year" class="form-control form-control-sm" placeholder="2023"></div>
                         <div class="col-12"><label class="small fw-bold">สีรถ</label><input type="text" id="a-color" class="form-control form-control-sm" placeholder="เช่น ดำ-แดง"></div>
@@ -115,9 +122,11 @@
                         <div class="col-12"><label class="small fw-bold">หมายเหตุ (สภาพรถ)</label><textarea id="a-note" class="form-control form-control-sm" rows="2" placeholder="เช่น เครื่องดัง, ชุดสีแตก..."></textarea></div>
                     </div>
                 </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button class="btn btn-danger btn-sm fw-bold w-25" id="btn-del-auc" style="display:none;" onclick="deleteRecord('Auction', 'a-rowIdx')">ลบ</button>
-                    <button class="btn btn-warning btn-sm fw-bold flex-grow-1 text-dark" onclick="saveAuction()">💾 บันทึกประมูล</button>
+                <!-- 💡 ปุ่มบันทึกแบบใหม่ เพิ่มต่อเนื่องได้เรื่อยๆ -->
+                <div class="modal-footer border-top-0 pt-0 d-flex flex-wrap gap-2">
+                    <button class="btn btn-danger btn-sm fw-bold flex-grow-1" id="btn-del-auc" style="display:none;" onclick="deleteRecord('Auction', 'a-rowIdx')">ลบข้อมูล</button>
+                    <button class="btn btn-outline-dark btn-sm fw-bold flex-grow-1" id="btn-save-close" onclick="saveAuction(false)">💾 บันทึกและปิด</button>
+                    <button class="btn btn-warning btn-sm fw-bold w-100 text-dark" id="btn-save-next" onclick="saveAuction(true)">🔥 บันทึก & เพิ่มคันต่อไป (รัวๆ)</button>
                 </div>
             </div>
         </div>
@@ -156,8 +165,8 @@
             loadData();
         };
 
-        async function loadData() {
-            document.getElementById('loader').style.display = 'flex';
+        async function loadData(silent = false) {
+            if(!silent) document.getElementById('loader').style.display = 'flex';
             try {
                 const res = await fetch(`${API_URL}?action=getMasterData`);
                 if(!res.ok) throw new Error();
@@ -165,8 +174,8 @@
                 allFin = data.financeChecks || [];
                 allAuc = data.auctions || [];
                 filterFin(); filterAuc();
-            } catch(e) { alert('เกิดข้อผิดพลาดในการโหลดข้อมูล'); }
-            document.getElementById('loader').style.display = 'none';
+            } catch(e) { if(!silent) alert('เกิดข้อผิดพลาดในการโหลดข้อมูล'); }
+            if(!silent) document.getElementById('loader').style.display = 'none';
         }
 
         function switchTab(tab) {
@@ -176,10 +185,32 @@
             document.getElementById('tab-auc').classList.toggle('active', tab === 'auc');
         }
 
+        function parseThaiDate(ds) {
+            if(!ds || ds === '-') return 0;
+            let p = ds.split('/');
+            if(p.length === 3) {
+                let y = parseInt(p[2]); if(y > 2400) y -= 543;
+                return new Date(y, parseInt(p[1])-1, parseInt(p[0])).getTime();
+            }
+            return 0;
+        }
+
+        // 💡 อัปเดตระบบค้นหา และ เรียงลำดับ หน้าไฟแนนซ์
         function filterFin() {
             const q = document.getElementById('search-fin').value.toLowerCase();
+            const sortVal = document.getElementById('sort-fin').value;
+            
+            let filteredFin = allFin.filter(f => `${f.model} ${f.year} ${f.note}`.toLowerCase().includes(q));
+            
+            filteredFin.sort((a, b) => {
+                if(sortVal === 'newest') return parseThaiDate(b.date) - parseThaiDate(a.date);
+                if(sortVal === 'model') return (a.model||'').localeCompare(b.model||'');
+                if(sortVal === 'amount') return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+                return 0;
+            });
+
             let html = '';
-            allFin.filter(f => `${f.model} ${f.year} ${f.note}`.toLowerCase().includes(q)).forEach(f => {
+            filteredFin.forEach(f => {
                 html += `<div class="card-ref border-start border-4 border-success">
                     <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
                         <div><b class="text-dark">${f.model}</b> <span class="text-muted small">ปี ${f.year || '-'}</span></div>
@@ -195,27 +226,50 @@
             document.getElementById('list-fin').innerHTML = html || '<p class="text-center text-muted mt-4">ไม่พบประวัติยอดจัดไฟแนนซ์</p>';
         }
 
+        // 💡 อัปเดตระบบประวัติประมูล ให้จัดกลุ่มตามรอบ (วันที่-สถานที่) แบบ Accordion หด-ขยายได้
         function filterAuc() {
             const q = document.getElementById('search-auc').value.toLowerCase();
-            let html = '';
-            allAuc.filter(a => `${a.model} ${a.year} ${a.location} ${a.note}`.toLowerCase().includes(q)).forEach(a => {
-                html += `<div class="card-ref border-start border-4 border-warning">
-                    <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
-                        <div><b class="text-dark">${a.model}</b> <span class="text-muted small">ปี ${a.year || '-'}</span></div>
-                        <div class="text-end"><span class="badge bg-warning text-dark d-block mb-1">${a.date || '-'}</span><span class="text-muted" style="font-size:0.6rem;"><i class="bi bi-geo-alt-fill"></i> ${a.location || '-'}</span></div>
-                    </div>
-                    <div class="row g-1 text-center small mb-2 bg-light rounded p-1">
-                        <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">สีรถ</span><b>${a.color || '-'}</b></div>
-                        <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">ราคาเปิด</span><b>฿${(a.startPrice||0).toLocaleString()}</b></div>
-                        <div class="col-4"><span class="text-danger d-block fw-bold" style="font-size:0.6rem;">ราคาจบ</span><b class="text-danger">฿${(a.winPrice||0).toLocaleString()}</b></div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-end">
-                        <div class="text-muted small w-75" style="font-size:0.7rem;">${a.note ? `📝 ${a.note}` : ''}</div>
-                        <button class="btn btn-sm btn-outline-primary py-0" style="font-size:0.65rem;" onclick="openAucModal(${a.rowIdx})"><i class="bi bi-pencil"></i> แก้ไข</button>
-                    </div>
-                </div>`;
+            let filteredAuc = allAuc.filter(a => `${a.model} ${a.year} ${a.location} ${a.note}`.toLowerCase().includes(q));
+
+            let auctionGroups = {};
+            filteredAuc.forEach(a => {
+                let key = `${a.date || 'ไม่ได้ระบุวัน'} | ${a.location || 'ไม่ได้ระบุลาน'}`;
+                if(!auctionGroups[key]) auctionGroups[key] = [];
+                auctionGroups[key].push(a);
             });
-            document.getElementById('list-auc').innerHTML = html || '<p class="text-center text-muted mt-4">ไม่พบประวัติลานประมูล</p>';
+
+            let accHtml = ''; let i = 0;
+            Object.keys(auctionGroups).forEach(key => {
+                const group = auctionGroups[key];
+                let listHtml = '';
+                group.forEach(a => {
+                    listHtml += `<div class="card-ref border-start border-4 border-warning mb-2 p-2 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start border-bottom pb-1 mb-1">
+                            <div><b class="text-dark" style="font-size:0.85rem;">${a.model}</b> <span class="text-muted small" style="font-size:0.7rem;">ปี ${a.year || '-'}</span></div>
+                        </div>
+                        <div class="row g-1 text-center small mb-2 bg-light rounded p-1">
+                            <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">สีรถ</span><b>${a.color || '-'}</b></div>
+                            <div class="col-4 border-end"><span class="text-muted d-block" style="font-size:0.6rem;">ราคาเปิด</span><b>฿${(a.startPrice||0).toLocaleString()}</b></div>
+                            <div class="col-4"><span class="text-danger d-block fw-bold" style="font-size:0.6rem;">ราคาจบ</span><b class="text-danger">฿${(a.winPrice||0).toLocaleString()}</b></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end mt-1">
+                            <div class="text-muted small w-75" style="font-size:0.7rem;">${a.note ? `📝 ${a.note}` : ''}</div>
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.65rem;" onclick="openAucModal(${a.rowIdx})"><i class="bi bi-pencil"></i> แก้ไข</button>
+                        </div>
+                    </div>`;
+                });
+
+                // สร้างหน้าตาพับได้
+                accHtml += `<div class="accordion-item mb-2 border-0 shadow-sm rounded">
+                    <h2 class="accordion-header"><button class="accordion-button ${i===0?'':'collapsed'} fw-bold text-dark bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#auc-${i}">
+                        <i class="bi bi-geo-alt-fill text-warning me-2"></i> ${key} &nbsp; <span class="badge bg-secondary ms-2">${group.length} คัน</span>
+                    </button></h2>
+                    <div id="auc-${i}" class="accordion-collapse collapse ${i===0?'show':''}" data-bs-parent="#accordionAuc"><div class="accordion-body bg-light p-2">${listHtml}</div></div>
+                </div>`;
+                i++;
+            });
+            
+            document.getElementById('accordionAuc').innerHTML = accHtml || '<p class="text-center text-muted mt-4">ไม่พบประวัติลานประมูล</p>';
         }
 
         function openFinModal(rowIdx) {
@@ -227,7 +281,8 @@
                 document.getElementById('f-year').value = f.year; document.getElementById('f-amount').value = f.amount;
                 document.getElementById('f-note').value = f.note;
             } else {
-                ['f-date','f-model','f-year','f-amount','f-note'].forEach(id => document.getElementById(id).value = '');
+                const t = new Date(); document.getElementById('f-date').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
+                ['f-model','f-year','f-amount','f-note'].forEach(id => document.getElementById(id).value = '');
             }
             finModal.show();
         }
@@ -235,6 +290,10 @@
         function openAucModal(rowIdx) {
             document.getElementById('a-rowIdx').value = rowIdx || '';
             document.getElementById('btn-del-auc').style.display = rowIdx ? 'block' : 'none';
+            document.getElementById('btn-save-next').style.display = rowIdx ? 'none' : 'block'; // ซ่อนปุ่มเพิ่มต่อเนื่องถ้าเป็นการแก้ไข
+            document.getElementById('btn-save-close').classList.toggle('w-100', rowIdx !== undefined); 
+            document.getElementById('auc-alert').classList.add('d-none'); // ซ่อนแบนเนอร์แจ้งเตือน
+
             if (rowIdx) {
                 const a = allAuc.find(x => x.rowIdx === rowIdx);
                 document.getElementById('a-date').value = a.date; document.getElementById('a-loc').value = a.location;
@@ -242,7 +301,8 @@
                 document.getElementById('a-color').value = a.color; document.getElementById('a-startPrice').value = a.startPrice;
                 document.getElementById('a-winPrice').value = a.winPrice; document.getElementById('a-note').value = a.note;
             } else {
-                ['a-date','a-loc','a-model','a-year','a-color','a-startPrice','a-winPrice','a-note'].forEach(id => document.getElementById(id).value = '');
+                const t = new Date(); document.getElementById('a-date').value = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
+                ['a-loc','a-model','a-year','a-color','a-startPrice','a-winPrice','a-note'].forEach(id => document.getElementById(id).value = '');
             }
             aucModal.show();
         }
@@ -263,8 +323,9 @@
             }, 400);
         }
 
-        function saveAuction() {
-            aucModal.hide();
+        // 💡 ระบบเพิ่มประมูลรถ (แบบเพิ่มต่อเนื่องได้ทันที!)
+        function saveAuction(isContinuous) {
+            aucModal.hide(); // ต้องซ่อนก่อนเพื่อเปิด PIN Modal
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     document.getElementById('loader').style.display = 'flex';
@@ -272,9 +333,32 @@
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                         if(!res.ok) throw new Error(); const result = await res.json();
-                        if(result.status === 'error') { alert(result.message); aucModal.show(); } else { await loadData(); }
-                    } catch(e) { alert('เน็ตหลุด ลองใหม่ครับ'); aucModal.show(); }
-                    document.getElementById('loader').style.display = 'none';
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none';
+                            aucModal.show(); 
+                        } else { 
+                            if(isContinuous) {
+                                // โหลดดาต้าแบบเงียบๆ ไม่โชว์ loader ซ้อน
+                                loadData(true); 
+                                document.getElementById('loader').style.display = 'none';
+                                
+                                // ล้างเฉพาะข้อมูลรถ ปล่อยวันที่และสถานที่ไว้ให้กรอกต่อได้เลย
+                                ['a-model','a-year','a-color','a-startPrice','a-winPrice','a-note'].forEach(id => document.getElementById(id).value = '');
+                                
+                                // โชว์แจ้งเตือนสีเขียวในกล่อง
+                                document.getElementById('auc-alert').classList.remove('d-none');
+                                aucModal.show();
+                                setTimeout(() => document.getElementById('a-model').focus(), 500);
+                            } else {
+                                await loadData(); 
+                            }
+                        }
+                    } catch(e) { 
+                        alert('เน็ตหลุด ลองใหม่ครับ'); 
+                        document.getElementById('loader').style.display = 'none';
+                        aucModal.show(); 
+                    }
                 });
             }, 400);
         }
