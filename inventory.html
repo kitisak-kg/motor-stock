@@ -37,7 +37,6 @@
     </div>
 
     <div class="container">
-        <!-- 💡 ปรับปรุงแถบเครื่องมือให้รองรับการแยกหมวดหมู่ และเป็นมิตรกับมือถือ -->
         <div class="row g-2 mb-3">
             <div class="col-12 d-flex gap-2">
                 <input type="text" id="search" class="form-control form-control-sm shadow-sm flex-grow-1" placeholder="🔍 ทะเบียน/รุ่น/ลูกค้า/เลข ปชช..." onkeyup="filterInventory(currentFilter)">
@@ -67,9 +66,6 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข (หน้าตาเหมือนเดิม แต่มีการปรับการดึงข้อมูลเพื่อเชื่อมโยงกับโค้ดหลังบ้าน) -->
-    <!-- (PIN, Duplicate, Modal Bike และ Sale Modal ยังคงเป็นแบบเดียวกับอัปเดตล่าสุด) -->
-    
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
@@ -160,6 +156,16 @@
                     </div>
                 </div>
 
+                <!-- 💡 เพิ่มกล่อง เช็คยอดจัดไฟแนนซ์ (รอลูกค้า) -->
+                <div class="bg-warning bg-opacity-10 p-2 rounded mb-2 border border-warning">
+                    <div class="fw-bold text-warning text-dark small mb-1"><i class="bi bi-bank"></i> เช็คยอดจัดไฟแนนซ์ (รอลูกค้า)</div>
+                    <div class="row g-2">
+                        <div class="col-4"><label class="x-small fw-bold">ยอดจัด: ติดล้อ</label><input type="number" id="m-finTidlor" class="form-control form-control-sm border-warning"></div>
+                        <div class="col-4"><label class="x-small fw-bold">ยอดจัด: อื่นๆ</label><input type="number" id="m-finOther" class="form-control form-control-sm border-warning"></div>
+                        <div class="col-4"><label class="x-small fw-bold">วันที่เช็คยอด</label><input type="text" id="m-finCheckDate" class="form-control form-control-sm date-mask border-warning" placeholder="วว/ดด/ปปปป"></div>
+                    </div>
+                </div>
+
                 <div class="row g-2 mb-2 border-top pt-2">
                     <div class="col-6"><label class="x-small fw-bold text-danger">13. ภาษีหมด</label><input type="text" id="m-taxExp" class="form-control form-control-sm date-mask"></div>
                     <div class="col-6"><label class="x-small fw-bold text-danger">14. บัตร ปชช หมด</label><input type="text" id="m-idExp" class="form-control form-control-sm date-mask"></div>
@@ -216,8 +222,9 @@
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
                         <input type="hidden" id="s-finCIMB" value="0">
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">วันที่เช็ค</label><input type="text" id="s-finCheckDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                         <div class="col-12 text-end text-dark fw-bold small" id="s-sum-fin">รวมยอดจัด: ฿0</div>
                     </div>
                     <label class="x-small fw-bold text-primary border-top pt-2 d-block">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
@@ -329,7 +336,6 @@
             document.getElementById('loader').style.display = 'none';
         }
 
-        // แปลงวันที่เพื่อใช้เรียงลำดับ
         function parseThaiDate(ds) {
             if(!ds || ds === '-') return 0;
             let p = ds.split('/');
@@ -340,7 +346,6 @@
             return 0;
         }
 
-        // 💡 ฟังก์ชันสร้างการ์ดข้อมูลรถ (ใช้ซ้ำได้เพื่อความคลีน)
         function buildStockCard(b) {
             let statusColor = 'bg-danger';
             if(b.status === 'พร้อมขาย') statusColor = 'bg-success'; if(b.status === 'กำลังซ่อม') statusColor = 'bg-warning text-dark';
@@ -352,7 +357,6 @@
                 shopBadge = ` | อู่: <span class="text-primary fw-bold">${shopName}</span>`;
             }
 
-            // ข้อมูลเจ้าของเล่ม
             let ownerDataString = [];
             if (b.ownerName) ownerDataString.push(b.ownerName);
             if (b.ownerId) ownerDataString.push('ปชช: ' + b.ownerId);
@@ -361,6 +365,18 @@
             if (ownerDataString.length > 0) {
                 let fullOwnerInfo = ownerDataString.join(' | ').replace(/"/g, '&quot;');
                 ownerBadge = `<span class="secret-wrapper ms-2">| <span class="text-secondary"><i class="bi bi-file-earmark-person"></i> เจ้าของเล่ม:</span> <i class="bi bi-eye-slash ms-1 text-primary" style="cursor:pointer;" onclick="toggleSecret(this)"></i> <span class="fw-bold text-primary secret-val" data-val="${fullOwnerInfo}">***</span></span>`;
+            }
+
+            // 💡 แถบโชว์ยอดจัดบนการ์ด
+            let finBadge = '';
+            if(b.finTidlor > 0 || b.finOther > 0) {
+                let t = [];
+                if(b.finTidlor > 0) t.push(`ติดล้อ: ฿${b.finTidlor.toLocaleString()}`);
+                if(b.finOther > 0) t.push(`อื่นๆ: ฿${b.finOther.toLocaleString()}`);
+                let d = b.finCheckDate ? ` (เช็ค: ${b.finCheckDate})` : '';
+                finBadge = `<div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 mt-1 mb-1" style="font-size:0.65rem;">
+                    <span class="text-dark"><i class="bi bi-bank"></i> ยอดจัดไฟแนนซ์:</span> <b class="text-danger">${t.join(' | ')}</b> <span class="text-muted">${d}</span>
+                </div>`;
             }
 
             const buyDateBadge = b.buyDate ? `ซื้อเข้า: <span class="text-primary fw-bold">${b.buyDate}</span> | ` : '';
@@ -379,6 +395,9 @@
                     ${buyDateBadge}เลขถัง: ${b.cha || '-'} | ภาษี: <span class="text-danger fw-bold">${b.taxExp || '-'}</span> | บัตร: <span class="text-danger fw-bold">${b.idExp || '-'}</span>${shopBadge}${ownerBadge}
                     ${b.stockNote ? `<br><span class="text-warning fw-bold"><i class="bi bi-sticky"></i> ${b.stockNote}</span>` : ''}
                 </div>
+                
+                ${finBadge}
+
                 <div class="row g-0 mt-2 p-2 bg-light rounded text-center align-items-center" style="font-size: 0.75rem;">
                     <div class="col"><div class="text-muted" style="font-size:0.55rem;">ทุนหน้าบ้าน</div><div class="fw-bold">฿${(b.showCost||0).toLocaleString()}</div></div>
                     <div class="col border-start"><div class="text-muted" style="font-size:0.55rem;">ค่าซ่อม</div><div class="fw-bold text-danger">฿${(b.repairSum||0).toLocaleString()}</div></div>
@@ -395,7 +414,6 @@
             </div>`;
         }
 
-        // 💡 ฟังก์ชันแยกกลุ่มตามรุ่น หรือเรียงลิสต์ตามปกติ
         function filterInventory(type) {
             currentFilter = type;
             localStorage.setItem('inventoryTab', type);
@@ -410,7 +428,7 @@
             
             const q = document.getElementById('search').value.toLowerCase();
             const sortVal = document.getElementById('sort-inventory').value;
-            const viewMode = document.getElementById('view-mode').value; // เช็คโหมดมุมมอง
+            const viewMode = document.getElementById('view-mode').value;
             
             let filteredBikes = allBikes.filter(b => {
                 if (b.saleStatus !== 'สต็อก') return false;
@@ -419,7 +437,6 @@
                 return matchType && searchTxt.includes(q);
             });
 
-            // จัดเรียง
             filteredBikes.sort((a, b) => {
                 if(sortVal === 'buyDateDesc') return parseThaiDate(b.buyDate) - parseThaiDate(a.buyDate);
                 if(sortVal === 'buyDateAsc') return parseThaiDate(a.buyDate) - parseThaiDate(b.buyDate);
@@ -429,17 +446,13 @@
 
             let targetDiv = document.getElementById('list-inventory');
 
-            // 💡 โหมดเรียงลงมาปกติ
             if (viewMode === 'list') {
                 let html = '';
                 filteredBikes.forEach(b => { html += buildStockCard(b); });
                 targetDiv.innerHTML = html || '<p class="text-center p-5 text-muted">ไม่มีรถในหมวดนี้</p>';
-            } 
-            // 💡 โหมดจัดกลุ่ม (Group by Model + Appearance)
-            else {
+            } else {
                 let groups = {};
                 filteredBikes.forEach(b => {
-                    // จัดกลุ่มตามชื่อรุ่น และ โฉมรถ ถ้ากรอกโฉมมาก็จะแยกเป็นกลุ่มโฉมนั้นๆ ให้เลย
                     let groupName = `${b.brand||''} ${b.model||''} ${b.appearance ? '(โฉม '+b.appearance+')' : ''}`.trim();
                     if(!groupName) groupName = 'ไม่ได้ระบุรุ่น';
                     
@@ -501,7 +514,8 @@
             document.getElementById('m-rowIdx').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
             
-            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-ownerName','m-ownerPhone','m-ownerId','m-ownerAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote'];
+            // 💡 เคลียร์ข้อมูลรวมช่องยอดจัด
+            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-ownerName','m-ownerPhone','m-ownerId','m-ownerAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote', 'm-finTidlor', 'm-finOther', 'm-finCheckDate'];
             clearFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             
             document.getElementById('m-status').value='รอส่งซ่อม'; 
@@ -515,7 +529,8 @@
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
             
-            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','ownerName','ownerPhone','ownerId','ownerAddress'];
+            // 💡 โหลดข้อมูลเข้าช่องทั้งหมด (รวมยอดจัด)
+            const fields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','ownerName','ownerPhone','ownerId','ownerAddress', 'finTidlor', 'finOther', 'finCheckDate'];
             fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) el.value = b[id] !== undefined ? b[id] : ''; });
             
             const repReal = document.getElementById('m-repairReal'); if(repReal) repReal.value = b.repairSum || 0;
@@ -557,7 +572,8 @@
             executeWithPin(async (pin) => {
                 const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
                 
-                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','ownerName','ownerPhone','ownerId','ownerAddress'];
+                // 💡 กวาดข้อมูลส่งไปหลังบ้าน
+                const fields = ['rowIdx','buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','ownerName','ownerPhone','ownerId','ownerAddress', 'finTidlor', 'finOther', 'finCheckDate'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
 
                 document.getElementById('loader').style.display = 'flex';
@@ -614,11 +630,13 @@
             document.getElementById('s-transferFee').value = b.transferFee || 0; document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
             document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0; document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
             
+            // 💡 ดึงยอดจัดมาโชว์ตอนขาย
             document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
             document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
             document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
             document.getElementById('s-finTidlor').value = b.finTidlor || 0; 
             document.getElementById('s-finOther').value = b.finOther || 0; 
+            document.getElementById('s-finCheckDate').value = b.finCheckDate || ''; 
             document.getElementById('s-saleCommission').value = b.saleCommission || 0;
             
             if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
@@ -647,11 +665,13 @@
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
                         transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
+                        
                         finCIMB: document.getElementById('s-finCIMB').value, 
                         downPayment1: document.getElementById('s-downPayment1').value, 
                         downPayment2: document.getElementById('s-downPayment2').value, 
                         finTidlor: document.getElementById('s-finTidlor').value, 
                         finOther: document.getElementById('s-finOther').value, 
+                        finCheckDate: document.getElementById('s-finCheckDate').value,
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
                     document.getElementById('loader').style.display = 'flex';
