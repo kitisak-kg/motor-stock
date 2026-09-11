@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปรายการสมุดใหญ่ (Pmax) - MOTOR MASTER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Sarabun', sans-serif; padding-bottom: 90px; }
+        .nav-header { background: white; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 8px 0; z-index: 1040; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-btn { border: none; background: none; font-weight: bold; color: #6c757d; font-size: 0.75rem; text-decoration: none; text-align: center; width: 20%; transition: 0.2s; } 
+        .nav-btn.active { color: #0d6efd; }
+        .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .table-wrapper { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); padding: 15px; }
+        table { font-size: 0.75rem; width: 100%; min-width: 1500px; border-collapse: collapse; }
+        th { background-color: #343a40; color: white; padding: 10px; text-align: center; white-space: nowrap; border: 1px solid #dee2e6;}
+        td { padding: 8px; vertical-align: middle; border: 1px solid #dee2e6; white-space: nowrap; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังโหลดข้อมูล...</div></div>
+
+    <div class="nav-header d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold m-0 text-primary"><i class="bi bi-table"></i> สรุปรายการสมุดใหญ่ (Pmax)</h5>
+        <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm">กลับหน้าแรก</a>
+    </div>
+
+    <div class="container-fluid mt-3">
+        <div class="d-flex gap-2 mb-3 w-50">
+            <input type="text" id="search-summary" class="form-control form-control-sm shadow-sm border-primary" placeholder="🔍 ค้นหา ทะเบียน/รุ่น/ปี/ลูกค้า..." onkeyup="filterSummary()">
+            <button class="btn btn-success btn-sm fw-bold shadow-sm" onclick="exportToCSV()"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="summary-table" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>สถานะ</th>
+                        <th>วันที่รับรถ</th>
+                        <th>รุ่น</th>
+                        <th>ปี</th>
+                        <th>สี</th>
+                        <th>ทะเบียน</th>
+                        <th>ภาษีหมด</th>
+                        <th>เลขเครื่อง</th>
+                        <th>เลขตัวถัง</th>
+                        <th class="text-right">ราคาซื้อเข้า</th>
+                        <th>จากไหน</th>
+                        <th class="text-right">ค่าซ่อม</th>
+                        <th class="text-right">ตั้งขาย</th>
+                        <th>วันที่ขาย</th>
+                        <th class="text-right">ราคาขายจริง</th>
+                        <th class="text-right">ค่าโอน</th>
+                        <th class="text-right">ค่าอื่นๆ</th>
+                        <th class="text-right text-success">กำไรสุทธิ</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="nav-bottom">
+        <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
+        <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
+        <a href="repair.html" class="nav-btn"><i class="bi bi-tools"></i>อู่ซ่อม</a>
+        <a href="finance.html" class="nav-btn"><i class="bi bi-wallet2"></i>บัญชี</a>
+        <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
+        let allBikes = [];
+
+        window.onload = async function() {
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                const res = await fetch(`${API_URL}?action=getMasterData`);
+                const data = await res.json();
+                allBikes = data.bikes || [];
+                renderSummary();
+            } catch(e) {
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+            }
+            document.getElementById('loader').style.display = 'none';
+        };
+
+        function renderSummary() {
+            const tbody = document.getElementById('summary-body');
+            let html = '';
+            
+            // เรียงจากซื้อล่าสุด
+            let sortedBikes = [...allBikes].reverse();
+
+            sortedBikes.forEach(b => {
+                let statusBadge = b.saleStatus === 'ขายแล้ว' ? `<span class="badge bg-success">ขายแล้ว</span>` : `<span class="badge bg-secondary">สต็อก</span>`;
+                
+                html += `<tr class="summary-row">
+                    <td class="text-center">${statusBadge}</td>
+                    <td>${b.buyDate || '-'}</td>
+                    <td>${b.brand || ''} ${b.model || '-'}</td>
+                    <td class="text-center">${b.year || '-'}</td>
+                    <td>${b.changedColor || b.color || '-'}</td>
+                    <td class="fw-bold">${b.plate || '-'}</td>
+                    <td class="text-danger">${b.taxExp || '-'}</td>
+                    <td>${b.eng || '-'}</td>
+                    <td>${b.cha || '-'}</td>
+                    <td class="text-right fw-bold">฿${(b.realCost || 0).toLocaleString()}</td>
+                    <td>${b.source || '-'}</td>
+                    <td class="text-right text-danger">฿${(b.repairSum || 0).toLocaleString()}</td>
+                    <td class="text-right text-primary">฿${(b.targetPrice || 0).toLocaleString()}</td>
+                    <td class="text-center">${b.saleDate || '-'}</td>
+                    <td class="text-right fw-bold text-success">฿${(b.soldPrice || 0).toLocaleString()}</td>
+                    <td class="text-right text-danger">฿${(b.transferFee || 0).toLocaleString()}</td>
+                    <td class="text-right text-danger">฿${(b.exTotal || 0).toLocaleString()}</td>
+                    <td class="text-right fw-bold text-success" style="font-size:0.85rem;">฿${(b.profit || 0).toLocaleString()}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="18" class="text-center py-4">ไม่มีข้อมูล</td></tr>';
+        }
+
+        function filterSummary() {
+            const q = document.getElementById('search-summary').value.toLowerCase();
+            document.querySelectorAll('.summary-row').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        function exportToCSV() {
+            let csv = [];
+            const rows = document.querySelectorAll("table tr");
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) 
+                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                csv.push(row.join(","));
+            }
+            let csvFile = new Blob(["\ufeff" + csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+            let downloadLink = document.createElement("a");
+            downloadLink.download = "MOTOR_MASTER_Pmax_Report.csv";
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+        }
+    </script>
+</body>
+</html>
