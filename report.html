@@ -35,6 +35,14 @@
     </div>
 
     <div class="container mt-3">
+        <!-- 💡 แถบแจ้งเตือนลัดไปยังสมุดบัญชี Pmax -->
+        <div class="alert alert-secondary shadow-sm no-print mb-3 border-0 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-info-circle-fill text-primary"></i> <strong class="small text-dark">ต้องการดูข้อมูลรวมทุกสาขาในรูปแบบตาราง Pmax ใช่หรือไม่?</strong></div>
+                <a href="summary.html" class="btn btn-primary btn-sm fw-bold shadow-sm" style="white-space: nowrap;"><i class="bi bi-table"></i> เปิดตาราง Pmax</a>
+            </div>
+        </div>
+
         <div class="row g-2 mb-3 no-print">
             <div class="col-12">
                 <label class="fw-bold small text-muted">เลือกประเภทรายงาน</label>
@@ -49,6 +57,7 @@
             <div class="col-12" id="month-filter-box" style="display:none;">
                 <select id="report-month" class="form-select border-success shadow-sm" onchange="buildReport()"></select>
             </div>
+            
             <div class="col-12 mt-2">
                 <div class="input-group shadow-sm">
                     <span class="input-group-text bg-white border-info text-info"><i class="bi bi-search"></i></span>
@@ -117,6 +126,7 @@
         function filterReportTable() {
             const query = document.getElementById('report-search').value.toLowerCase();
             const type = document.getElementById('report-type').value;
+            
             const rows = document.querySelectorAll('#r-content table tbody tr');
             
             rows.forEach(row => {
