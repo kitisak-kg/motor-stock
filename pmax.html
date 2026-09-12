@@ -14,16 +14,16 @@
         .tab-wrapper { overflow-x: auto; white-space: nowrap; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tab-btn { border: none; background: #f8f9fa; padding: 10px 15px; font-weight: bold; font-size: 0.85rem; color: #666; border-radius: 5px; margin-right: 5px; }
         .tab-btn.active { background: #198754; color: white; }
-        .table-responsive { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 10px; font-size: 0.75rem; }
-        th { background-color: #343a40 !important; color: white !important; white-space: nowrap; }
-        td { white-space: nowrap; vertical-align: middle; }
+        .table-responsive { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 10px; font-size: 0.75rem; overflow-x: auto; }
+        th { background-color: #343a40 !important; color: white !important; white-space: nowrap; border: 1px solid #dee2e6; text-align: center; }
+        td { white-space: nowrap; vertical-align: middle; border: 1px solid #dee2e6; padding: 6px; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
     <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold">กำลังโหลดข้อมูล...</div></div>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold m-0 text-success"><i class="bi bi-journal-text"></i> สมุดบันทึกพี่แม็ก (Pmax)</h5>
             <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm">กลับหน้าแรก</a>
@@ -36,13 +36,13 @@
             <button class="tab-btn" id="tab-receive" onclick="switchTab('receive')">4. รับรถเข้า</button>
         </div>
 
-        <div class="d-flex justify-content-between mb-3">
-            <input type="text" id="search-input" class="form-control form-control-sm w-50 shadow-sm" placeholder="🔍 ค้นหาในตาราง..." onkeyup="filterTable()">
-            <button class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="openAddModal()">+ บันทึกใหม่</button>
+        <div class="d-flex gap-2 mb-3">
+            <input type="text" id="search-input" class="form-control form-control-sm shadow-sm border-success" placeholder="🔍 ค้นหาในตาราง..." onkeyup="filterTable()">
+            <button class="btn btn-success btn-sm fw-bold shadow-sm text-nowrap" onclick="openAddModal()">+ บันทึกใหม่</button>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover table-bordered" id="data-table">
+            <table class="table table-hover table-bordered" id="data-table" style="min-width: 1500px;">
                 <thead id="table-head"></thead>
                 <tbody id="table-body"></tbody>
             </table>
@@ -122,7 +122,7 @@
             fetchPmaxData();
         };
 
-        // 💡 ฟังก์ชันจัดการลูกน้ำ (,) และวันที่ (/)
+        // 💡 ระบบจัด Format ให้เป็นลูกน้ำ และเติม / วันที่ อัตโนมัติเวลาคีย์
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
@@ -132,6 +132,21 @@
             if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
             else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
             input.value = v;
+        }
+        function formatPhone(input) {
+            let v = String(input.value).replace(/[^0-9]/g, '');
+            input.value = v;
+        }
+        
+        // 💡 ฟังก์ชัน Format ตัวเลขแบบใส่ลูกน้ำเพื่อนำไปโชว์ในตารางสวยๆ
+        function prettyPrint(val, colName) {
+            if(!val) return '-';
+            // ถ้าหัวข้อมีคำพวกนี้ ให้ใส่ลูกน้ำ
+            if(colName.match(/ราคา|ทุน|ยอด|ซ่อม|โอน|กำไร|เหลือ/)) {
+                let num = Number(String(val).replace(/,/g, ''));
+                if(!isNaN(num) && val !== '') return num.toLocaleString('en-US');
+            }
+            return val;
         }
 
         async function fetchPmaxData() {
@@ -158,16 +173,16 @@
             const cols = config[currentTab].cols;
             const dataList = pmaxData[currentTab];
             
-            let headHtml = '<tr><th>จัดการ</th>';
+            let headHtml = '<tr><th style="width:50px;">แก้ไข</th>';
             cols.forEach(c => headHtml += `<th>${c}</th>`);
             headHtml += '</tr>';
             document.getElementById('table-head').innerHTML = headHtml;
 
             let bodyHtml = '';
             dataList.forEach(row => {
-                let tr = `<tr class="data-row"><td><button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="openEditModal(${row.rowIdx})"><i class="bi bi-pencil"></i></button></td>`;
+                let tr = `<tr class="data-row"><td class="text-center"><button class="btn btn-sm btn-outline-success py-0 px-2" onclick="openEditModal(${row.rowIdx})"><i class="bi bi-pencil"></i></button></td>`;
                 for(let i=1; i<=cols.length; i++) {
-                    tr += `<td>${row.data[i] || '-'}</td>`;
+                    tr += `<td>${prettyPrint(row.data[i], cols[i-1])}</td>`;
                 }
                 tr += '</tr>';
                 bodyHtml += tr;
@@ -210,19 +225,21 @@
                 let onInput = '';
                 
                 // ตรวจหาคำเพื่อฝังระบบพิมพ์
-                if(col.includes('วันที่') || col.includes('ภาษี') || col.includes('บัตร')) {
+                if(col.match(/วันที่|ภาษี|บัตร/)) {
                     extraClass = 'date-mask';
                     onInput = 'oninput="formatDateInput(this)"';
-                } else if(col.includes('ราคา') || col.includes('ยอด') || col.includes('ทุน') || col.includes('โอน') || col.includes('ซ่อม') || col.includes('กำไร') || col.includes('เหลือ') || col.includes('ค่า')) {
-                    extraClass = 'currency-mask';
+                } else if(col.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ/)) {
+                    extraClass = 'currency-mask font-monospace fw-bold text-success';
                     onInput = 'oninput="formatCurrency(this)"';
-                    // แปลงค่าเก่าให้มีลูกน้ำมาเลย
+                    // โหลดค่าเก่าแบบมีลูกน้ำ
                     val = val ? Number(String(val).replace(/,/g,'')).toLocaleString('en-US') : '';
+                } else if(col.match(/เบอร์/)) {
+                    onInput = 'oninput="formatPhone(this)"';
                 }
 
                 html += `
-                <div class="col-6">
-                    <label class="small fw-bold text-muted">${col}</label>
+                <div class="${col.includes('อื่นๆ') || col.includes('หมายเหตุ') ? 'col-12' : 'col-6'}">
+                    <label class="small fw-bold text-dark mb-1">${col}</label>
                     <input type="text" id="input-${i}" class="form-control form-control-sm border-secondary ${extraClass}" value="${val}" ${onInput}>
                 </div>`;
             });
@@ -237,7 +254,12 @@
                     const cols = config[currentTab].cols;
                     let rowData = ['']; // index 0 เผื่อไว้ใส่ ID ใน GS
                     for(let i=0; i<cols.length; i++) {
-                        rowData.push(document.getElementById(`input-${i}`).value);
+                        let rawVal = document.getElementById(`input-${i}`).value;
+                        // ถ้าเป็นช่องเงิน ล้างลูกน้ำก่อนเซฟลง Excel
+                        if(cols[i].match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ/)) {
+                            rawVal = String(rawVal).replace(/,/g, '');
+                        }
+                        rowData.push(rawVal);
                     }
                     
                     document.getElementById('loader').style.display = 'flex';
