@@ -58,6 +58,7 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
+    <!-- PIN Modal -->
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
@@ -70,6 +71,7 @@
         </div>
     </div>
 
+    <!-- Modal Form (ใช้ตัวเดียวเปลี่ยน Input ไปตาม Tab) -->
     <div class="modal fade" id="modal-form" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg">
@@ -138,13 +140,23 @@
             input.value = v;
         }
         
-        // 💡 ฟังก์ชัน Format ตัวเลขแบบใส่ลูกน้ำเพื่อนำไปโชว์ในตารางสวยๆ
+        // 💡 ฟังก์ชัน Format ข้อมูลเพื่อนำไปโชว์ในตารางสวยๆ
         function prettyPrint(val, colName) {
-            if(!val) return '-';
-            // ถ้าหัวข้อมีคำพวกนี้ ให้ใส่ลูกน้ำ
-            if(colName.match(/ราคา|ทุน|ยอด|ซ่อม|โอน|กำไร|เหลือ/)) {
+            if(!val || String(val).trim() === '') return '-';
+            // จัดการช่องเงิน
+            if(colName.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
                 let num = Number(String(val).replace(/,/g, ''));
                 if(!isNaN(num) && val !== '') return num.toLocaleString('en-US');
+            }
+            // 💡 จัดการวันที่ที่พิมพ์ติดกันมาเช่น 30092569 -> 30/09/2569
+            if(colName.match(/วันที่|ภาษี|บัตร/)) {
+                let v = String(val).replace(/\D/g, '');
+                if (v.length === 8) {
+                    return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                } else if (v.length === 7) {
+                    v = '0' + v;
+                    return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                }
             }
             return val;
         }
@@ -173,7 +185,7 @@
             const cols = config[currentTab].cols;
             const dataList = pmaxData[currentTab];
             
-            let headHtml = '<tr><th style="width:50px;">แก้ไข</th>';
+            let headHtml = '<tr><th style="width:50px;" class="text-center">แก้ไข</th>';
             cols.forEach(c => headHtml += `<th>${c}</th>`);
             headHtml += '</tr>';
             document.getElementById('table-head').innerHTML = headHtml;
@@ -211,11 +223,11 @@
             document.getElementById('p-rowIdx').value = rowIdx;
             document.getElementById('btn-delete').style.display = 'block';
             document.getElementById('modal-title').innerText = `แก้ไข: ${config[currentTab].title}`;
-            buildForm(record.data.slice(1)); 
+            buildForm(record.data.slice(1)); // ข้าม ID คอลัมน์ 0
             formModal.show();
         }
 
-        // 💡 สร้างฟอร์มอัตโนมัติ พร้อมฝังลูกน้ำและขีดวันที่
+        // 💡 สร้างฟอร์มอัตโนมัติ พร้อมโหลดค่าเก่าและจัด Format ทันที
         function buildForm(values) {
             const cols = config[currentTab].cols;
             let html = '';
@@ -224,15 +236,16 @@
                 let extraClass = '';
                 let onInput = '';
                 
-                // ตรวจหาคำเพื่อฝังระบบพิมพ์
+                // แปลงค่าที่โหลดมาให้สวยงามก่อนใส่ input (ดึงวันที่และลูกน้ำมาโชว์ในกล่อง)
+                val = prettyPrint(val, col);
+                if (val === '-') val = ''; 
+                
                 if(col.match(/วันที่|ภาษี|บัตร/)) {
                     extraClass = 'date-mask';
                     onInput = 'oninput="formatDateInput(this)"';
-                } else if(col.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ/)) {
+                } else if(col.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
                     extraClass = 'currency-mask font-monospace fw-bold text-success';
                     onInput = 'oninput="formatCurrency(this)"';
-                    // โหลดค่าเก่าแบบมีลูกน้ำ
-                    val = val ? Number(String(val).replace(/,/g,'')).toLocaleString('en-US') : '';
                 } else if(col.match(/เบอร์/)) {
                     onInput = 'oninput="formatPhone(this)"';
                 }
@@ -255,8 +268,8 @@
                     let rowData = ['']; // index 0 เผื่อไว้ใส่ ID ใน GS
                     for(let i=0; i<cols.length; i++) {
                         let rawVal = document.getElementById(`input-${i}`).value;
-                        // ถ้าเป็นช่องเงิน ล้างลูกน้ำก่อนเซฟลง Excel
-                        if(cols[i].match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ/)) {
+                        // 💡 ถ้าเป็นช่องเงิน ล้างลูกน้ำก่อนเซฟลง Excel ฐานข้อมูลจะได้สะอาด
+                        if(cols[i].match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
                             rawVal = String(rawVal).replace(/,/g, '');
                         }
                         rowData.push(rawVal);
