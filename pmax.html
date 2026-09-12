@@ -25,7 +25,7 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0 text-success"><i class="bi bi-journal-text"></i> สมุดบันทึก (Pmax)</h5>
+            <h5 class="fw-bold m-0 text-success"><i class="bi bi-journal-text"></i> สมุดบันทึกพี่แม็ก (Pmax)</h5>
             <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm">กลับหน้าแรก</a>
         </div>
 
@@ -58,7 +58,6 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <!-- PIN Modal -->
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
@@ -71,7 +70,6 @@
         </div>
     </div>
 
-    <!-- Modal Form (ใช้ตัวเดียวเปลี่ยน Input ไปตาม Tab) -->
     <div class="modal fade" id="modal-form" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg">
@@ -96,10 +94,10 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         
         const config = {
-            stock: { sheet: 'Pmax_Stock', title: '1. สต็อก', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคาซื้อเข้า', 'จากไหน', 'ซ่อม', 'ตั้งขาย', 'ขายแล้ว', 'วันที่ขาย', 'ราคา', 'โอน', 'ค่าอื่นๆ', 'เหลือ', 'กำไร'] },
+            stock: { sheet: 'Pmax_Stock', title: '1. สต็อก', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคาซื้อเข้า', 'จากไหน', 'ซ่อม', 'ตั้งขาย', 'ขายแล้ว', 'วันที่ขาย', 'ราคา', 'โอน', 'ค่าอื่นๆ', 'เหลือ', 'กำไร', 'อื่นๆ'] },
             transfer: { sheet: 'Pmax_Transfer', title: '2. งานส่งโอน', cols: ['วันที่', 'ลูกค้า', 'เบอร์', 'รุ่น', 'สี', 'เลขตัวถัง', 'เลขเครื่อง', 'โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'อื่นๆ'] },
             finance: { sheet: 'Pmax_Finance', title: '3. ไฟแนนซ์', cols: ['วันที่', 'ไฟแนนซ์', 'ลูกค้า', 'เบอร์', 'เลขเครื่อง', 'เลขตัวถัง', 'สี', 'รุ่น', 'ทะเบียน', 'ยอด', 'เพิ่มดาวน์', 'ได้เล่มแล้ว', 'ได้เงินแล้ว', 'ราคาผ่อน', 'อื่นๆ'] },
-            receive: { sheet: 'Pmax_Receive', title: '4. รับรถเข้า', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'บัตร', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคา', 'จากใคร', 'ยอดทุนเก่ง', 'ยอดซื้อ', 'ยอดคงเหลือ', 'วันที่จ่าย'] }
+            receive: { sheet: 'Pmax_Receive', title: '4. รับรถเข้า', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'บัตร', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคา', 'จากใคร', 'ยอดทุนเก่ง', 'ยอดซื้อ', 'ยอดคงเหลือ', 'วันที่จ่าย', 'อื่นๆ'] }
         };
 
         let currentTab = 'stock';
@@ -123,6 +121,18 @@
             formModal = new bootstrap.Modal(document.getElementById('modal-form'));
             fetchPmaxData();
         };
+
+        // 💡 ฟังก์ชันจัดการลูกน้ำ (,) และวันที่ (/)
+        function formatCurrency(input) {
+            let val = String(input.value).replace(/[^0-9]/g, '');
+            input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
+        }
+        function formatDateInput(input) {
+            let v = input.value.replace(/\D/g, '').slice(0, 8);
+            if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+            else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+            input.value = v;
+        }
 
         async function fetchPmaxData() {
             document.getElementById('loader').style.display = 'flex';
@@ -186,19 +196,34 @@
             document.getElementById('p-rowIdx').value = rowIdx;
             document.getElementById('btn-delete').style.display = 'block';
             document.getElementById('modal-title').innerText = `แก้ไข: ${config[currentTab].title}`;
-            buildForm(record.data.slice(1)); // ข้าม ID คอลัมน์ 0
+            buildForm(record.data.slice(1)); 
             formModal.show();
         }
 
+        // 💡 สร้างฟอร์มอัตโนมัติ พร้อมฝังลูกน้ำและขีดวันที่
         function buildForm(values) {
             const cols = config[currentTab].cols;
             let html = '';
             cols.forEach((col, i) => {
                 let val = values[i] !== undefined ? values[i] : '';
+                let extraClass = '';
+                let onInput = '';
+                
+                // ตรวจหาคำเพื่อฝังระบบพิมพ์
+                if(col.includes('วันที่') || col.includes('ภาษี') || col.includes('บัตร')) {
+                    extraClass = 'date-mask';
+                    onInput = 'oninput="formatDateInput(this)"';
+                } else if(col.includes('ราคา') || col.includes('ยอด') || col.includes('ทุน') || col.includes('โอน') || col.includes('ซ่อม') || col.includes('กำไร') || col.includes('เหลือ') || col.includes('ค่า')) {
+                    extraClass = 'currency-mask';
+                    onInput = 'oninput="formatCurrency(this)"';
+                    // แปลงค่าเก่าให้มีลูกน้ำมาเลย
+                    val = val ? Number(String(val).replace(/,/g,'')).toLocaleString('en-US') : '';
+                }
+
                 html += `
                 <div class="col-6">
                     <label class="small fw-bold text-muted">${col}</label>
-                    <input type="text" id="input-${i}" class="form-control form-control-sm border-secondary" value="${val}">
+                    <input type="text" id="input-${i}" class="form-control form-control-sm border-secondary ${extraClass}" value="${val}" ${onInput}>
                 </div>`;
             });
             document.getElementById('dynamic-form').innerHTML = html;
