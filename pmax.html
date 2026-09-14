@@ -124,41 +124,45 @@
             fetchPmaxData();
         };
 
-        // 💡 ฟังก์ชันแยกแยะหัวข้อแบบแม่นยำ ไม่ให้สับสนระหว่างโอนเงินกับงานส่งโอน
-        function isCurrencyCol(col) {
-            if (col === 'โอน') return true; // เฉพาะคำว่าโอนโดดๆ (ในหน้าสต็อก) ถึงจะเป็นเงิน
-            return col.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ|ค่า|ตั้งขาย|ดาวน์/) !== null;
-        }
-        function isDateCol(col) {
-            return col.match(/วันที่|ภาษี|บัตร/) !== null;
-        }
-
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
         }
+        
         function formatDateInput(input) {
             let v = input.value.replace(/\D/g, '').slice(0, 8);
             if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
             else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
             input.value = v;
         }
+
+        // 💡 ฟังก์ชันจัดรูปแบบเบอร์โทรให้มีขีด xxx-xxxxxxx
         function formatPhone(input) {
-            let v = String(input.value).replace(/[^0-9]/g, '');
+            let v = String(input.value).replace(/\D/g, '');
+            if (v.length > 3) {
+                v = v.slice(0, 3) + '-' + v.slice(3, 10);
+            }
             input.value = v;
         }
         
+        // 💡 ฟังก์ชัน Format เพื่อนำไปโชว์ในตารางสวยๆ (พร้อมข้อยกเว้น)
         function prettyPrint(val, colName) {
             if(!val || String(val).trim() === '') return '-';
             
-            if(isCurrencyCol(colName)) {
+            // ยกเว้นคอลัมน์เหล่านี้ ไม่ต้องแปลงเป็นตัวเลขหรือลูกน้ำ
+            if (colName === 'โอน ย้าย ต่อภาษี' || colName === 'ส่งใครโอน' || colName === 'ค่าอื่นๆ' || colName === 'อื่นๆ') {
+                return val;
+            }
+
+            if((colName === 'โอน' && currentTab === 'stock') || colName.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ/)) {
                 let num = Number(String(val).replace(/,/g, ''));
                 if(!isNaN(num) && val !== '') return num.toLocaleString('en-US');
             }
-            if(isDateCol(colName)) {
+            if(colName.match(/วันที่|ภาษี|บัตร/)) {
                 let v = String(val).replace(/\D/g, '');
-                if (v.length === 8) return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-                else if (v.length === 7) {
+                if (v.length === 8) {
+                    return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                } else if (v.length === 7) {
                     v = '0' + v;
                     return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
                 }
@@ -232,6 +236,24 @@
             formModal.show();
         }
 
+        // 💡 ฟังก์ชันคิดเลข ยอดรับรถเข้า (ทุนเก่ง - ยอดซื้อ = คงเหลือ)
+        function calcReceiveTotal() {
+            if(currentTab !== 'receive') return;
+            const cols = config['receive'].cols;
+            const idxCap = cols.indexOf('ยอดทุนเก่ง');
+            const idxBuy = cols.indexOf('ยอดซื้อ');
+            const idxBal = cols.indexOf('ยอดคงเหลือ');
+            
+            const capVal = document.getElementById(`input-${idxCap}`) ? Number(String(document.getElementById(`input-${idxCap}`).value).replace(/,/g, '')) || 0 : 0;
+            const buyVal = document.getElementById(`input-${idxBuy}`) ? Number(String(document.getElementById(`input-${idxBuy}`).value).replace(/,/g, '')) || 0 : 0;
+            
+            const balEl = document.getElementById(`input-${idxBal}`);
+            if(balEl) {
+                const total = capVal - buyVal;
+                balEl.value = total !== 0 ? total.toLocaleString('en-US') : '0';
+            }
+        }
+
         function calcFinanceTotal() {
             if(currentTab !== 'finance') return;
             const cols = config['finance'].cols;
@@ -247,7 +269,9 @@
             const total = price * terms;
             
             const elTotal = document.getElementById(`input-${idxTotal}`);
-            if(elTotal) elTotal.value = total > 0 ? total.toLocaleString('en-US') : '';
+            if(elTotal) {
+                elTotal.value = total > 0 ? total.toLocaleString('en-US') : '';
+            }
         }
 
         function buildForm(values) {
@@ -263,21 +287,29 @@
                 val = prettyPrint(val, col);
                 if (val === '-') val = ''; 
 
-                if (col === 'ยอดรวม') {
+                // 💡 ระบบคัดกรองข้อยกเว้น ไม่ให้ใส่ลูกน้ำผิดช่อง
+                if (col === 'โอน ย้าย ต่อภาษี' || col === 'ส่งใครโอน' || col === 'ค่าอื่นๆ' || col === 'อื่นๆ') {
+                    // ช่องที่เป็นข้อความล้วน ปล่อยเป็นปกติ
+                } else if(col.match(/วันที่|ภาษี|บัตร/)) {
+                    extraClass = 'date-mask';
+                    onInput = 'oninput="formatDateInput(this)"';
+                } else if (col === 'ยอดรวม' || col === 'ยอดคงเหลือ') {
                     extraClass = 'currency-mask font-monospace fw-bold text-danger bg-light';
                     readOnlyAttr = 'readonly';
                 } else if (col === 'จำนวนงวด') {
                     extraClass = 'font-monospace fw-bold text-primary';
                     typeAttr = 'type="number"';
                     onInput = 'oninput="calcFinanceTotal()"';
-                } else if (isDateCol(col)) {
-                    extraClass = 'date-mask';
-                    onInput = 'oninput="formatDateInput(this)"';
-                } else if (isCurrencyCol(col)) {
+                } else if(col === 'โอน' && currentTab === 'stock') {
                     extraClass = 'currency-mask font-monospace fw-bold text-success';
-                    let extraFunc = (currentTab === 'finance' && col === 'ราคาผ่อน') ? '; calcFinanceTotal()' : '';
+                    onInput = 'oninput="formatCurrency(this)"';
+                } else if(col.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ/)) {
+                    extraClass = 'currency-mask font-monospace fw-bold text-success';
+                    let extraFunc = '';
+                    if (currentTab === 'finance' && col === 'ราคาผ่อน') extraFunc = '; calcFinanceTotal()';
+                    if (currentTab === 'receive' && (col === 'ยอดทุนเก่ง' || col === 'ยอดซื้อ')) extraFunc = '; calcReceiveTotal()';
                     onInput = `oninput="formatCurrency(this)${extraFunc}"`;
-                } else if (col.match(/เบอร์/)) {
+                } else if(col.match(/เบอร์/)) {
                     onInput = 'oninput="formatPhone(this)"';
                 }
 
@@ -299,8 +331,11 @@
                     let rowData = ['']; 
                     for(let i=0; i<cols.length; i++) {
                         let rawVal = document.getElementById(`input-${i}`).value;
-                        if(isCurrencyCol(cols[i])) {
-                            rawVal = String(rawVal).replace(/,/g, '');
+                        // 💡 ล้างเฉพาะลูกน้ำในช่องที่ใช่ ก่อนส่งไปบันทึก
+                        if (cols[i] !== 'โอน ย้าย ต่อภาษี' && cols[i] !== 'ส่งใครโอน' && cols[i] !== 'ค่าอื่นๆ' && cols[i] !== 'อื่นๆ') {
+                            if((cols[i] === 'โอน' && currentTab === 'stock') || cols[i].match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ/)) {
+                                rawVal = String(rawVal).replace(/,/g, '');
+                            }
                         }
                         rowData.push(rawVal);
                     }
