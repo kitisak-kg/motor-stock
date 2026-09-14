@@ -28,7 +28,6 @@
 <body>
     <div id="loader"><div class="spinner-border text-primary mb-2"></div><div class="fw-bold" id="loader-text">กำลังประมวลผล...</div></div>
 
-    <!-- 💡 เพิ่มแท็บเช็คไฟแนนซ์ตามที่ขอ -->
     <div class="tab-fixed shadow-sm px-2">
         <button class="tab-item active" id="tab-all" onclick="filterInventory('all')">สต็อกทั้งหมด</button>
         <button class="tab-item text-danger" id="tab-notready" onclick="filterInventory('ไม่พร้อมขาย')">ไม่พร้อมขาย</button>
@@ -68,7 +67,6 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <!-- Modal ต่างๆ เหมือนเดิม -->
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div></div>
 
     <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div><div class="modal-body p-4"><p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ</p><div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div><p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p></div><div class="modal-footer d-flex gap-2 border-0 pt-0"><button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(),400);">กลับไปแก้ไข</button><button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button></div></div></div></div>
@@ -80,7 +78,6 @@
             <div class="modal-body p-3 small">
                 <input type="hidden" id="m-rowIdx">
                 <div class="row g-2 mb-2">
-                    <!-- 💡 เพิ่ม class date-mask ทุกช่องวันที่ -->
                     <div class="col-12"><label class="x-small fw-bold">1. วันที่ซื้อรถเข้า</label><input type="text" id="m-buyDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                     <div class="col-4"><label class="x-small fw-bold">2. ทะเบียน</label><input type="text" id="m-plate" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold">3. เลขถัง</label><input type="text" id="m-cha" class="form-control form-control-sm"></div>
@@ -101,7 +98,7 @@
 
                     <div class="col-4 mt-2"><label class="x-small fw-bold">ยี่ห้อ</label><select id="m-brand" class="form-select form-select-sm"><option>HONDA</option><option>YAMAHA</option><option>อื่นๆ</option></select></div>
                     <div class="col-5 mt-2"><label class="x-small fw-bold">รุ่นรถ</label><input type="text" id="m-model" class="form-control form-control-sm"></div>
-                    <div class="col-3 mt-2"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="text" id="m-year" class="form-control form-control-sm"></div>
+                    <div class="col-3 mt-2"><label class="x-small fw-bold">7. ปีจดทะเบียน</label><input type="number" id="m-year" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold">6. ปีโฉมรถ</label><input type="text" id="m-appearance" class="form-control form-control-sm" placeholder="เช่น 2021, LED"></div>
                     <div class="col-4"><label class="x-small fw-bold">สีเดิม</label><input type="text" id="m-color" class="form-control form-control-sm"></div>
                     <div class="col-4"><label class="x-small fw-bold text-primary">ทำสีใหม่เป็น</label><input type="text" id="m-changedColor" class="form-control form-control-sm border-primary"></div>
@@ -110,7 +107,6 @@
                 <div class="bg-primary bg-opacity-10 p-2 rounded mb-2 border border-primary">
                     <div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
                     <div class="row g-2 align-items-end">
-                        <!-- 💡 เพิ่ม class currency-mask ให้ทำงานกับลูกน้ำ -->
                         <div class="col-6"><label class="x-small">8. ทุนซื้อจริง</label><input type="text" id="m-realCost" class="form-control form-control-sm currency-mask" oninput="calcTotal()"></div>
                         <div class="col-6"><label class="x-small">9. ค่าซ่อมสะสม (จากอู่)</label><input type="text" id="m-repairReal" class="form-control form-control-sm bg-light currency-mask" readonly></div>
                     </div>
@@ -133,7 +129,6 @@
                     </div>
                 </div>
 
-                <!-- 💡 ยอดจัดไฟแนนซ์ (รอลูกค้า) -->
                 <div class="bg-warning bg-opacity-10 p-2 rounded mb-2 border border-warning">
                     <div class="fw-bold text-warning text-dark small mb-1"><i class="bi bi-bank"></i> เช็คยอดจัดไฟแนนซ์ (รอลูกค้า)</div>
                     <div class="row g-2">
@@ -271,7 +266,6 @@
             if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
         });
 
-        // 💡 ฟังก์ชันจัดการลูกน้ำ (,) และวันที่ (/)
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
@@ -282,7 +276,6 @@
             else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
             input.value = v;
         }
-        // ฟังก์ชันล้างลูกน้ำออกเวลาจะเอาไปคำนวณ
         function unformatCurrency(val) { return Number(String(val).replace(/,/g, '')) || 0; }
 
         window.onload = function() {
@@ -290,7 +283,6 @@
             saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
             duplicateModal = new bootstrap.Modal(document.getElementById('modal-duplicate'));
             
-            // ผูกระบบวันที่และตัวเลข
             document.querySelectorAll('.date-mask').forEach(input => {
                 input.addEventListener('input', function() { formatDateInput(this); });
             });
@@ -405,6 +397,7 @@
             </div>`;
         }
 
+        // 💡 กรองแท็บไฟแนนซ์ให้ดูข้อมูลให้ครบ ถ้าคีย์มาก็ต้องโชว์
         function filterInventory(type) {
             currentFilter = type;
             localStorage.setItem('inventoryTab', type);
@@ -415,7 +408,7 @@
             if(type==='กำลังซ่อม') tabId = 'tab-repair'; 
             if(type==='พร้อมขาย') tabId = 'tab-ready'; 
             if(type==='ไม่พร้อมขาย') tabId = 'tab-notready'; 
-            if(type==='fincheck') tabId = 'tab-fincheck'; // 💡 แท็บเช็คไฟแนนซ์
+            if(type==='fincheck') tabId = 'tab-fincheck';
             
             if(document.getElementById(tabId)) document.getElementById(tabId).classList.add('active');
             
@@ -430,7 +423,7 @@
                 let matchType = false;
                 if(type === 'all') matchType = true;
                 else if(type === 'ไม่พร้อมขาย') matchType = (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม');
-                else if(type === 'fincheck') matchType = (b.finCIMB > 0 || b.finTidlor > 0 || b.finOther > 0);
+                else if(type === 'fincheck') matchType = (b.finCIMB > 0 || b.finTidlor > 0 || b.finOther > 0 || (b.finCheckDate && b.finCheckDate.trim() !== ''));
                 else matchType = (b.status === type);
                 
                 return matchType && searchTxt.includes(q);
@@ -487,7 +480,6 @@
             }
         }
 
-        // 💡 อัปเดตให้คำนวณโดยใช้ unformatCurrency() ถอดลูกน้ำออกก่อนคิดเลข
         function calcTotal() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? unformatCurrency(el.value) : 0; };
             const repair = getVal('m-repairReal'); const real = getVal('m-realCost'); const inc = getVal('m-inc1P') + getVal('m-inc2P') + getVal('m-inc3P');
@@ -497,14 +489,18 @@
         function calcSaleProfit() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? unformatCurrency(el.value) : 0; };
             const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
-            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
+            
+            let exTotal = 0;
+            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += Number(unformatCurrency(el.value)) || 0);
+
+            const totalInternal = getVal('s-totalInternal'); 
             
             const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
             const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
             document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
             document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
 
-            const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; const deduct = transferFee + exTotal; const profit = revenue - totalInternal - deduct;
             
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
@@ -538,7 +534,6 @@
             const txtFields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc2N','inc3N','ownerName','ownerPhone','ownerId','ownerAddress', 'finCheckDate'];
             txtFields.forEach(id => setFieldVal('m-'+id, b[id]));
 
-            // 💡 โหลดแบบฝังลูกน้ำ
             const curFields = ['realCost','showCost','targetPrice','inc1P','inc2P','inc3P','finTidlor','finOther'];
             curFields.forEach(id => setFieldVal('m-'+id, b[id], true));
             
@@ -629,13 +624,13 @@
             costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${manualTotalInternal.toLocaleString()}</div>`; 
             document.getElementById('s-cost-breakdown-container').innerHTML = costHtml;
 
-            // 💡 โหลดข้อมูลเข้าแบบมีลูกน้ำให้เรียบร้อย
             setFieldVal('s-price', b.soldPrice || b.targetPrice || 0, true);
             const t = new Date(); setFieldVal('s-date', b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`);
             
             setFieldVal('s-cusName', b.cusName); setFieldVal('s-cusId', b.cusId); setFieldVal('s-cusAddress', b.cusAddress);
             setFieldVal('s-transferFee', b.transferFee, true); 
             
+            // 💡 ช่องรายการหักที่อาจจะมีลูกน้ำแล้วลืมแกะออกตอนเซฟ ตอนนี้ชัวร์แล้ว
             setFieldVal('s-ex1N', b.ex1N); setFieldVal('s-ex1P', b.ex1P, true);
             setFieldVal('s-ex2N', b.ex2N); setFieldVal('s-ex2P', b.ex2P, true);
             setFieldVal('s-ex3N', b.ex3N); setFieldVal('s-ex3P', b.ex3P, true);
@@ -645,9 +640,8 @@
             setFieldVal('s-downPayment2', b.downPayment2, true); 
             setFieldVal('s-finTidlor', b.finTidlor, true); 
             setFieldVal('s-finOther', b.finOther, true); 
+            setFieldVal('s-finCheckDate', b.finCheckDate); 
             setFieldVal('s-saleCommission', b.saleCommission, true);
-            
-            setFieldVal('s-finCheckDate', b.finCheckDate);
             
             if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
             if(document.getElementById('s-tax')) document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ';
@@ -684,6 +678,7 @@
                         finCheckDate: document.getElementById('s-finCheckDate').value,
                         saleCommission: document.getElementById('s-saleCommission').value
                     };
+
                     document.getElementById('loader').style.display = 'flex';
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
