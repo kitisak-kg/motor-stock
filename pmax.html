@@ -98,7 +98,6 @@
         const config = {
             stock: { sheet: 'Pmax_Stock', title: '1. สต็อก', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคาซื้อเข้า', 'จากไหน', 'ซ่อม', 'ตั้งขาย', 'ขายแล้ว', 'วันที่ขาย', 'ราคา', 'โอน', 'ค่าอื่นๆ', 'เหลือ', 'กำไร', 'อื่นๆ'] },
             transfer: { sheet: 'Pmax_Transfer', title: '2. งานส่งโอน', cols: ['วันที่', 'ลูกค้า', 'เบอร์', 'รุ่น', 'สี', 'เลขตัวถัง', 'เลขเครื่อง', 'โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'อื่นๆ'] },
-            // 💡 เพิ่ม ราคาผ่อน, จำนวนงวด, ยอดรวม เรียบร้อยครับ
             finance: { sheet: 'Pmax_Finance', title: '3. ไฟแนนซ์', cols: ['วันที่', 'ไฟแนนซ์', 'ลูกค้า', 'เบอร์', 'เลขเครื่อง', 'เลขตัวถัง', 'สี', 'รุ่น', 'ทะเบียน', 'ยอด', 'เพิ่มดาวน์', 'ได้เล่มแล้ว', 'ได้เงินแล้ว', 'ราคาผ่อน', 'จำนวนงวด', 'ยอดรวม', 'อื่นๆ'] },
             receive: { sheet: 'Pmax_Receive', title: '4. รับรถเข้า', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'บัตร', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคา', 'จากใคร', 'ยอดทุนเก่ง', 'ยอดซื้อ', 'ยอดคงเหลือ', 'วันที่จ่าย', 'อื่นๆ'] }
         };
@@ -125,6 +124,15 @@
             fetchPmaxData();
         };
 
+        // 💡 ฟังก์ชันแยกแยะหัวข้อแบบแม่นยำ ไม่ให้สับสนระหว่างโอนเงินกับงานส่งโอน
+        function isCurrencyCol(col) {
+            if (col === 'โอน') return true; // เฉพาะคำว่าโอนโดดๆ (ในหน้าสต็อก) ถึงจะเป็นเงิน
+            return col.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ|ค่า|ตั้งขาย|ดาวน์/) !== null;
+        }
+        function isDateCol(col) {
+            return col.match(/วันที่|ภาษี|บัตร/) !== null;
+        }
+
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
@@ -142,15 +150,15 @@
         
         function prettyPrint(val, colName) {
             if(!val || String(val).trim() === '') return '-';
-            if(colName.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
+            
+            if(isCurrencyCol(colName)) {
                 let num = Number(String(val).replace(/,/g, ''));
                 if(!isNaN(num) && val !== '') return num.toLocaleString('en-US');
             }
-            if(colName.match(/วันที่|ภาษี|บัตร/)) {
+            if(isDateCol(colName)) {
                 let v = String(val).replace(/\D/g, '');
-                if (v.length === 8) {
-                    return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-                } else if (v.length === 7) {
+                if (v.length === 8) return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                else if (v.length === 7) {
                     v = '0' + v;
                     return v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
                 }
@@ -224,17 +232,13 @@
             formModal.show();
         }
 
-        // 💡 ฟังก์ชันคิดเลขยอดรวมไฟแนนซ์ (ราคาผ่อน x จำนวนงวด)
         function calcFinanceTotal() {
             if(currentTab !== 'finance') return;
-            
-            // หาเลข Index ของกล่องที่เราต้องการ
             const cols = config['finance'].cols;
             const idxPrice = cols.indexOf('ราคาผ่อน');
             const idxTerms = cols.indexOf('จำนวนงวด');
             const idxTotal = cols.indexOf('ยอดรวม');
             
-            // ดึงค่ามาคำนวณ (ตัดลูกน้ำออกก่อน)
             const priceVal = document.getElementById(`input-${idxPrice}`) ? String(document.getElementById(`input-${idxPrice}`).value).replace(/,/g, '') : '0';
             const termsVal = document.getElementById(`input-${idxTerms}`) ? String(document.getElementById(`input-${idxTerms}`).value).replace(/,/g, '') : '0';
             
@@ -243,12 +247,9 @@
             const total = price * terms;
             
             const elTotal = document.getElementById(`input-${idxTotal}`);
-            if(elTotal) {
-                elTotal.value = total > 0 ? total.toLocaleString('en-US') : '';
-            }
+            if(elTotal) elTotal.value = total > 0 ? total.toLocaleString('en-US') : '';
         }
 
-        // 💡 สร้างฟอร์ม และผูกสูตรคำนวณเข้ากับกล่องแบบเป๊ะๆ
         function buildForm(values) {
             const cols = config[currentTab].cols;
             let html = '';
@@ -262,24 +263,21 @@
                 val = prettyPrint(val, col);
                 if (val === '-') val = ''; 
 
-                if(col.match(/วันที่|ภาษี|บัตร/)) {
-                    extraClass = 'date-mask';
-                    onInput = 'oninput="formatDateInput(this)"';
-                } else if (col === 'ยอดรวม') {
-                    // 💡 ช่องยอดรวม ให้กดแก้ไม่ได้ (ระบบคิดให้เอง)
+                if (col === 'ยอดรวม') {
                     extraClass = 'currency-mask font-monospace fw-bold text-danger bg-light';
                     readOnlyAttr = 'readonly';
                 } else if (col === 'จำนวนงวด') {
-                    // 💡 ช่องจำนวนงวด เวลากดให้มันวิ่งไปสั่งคูณเลข
                     extraClass = 'font-monospace fw-bold text-primary';
                     typeAttr = 'type="number"';
                     onInput = 'oninput="calcFinanceTotal()"';
-                } else if(col.match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
+                } else if (isDateCol(col)) {
+                    extraClass = 'date-mask';
+                    onInput = 'oninput="formatDateInput(this)"';
+                } else if (isCurrencyCol(col)) {
                     extraClass = 'currency-mask font-monospace fw-bold text-success';
-                    // 💡 ถ้าเป็นช่องราคาผ่อน เวลาพิมพ์ปุ๊บ สั่งคูณเลขปั๊บ
                     let extraFunc = (currentTab === 'finance' && col === 'ราคาผ่อน') ? '; calcFinanceTotal()' : '';
                     onInput = `oninput="formatCurrency(this)${extraFunc}"`;
-                } else if(col.match(/เบอร์/)) {
+                } else if (col.match(/เบอร์/)) {
                     onInput = 'oninput="formatPhone(this)"';
                 }
 
@@ -298,10 +296,10 @@
                 executeWithPin(async (pin) => {
                     const rowIdx = document.getElementById('p-rowIdx').value;
                     const cols = config[currentTab].cols;
-                    let rowData = ['']; // index 0 เผื่อไว้ใส่ ID ใน GS
+                    let rowData = ['']; 
                     for(let i=0; i<cols.length; i++) {
                         let rawVal = document.getElementById(`input-${i}`).value;
-                        if(cols[i].match(/ราคา|ยอด|ทุน|โอน|ซ่อม|กำไร|เหลือ|ค่า/)) {
+                        if(isCurrencyCol(cols[i])) {
                             rawVal = String(rawVal).replace(/,/g, '');
                         }
                         rowData.push(rawVal);
