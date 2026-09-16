@@ -67,7 +67,6 @@
         <a href="report.html" class="nav-btn"><i class="bi bi-file-earmark-bar-graph-fill"></i>รายงาน</a>
     </div>
 
-    <!-- Modal ต่างๆ เหมือนเดิม -->
     <div class="modal fade" id="modal-pin" tabindex="-1" style="z-index: 9999;"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow"><div class="modal-body p-4 text-center"><h6 class="fw-bold text-primary mb-3"><i class="bi bi-shield-lock-fill"></i> ยืนยันรหัสพนักงาน (PIN)</h6><input type="password" id="global-pin" class="form-control text-center fw-bold fs-3 mb-3" style="letter-spacing: 10px;" placeholder="****" maxlength="4" autocomplete="off"><div class="d-flex gap-2"><button class="btn btn-light w-50" data-bs-dismiss="modal">ยกเลิก</button><button class="btn btn-primary w-50 fw-bold" id="btn-confirm-pin">ยืนยัน</button></div></div></div></div></div>
 
     <div class="modal fade" id="modal-duplicate" tabindex="-1" style="z-index: 1050;"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-danger text-white p-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> ⚠️ ตรวจพบข้อมูลรถซ้ำในระบบ!</h6></div><div class="modal-body p-4"><p class="text-muted small mb-2">ข้อมูลที่คุณกำลังบันทึก ตรงกับรถที่มีอยู่แล้วในระบบ</p><div id="duplicate-list" class="bg-light p-2 rounded border border-danger mb-3" style="font-size:0.8rem;"></div><p class="fw-bold text-dark text-center mb-0">คุณต้องการคีย์เป็น "รถคันใหม่" หรือไม่?</p></div><div class="modal-footer d-flex gap-2 border-0 pt-0"><button class="btn btn-light flex-grow-1 fw-bold border" onclick="duplicateModal.hide(); setTimeout(()=>bikeModal.show(),400);">กลับไปแก้ไข</button><button class="btn btn-danger flex-grow-1 fw-bold" onclick="forceSaveBike()">บันทึกซ้ำ (รับซื้อคืน)</button></div></div></div></div>
@@ -267,7 +266,7 @@
             if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
         });
 
-        // ฟังก์ชันลูกน้ำและวันที่
+        // 💡 ฟังก์ชันลูกน้ำและวันที่
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
@@ -353,7 +352,6 @@
                 ownerBadge = `<span class="secret-wrapper ms-2">| <span class="text-secondary"><i class="bi bi-file-earmark-person"></i> เจ้าของเล่ม:</span> <i class="bi bi-eye-slash ms-1 text-primary" style="cursor:pointer;" onclick="toggleSecret(this)"></i> <span class="fw-bold text-primary secret-val" data-val="${fullOwnerInfo}">***</span></span>`;
             }
 
-            // 💡 แถบโชว์ยอดจัดบนการ์ด
             let finBadge = '';
             if(b.finTidlor > 0 || b.finOther > 0 || (b.finCheckDate && b.finCheckDate.trim() !== '')) {
                 let t = [];
@@ -411,7 +409,7 @@
             if(type==='กำลังซ่อม') tabId = 'tab-repair'; 
             if(type==='พร้อมขาย') tabId = 'tab-ready'; 
             if(type==='ไม่พร้อมขาย') tabId = 'tab-notready'; 
-            if(type==='fincheck') tabId = 'tab-fincheck';
+            if(type==='fincheck') tabId = 'tab-fincheck'; // 💡 แท็บเช็คไฟแนนซ์
             
             if(document.getElementById(tabId)) document.getElementById(tabId).classList.add('active');
             
@@ -423,11 +421,14 @@
                 if (b.saleStatus !== 'สต็อก') return false;
                 const searchTxt = `${b.plate||''} ${b.model||''} ${b.brand||''} ${b.cha||''} ${b.eng||''} ${b.year||''} ${b.appearance||''} ${b.color||''} ${b.changedColor||''} ${b.ownerName||''} ${b.ownerId||''} ${b.ownerAddress||''} ${b.cusName||''} ${b.cusId||''} ${b.cusAddress||''}`.toLowerCase();
                 
-                // 💡 เงื่อนไขดึงรถแท็บไฟแนนซ์
+                // 💡 เงื่อนไขดึงรถแท็บไฟแนนซ์ (แก้อาการไม่โชว์รถ)
                 let matchType = false;
                 if(type === 'all') matchType = true;
                 else if(type === 'ไม่พร้อมขาย') matchType = (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม');
-                else if(type === 'fincheck') matchType = (b.finCIMB > 0 || b.finTidlor > 0 || b.finOther > 0 || (b.finCheckDate && b.finCheckDate.trim() !== ''));
+                else if(type === 'fincheck') {
+                    // ถ้ายอดเกิน 0 หรือ วันที่เช็คมีข้อความ (ไม่ว่างเปล่า) ให้โชว์เลย!
+                    matchType = (Number(b.finCIMB) > 0 || Number(b.finTidlor) > 0 || Number(b.finOther) > 0 || (b.finCheckDate && String(b.finCheckDate).trim() !== ''));
+                }
                 else matchType = (b.status === type);
                 
                 return matchType && searchTxt.includes(q);
