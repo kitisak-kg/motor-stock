@@ -72,7 +72,6 @@
 
     <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 small" id="detail-content"></div></div></div></div>
 
-    <!-- โหมดจัดการขาย (หักค่าใช้จ่าย 3 ช่องแบบดั้งเดิมที่เสถียร) -->
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -82,7 +81,7 @@
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
                 <div class="row g-2 mb-3">
-                    <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="number" id="s-price" class="form-control form-control-sm fw-bold text-success" oninput="calcSaleProfit()"></div>
+                    <div class="col-6"><label class="small fw-bold text-success">ราคาตกลงขายจริง</label><input type="text" id="s-price" class="form-control form-control-sm fw-bold text-success currency-mask" oninput="calcSaleProfit()"></div>
                     <div class="col-6"><label class="small fw-bold">วันที่ขาย/มัดจำ</label><input type="text" id="s-date" class="form-control form-control-sm date-mask"></div>
                     
                     <div class="col-12"><label class="small fw-bold text-info"><i class="bi bi-person-lines-fill"></i> ชื่อ-นามสกุล / เบอร์โทร</label><input type="text" id="s-cusName" class="form-control form-control-sm border-info" placeholder="ชื่อ-นามสกุล ลูกค้า"></div>
@@ -92,33 +91,34 @@
 
                 <div class="box-deduct">
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
-                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="number" id="s-transferFee" class="form-control form-control-sm mb-2" oninput="calcSaleProfit()">
+                    <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="text" id="s-transferFee" class="form-control form-control-sm mb-2 currency-mask" oninput="calcSaleProfit()">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
                     <div class="row g-1">
-                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="number" id="s-ex1P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="number" id="s-ex2P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
-                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="number" id="s-ex3P" class="form-control form-control-sm" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="text" id="s-ex1P" class="form-control form-control-sm currency-mask s-ex-price" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="text" id="s-ex2P" class="form-control form-control-sm currency-mask s-ex-price" placeholder="ราคา" oninput="calcSaleProfit()"></div>
+                        <div class="col-8 mt-1"><input type="text" id="s-ex3N" class="form-control form-control-sm" placeholder="รายการหัก 3"></div><div class="col-4 mt-1"><input type="text" id="s-ex3P" class="form-control form-control-sm currency-mask s-ex-price" placeholder="ราคา" oninput="calcSaleProfit()"></div>
                     </div>
                 </div>
 
                 <div class="box-finance">
                     <div class="box-finance-title">ยอดจัดไฟแนนซ์ & เงินดาวน์ (บันทึกไว้ดู)</div>
                     <div class="row g-1 mb-2">
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="number" id="s-downPayment1" class="form-control form-control-sm border-info" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="number" id="s-downPayment2" class="form-control form-control-sm border-info" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 1</label><input type="text" id="s-downPayment1" class="form-control form-control-sm border-info currency-mask" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
+                        <div class="col-6"><label class="x-small fw-bold text-info">ดาวน์งวดที่ 2</label><input type="text" id="s-downPayment2" class="form-control form-control-sm border-info currency-mask" placeholder="เช่น 5000" oninput="calcSaleProfit()"></div>
                         <div class="col-12 text-end text-info fw-bold small mb-2" id="s-sum-down">รวมเงินดาวน์: ฿0</div>
                     </div>
                     <div class="row g-1 mb-2 border-top pt-2">
                         <input type="hidden" id="s-finCIMB" value="0">
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="number" id="s-finTidlor" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
-                        <div class="col-6"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="number" id="s-finOther" class="form-control form-control-sm" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">ยอดจัด: ติดล้อ</label><input type="text" id="s-finTidlor" class="form-control form-control-sm currency-mask" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">ยอดจัด: อื่นๆ</label><input type="text" id="s-finOther" class="form-control form-control-sm currency-mask" oninput="calcSaleProfit()"></div>
+                        <div class="col-4"><label class="x-small fw-bold text-dark">วันที่เช็ค</label><input type="text" id="s-finCheckDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                         <div class="col-12 text-end text-dark fw-bold small" id="s-sum-fin">รวมยอดจัด: ฿0</div>
                     </div>
                     <label class="x-small fw-bold text-primary border-top pt-2 d-block">ค่าคอมมิชชั่นไฟแนนซ์ (บวกเพิ่มเป็นกำไร)</label>
-                    <input type="number" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold" oninput="calcSaleProfit()">
+                    <input type="text" id="s-saleCommission" class="form-control form-control-sm border-primary text-primary fw-bold currency-mask" oninput="calcSaleProfit()">
                 </div>
                 
-                <div class="bg-dark text-white p-2 rounded mb-3 shadow-sm">
+                <div class="bg-dark text-white p-2 rounded mb-2 shadow-sm">
                     <div class="fw-bold small border-bottom border-secondary pb-1 mb-1">🧮 สรุปกำไรสุทธิ (คำนวณอัตโนมัติ)</div>
                     <div class="row text-center align-items-center">
                         <div class="col-3 border-end border-secondary"><small class="text-white-50" style="font-size:0.55rem;">รับจริง(รวมคอม)</small><div id="s-calc-revenue" class="fw-bold text-success" style="font-size:0.8rem;">฿0</div></div>
@@ -156,7 +156,6 @@
       </div>
     </div>
 
-    <!-- โหมด Capital Modal (คงเดิม) -->
     <div class="modal fade" id="modal-capital" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
@@ -172,6 +171,7 @@
                             <option value="เงินลงทุน">💸 เงินลงทุน (ควักเนื้อ)</option>
                             <option value="ลงทุนจากกำไร">🔄 ทุนจากกำไร (เอากำไรมาหมุน)</option>
                         </select>
+
                         <div class="row g-2 mb-2">
                             <div class="col-7"><label class="small fw-bold">จำนวนเงิน</label><input type="number" id="c-amount" class="form-control"></div>
                             <div class="col-5"><label class="small fw-bold text-primary">กำไรคันที่</label><input type="text" id="c-targetBikes" class="form-control border-primary" placeholder="เช่น 1, 2"></div>
@@ -206,18 +206,38 @@
         });
         document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
+        // ฟังก์ชันล้าง/ใส่ลูกน้ำ
+        function formatCurrency(input) {
+            let val = String(input.value).replace(/[^0-9]/g, '');
+            input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
+        }
+        function formatDateInput(input) {
+            let v = input.value.replace(/\D/g, '').slice(0, 8);
+            if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+            else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+            input.value = v;
+        }
+        function unformatCurrency(val) { return Number(String(val).replace(/,/g, '')) || 0; }
+        
+        function setFieldVal(id, val, isCurrency=false) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            if(isCurrency) el.value = val ? Number(val).toLocaleString('en-US') : '';
+            else el.value = val !== undefined ? val : '';
+        }
+
         window.onload = function() {
             saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
             capModal = new bootstrap.Modal(document.getElementById('modal-capital'));
             detailsModal = new bootstrap.Modal(document.getElementById('modal-details'));
+            
             document.querySelectorAll('.date-mask').forEach(input => {
-                input.addEventListener('input', function(e) {
-                    let v = e.target.value.replace(/\D/g, '').slice(0, 8);
-                    if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-                    else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
-                    e.target.value = v;
-                });
+                input.addEventListener('input', function() { formatDateInput(this); });
             });
+            document.querySelectorAll('.currency-mask').forEach(input => {
+                input.addEventListener('input', function() { formatCurrency(this); });
+            });
+
             loadFinanceData();
         };
 
@@ -237,6 +257,7 @@
                 if (data.capitalHistory) {
                     let htmlLeft = ''; let htmlRight = '';
                     let totalLeft = 0; let totalRight = 0;
+
                     data.capitalHistory.forEach(c => { 
                         const targetStr = c.targetBikes ? `<small class="text-primary">(กำไรคันที่ ${c.targetBikes})</small>` : '';
                         const box = `
@@ -252,10 +273,15 @@
                                 <div class="mt-1 text-end">${targetStr}</div>
                             </div>
                         `;
+
                         if(c.capType === 'เงินลงทุน') { htmlLeft += box; totalLeft += Number(c.amount); } 
                         else { htmlRight += box; totalRight += Number(c.amount); }
                     });
-                    document.getElementById('cap-summary-row').innerHTML = `<div class="col-6"><div class="bg-primary text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small><b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b></div></div><div class="col-6"><div class="bg-success text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small><b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b></div></div>`;
+
+                    document.getElementById('cap-summary-row').innerHTML = `
+                        <div class="col-6"><div class="bg-primary text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">เงินลงทุนรวม</small><b style="font-size:0.9rem;">฿${totalLeft.toLocaleString()}</b></div></div>
+                        <div class="col-6"><div class="bg-success text-white p-2 rounded text-center shadow-sm"><small class="d-block opacity-75" style="font-size:0.65rem;">ทุนจากกำไรสะสม</small><b style="font-size:0.9rem;">฿${totalRight.toLocaleString()}</b></div></div>
+                    `;
                     document.getElementById('list-capital-history').innerHTML = `<div class="col-6">${htmlLeft || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div><div class="col-6">${htmlRight || '<div class="text-center text-muted small mt-2">ไม่มีประวัติ</div>'}</div>`;
                 }
             } catch(e) { document.getElementById('loader').style.display = 'none'; }
@@ -280,10 +306,13 @@
                         <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails(${b.rowIdx})" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
                         <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model} ปี ${b.year||'-'}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
                     </div>
+                    
                     ${customerHtml}
+
                     <div class="bg-warning bg-opacity-10 border border-warning rounded px-2 py-1 flex-grow-1" style="font-size:0.65rem; line-height:1.3; max-width: 150px;">
                         <span class="text-muted">ส่งเล่มให้:</span> <b class="text-primary">${b.transferTo || 'ยังไม่ระบุ'}</b><br><span class="text-muted">วันที่ส่ง:</span> <b class="text-danger">${b.transferDate || '-'}</b>
                     </div>
+                    
                     <div class="d-flex gap-1" style="font-size:0.65rem;">
                         <span class="doc-badge ${prb.includes('แล้ว')?'doc-ok':'doc-wait'}">พรบ:${prb.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
@@ -302,11 +331,13 @@
 
         function renderBikesList(type) {
             const listBikes = allBikes.filter(b => type === 'sold' ? b.saleStatus === 'ขายแล้ว' : b.saleStatus === 'รอเคลียร์ไฟแนนซ์');
+            
             if(type === 'pending') {
                 let html = ''; listBikes.forEach(b => html += buildBikeCard(b));
                 document.getElementById('list-pending').innerHTML = html || '<p class="text-center p-4 text-muted">ไม่มีรถรอเคลียร์ยอด</p>';
                 return;
             }
+
             let monthGroups = {};
             listBikes.forEach(b => {
                 const parts = (b.saleDate||'').split('/'); let key = '0000-00'; let label = 'ไม่ได้ระบุเดือน';
@@ -329,6 +360,17 @@
 
         function showCarDetails(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
+            
+            let ownerBadge = '';
+            if (b.ownerName || b.ownerId || b.ownerAddress) {
+                let ownerData = [];
+                if (b.ownerName) ownerData.push(b.ownerName);
+                if (b.ownerPhone) ownerData.push('เบอร์: ' + b.ownerPhone);
+                if (b.ownerId) ownerData.push('ปชช: ' + b.ownerId);
+                if (b.ownerAddress) ownerData.push('ที่อยู่: ' + b.ownerAddress);
+                ownerBadge = ` | <span class="text-secondary"><i class="bi bi-file-earmark-person"></i> ผู้ถือกรรมสิทธิ์เดิม:</span> <b class="text-dark">${ownerData.join(' | ')}</b>`;
+            }
+
             let html = `
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
@@ -337,8 +379,15 @@
                     <div class="col-6"><small class="text-muted d-block">เลขบัตร ปชช:</small> <b class="text-primary">${b.cusId || '-'}</b></div>
                     <div class="col-12"><small class="text-muted d-block">ที่อยู่:</small> <b class="text-primary">${b.cusAddress || '-'}</b></div>
                     <div class="col-12 mt-2"><hr class="m-0 border-secondary"></div>
-                    <div class="col-6"><small class="text-muted d-block">วันที่ซื้อเข้า:</small> <b>${b.buyDate || '-'}</b></div><div class="col-6"><small class="text-muted d-block">แหล่งที่ซื้อ:</small> <b>${b.source || '-'}</b></div>
-                    <div class="col-6"><small class="text-muted d-block">เลขถัง:</small> <b>${b.cha || '-'}</b></div><div class="col-6"><small class="text-muted d-block">เลขเครื่อง:</small> <b>${b.eng || '-'}</b></div>
+                    
+                    <div class="col-12"><small class="text-muted d-block">ประวัติการซื้อรถเข้า:</small> 
+                        <div class="bg-white p-2 border rounded mt-1" style="font-size:0.75rem;">
+                            <span class="text-muted">ซื้อจาก:</span> <b class="text-dark">${b.source || '-'}</b>${ownerBadge}<br>
+                            <span class="text-muted">วันที่รับรถ:</span> <b class="text-dark">${b.buyDate || '-'}</b> | <span class="text-muted">ทุนซื้อเข้า:</span> <b class="text-danger">฿${(b.realCost||0).toLocaleString()}</b>
+                        </div>
+                    </div>
+
+                    <div class="col-6 mt-2"><small class="text-muted d-block">เลขถัง:</small> <b>${b.cha || '-'}</b></div><div class="col-6 mt-2"><small class="text-muted d-block">เลขเครื่อง:</small> <b>${b.eng || '-'}</b></div>
                     <div class="col-6"><small class="text-muted d-block">สีเดิม:</small> <b>${b.color || '-'}</b></div><div class="col-6"><small class="text-muted d-block">ทำสีใหม่:</small> <b>${b.changedColor || '-'}</b></div>
                     <div class="col-12"><small class="text-muted d-block">หมายเหตุสต็อก:</small> <b>${b.stockNote || '-'}</b></div>
                 </div>
@@ -360,29 +409,40 @@
             document.querySelectorAll('#section-'+type+' .sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
         }
 
+        // 💡 คิดเลขกล่องดำในหน้า Finance (ดึง exTotal มาคิดด้วยแล้ว)
         function calcSaleProfit() {
-            const getVal = (id) => Number(document.getElementById(id).value) || 0;
-            const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
-            const ex1 = getVal('s-ex1P'); const ex2 = getVal('s-ex2P'); const ex3 = getVal('s-ex3P'); const totalInternal = getVal('s-totalInternal'); 
+            const soldPrice = unformatCurrency(document.getElementById('s-price').value); 
+            const comm = unformatCurrency(document.getElementById('s-saleCommission').value); 
+            const transferFee = unformatCurrency(document.getElementById('s-transferFee').value);
             
-            const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
-            const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
+            let exTotal = 0;
+            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += unformatCurrency(el.value));
+
+            const totalInternal = unformatCurrency(document.getElementById('s-totalInternal').value); 
+            
+            const down1 = unformatCurrency(document.getElementById('s-downPayment1').value); 
+            const down2 = unformatCurrency(document.getElementById('s-downPayment2').value);
+            const finTidlor = unformatCurrency(document.getElementById('s-finTidlor').value); 
+            const finOther = unformatCurrency(document.getElementById('s-finOther').value);
+            
             document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
             document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
 
-            const revenue = soldPrice + comm; const deduct = transferFee + ex1 + ex2 + ex3; const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; const deduct = transferFee + exTotal; const profit = revenue - totalInternal - deduct;
             
             document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
             document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
-        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูล แบบดั้งเดิมที่เสถียรสุดๆ
+        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชี (แก้ไขบั๊กโหลด array ผิดพลาด)
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx);
+            
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
             document.getElementById('s-rowIdx').value = rowIdx; 
             document.getElementById('s-totalInternal').value = manualTotalInternal; 
+
             document.getElementById('s-title').innerText = (b.plate || '') + " " + (b.model || '');
             
             let costHtml = `<div class="fw-bold text-primary small mb-1">ทุนรถ (รวมเป็นทุนจมของร้านทันที)</div>
@@ -396,33 +456,39 @@
                 if(b.inc2N) costHtml += `<div class="d-flex justify-content-between x-small"><span>${b.inc2N}</span><span>฿${(b.inc2P||0).toLocaleString()}</span></div>`;
                 if(b.inc3N) costHtml += `<div class="d-flex justify-content-between x-small"><span>${b.inc3N}</span><span>฿${(b.inc3P||0).toLocaleString()}</span></div>`;
             } else { costHtml += `<div class="x-small text-muted">- ไม่มี -</div>`; }
+            
             costHtml += `</div><div class="mt-2 text-end fw-bold text-primary small">รวมต้นทุนจม: ฿${manualTotalInternal.toLocaleString()}</div>`; 
             document.getElementById('s-cost-breakdown-container').innerHTML = costHtml;
 
-            document.getElementById('s-price').value = b.soldPrice || b.targetPrice || 0;
-            const t = new Date(); document.getElementById('s-date').value = b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`;
+            setFieldVal('s-price', b.soldPrice || b.targetPrice || 0, true);
+            const t = new Date(); setFieldVal('s-date', b.saleDate || `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()+543}`);
             
-            document.getElementById('s-cusName').value = b.cusName || '';
-            document.getElementById('s-cusId').value = b.cusId || '';
-            document.getElementById('s-cusAddress').value = b.cusAddress || '';
-
-            document.getElementById('s-transferFee').value = b.transferFee || 0; 
-            document.getElementById('s-ex1N').value = b.ex1N || ''; document.getElementById('s-ex1P').value = b.ex1P || 0;
-            document.getElementById('s-ex2N').value = b.ex2N || ''; document.getElementById('s-ex2P').value = b.ex2P || 0;
-            document.getElementById('s-ex3N').value = b.ex3N || ''; document.getElementById('s-ex3P').value = b.ex3P || 0;
+            setFieldVal('s-cusName', b.cusName); setFieldVal('s-cusId', b.cusId); setFieldVal('s-cusAddress', b.cusAddress);
+            setFieldVal('s-transferFee', b.transferFee, true); 
             
-            document.getElementById('s-finCIMB').value = b.finCIMB || 0; 
-            document.getElementById('s-downPayment1').value = b.downPayment1 || 0; 
-            document.getElementById('s-downPayment2').value = b.downPayment2 || 0; 
-            document.getElementById('s-finTidlor').value = b.finTidlor || 0; 
-            document.getElementById('s-finOther').value = b.finOther || 0; 
-            document.getElementById('s-saleCommission').value = b.saleCommission || 0;
+            // 💡 โหลดข้อมูลรายการหักแบบใหม่ (ดึงจาก exList เลย ไม่ต้องแยกอ้างอิง)
+            let activeEx = b.exList || [];
+            if(activeEx.length < 3) {
+                activeEx = [ {name: b.ex1N||'', price: b.ex1P||0}, {name: b.ex2N||'', price: b.ex2P||0}, {name: b.ex3N||'', price: b.ex3P||0} ];
+            }
+            
+            setFieldVal('s-ex1N', activeEx[0]?.name||''); setFieldVal('s-ex1P', activeEx[0]?.price||0, true);
+            setFieldVal('s-ex2N', activeEx[1]?.name||''); setFieldVal('s-ex2P', activeEx[1]?.price||0, true);
+            setFieldVal('s-ex3N', activeEx[2]?.name||''); setFieldVal('s-ex3P', activeEx[2]?.price||0, true);
+            
+            setFieldVal('s-finCIMB', b.finCIMB, true); 
+            setFieldVal('s-downPayment1', b.downPayment1, true); 
+            setFieldVal('s-downPayment2', b.downPayment2, true); 
+            setFieldVal('s-finTidlor', b.finTidlor, true); 
+            setFieldVal('s-finOther', b.finOther, true); 
+            setFieldVal('s-finCheckDate', b.finCheckDate);
+            setFieldVal('s-saleCommission', b.saleCommission, true);
             
             if(document.getElementById('s-prb')) document.getElementById('s-prb').value = b.prbStatus || 'รอดำเนินการ';
             if(document.getElementById('s-tax')) document.getElementById('s-tax').value = b.taxStatus || 'รอดำเนินการ';
             if(document.getElementById('s-book')) document.getElementById('s-book').value = b.bookTransferStatus || 'รอเล่มโอน';
-            if(document.getElementById('s-transferTo')) document.getElementById('s-transferTo').value = b.transferTo || '';
-            if(document.getElementById('s-transferDate')) document.getElementById('s-transferDate').value = b.transferDate || '';
+            setFieldVal('s-transferTo', b.transferTo);
+            setFieldVal('s-transferDate', b.transferDate);
             
             calcSaleProfit(); saleModal.show();
         }
@@ -432,22 +498,41 @@
             setTimeout(() => {
                 executeWithPin(async (pin) => {
                     const payload = { 
-                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, soldPrice: document.getElementById('s-price').value, saleDate: document.getElementById('s-date').value, 
-                        cusName: document.getElementById('s-cusName').value, cusId: document.getElementById('s-cusId').value, cusAddress: document.getElementById('s-cusAddress').value, 
+                        action: 'updateSale', saleStatus: statusType, pin: pin, rowIdx: document.getElementById('s-rowIdx').value, 
+                        soldPrice: unformatCurrency(document.getElementById('s-price').value), 
+                        saleDate: document.getElementById('s-date').value, 
+                        cusName: document.getElementById('s-cusName').value, 
+                        cusId: document.getElementById('s-cusId').value, 
+                        cusAddress: document.getElementById('s-cusAddress').value, 
                         prbStatus: document.getElementById('s-prb') ? document.getElementById('s-prb').value : 'รอดำเนินการ', 
                         taxStatus: document.getElementById('s-tax') ? document.getElementById('s-tax').value : 'รอดำเนินการ', 
                         bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
-                        transferFee: document.getElementById('s-transferFee').value, ex1N: document.getElementById('s-ex1N').value, ex1P: document.getElementById('s-ex1P').value, ex2N: document.getElementById('s-ex2N').value, ex2P: document.getElementById('s-ex2P').value, ex3N: document.getElementById('s-ex3N').value, ex3P: document.getElementById('s-ex3P').value,
-                        finCIMB: document.getElementById('s-finCIMB').value, downPayment1: document.getElementById('s-downPayment1').value, downPayment2: document.getElementById('s-downPayment2').value, finTidlor: document.getElementById('s-finTidlor').value, finOther: document.getElementById('s-finOther').value, saleCommission: document.getElementById('s-saleCommission').value
+                        transferFee: unformatCurrency(document.getElementById('s-transferFee').value), 
+                        ex1N: document.getElementById('s-ex1N').value, ex1P: unformatCurrency(document.getElementById('s-ex1P').value), 
+                        ex2N: document.getElementById('s-ex2N').value, ex2P: unformatCurrency(document.getElementById('s-ex2P').value), 
+                        ex3N: document.getElementById('s-ex3N').value, ex3P: unformatCurrency(document.getElementById('s-ex3P').value),
+                        finCIMB: unformatCurrency(document.getElementById('s-finCIMB').value), 
+                        downPayment1: unformatCurrency(document.getElementById('s-downPayment1').value), 
+                        downPayment2: unformatCurrency(document.getElementById('s-downPayment2').value), 
+                        finTidlor: unformatCurrency(document.getElementById('s-finTidlor').value), 
+                        finOther: unformatCurrency(document.getElementById('s-finOther').value), 
+                        finCheckDate: document.getElementById('s-finCheckDate').value,
+                        saleCommission: unformatCurrency(document.getElementById('s-saleCommission').value)
                     };
+
                     document.getElementById('loader').style.display = 'flex';
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                         if(!res.ok) throw new Error('Net Error');
                         const result = await res.json();
-                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; saleModal.show(); } else { await loadFinanceData(); }
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            saleModal.show(); 
+                        } else { await loadFinanceData(); }
                     } catch(e) {
                         alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
                         document.getElementById('loader').style.display = 'none';
@@ -467,7 +552,12 @@
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'revertSale', rowIdx: document.getElementById('s-rowIdx').value, pin: pin }) });
                         if(!res.ok) throw new Error('Net Error');
                         const result = await res.json();
-                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; saleModal.show(); } else { await loadFinanceData(); }
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            saleModal.show();
+                        } else { await loadFinanceData(); }
                     } catch(e) {
                         alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
                         document.getElementById('loader').style.display = 'none';
@@ -497,7 +587,12 @@
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveCapital', pin: pin, rowIdx: document.getElementById('c-rowIdx').value, amount: document.getElementById('c-amount').value, date: document.getElementById('c-date').value, targetBikes: document.getElementById('c-targetBikes').value, capType: document.getElementById('c-capType').value, note: document.getElementById('c-note').value }) });
                         if(!res.ok) throw new Error('Net Error');
                         const result = await res.json();
-                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; capModal.show(); } else { await loadFinanceData(); }
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            capModal.show(); 
+                        } else { await loadFinanceData(); }
                     } catch(e) {
                         alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
                         document.getElementById('loader').style.display = 'none';
@@ -517,7 +612,12 @@
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCapital', rowIdx: document.getElementById('c-rowIdx').value, pin: pin }) });
                         if(!res.ok) throw new Error('Net Error');
                         const result = await res.json();
-                        if(result.status === 'error') { alert(result.message); document.getElementById('loader').style.display = 'none'; capModal.show(); } else { await loadFinanceData(); }
+                        
+                        if(result.status === 'error') { 
+                            alert(result.message); 
+                            document.getElementById('loader').style.display = 'none'; 
+                            capModal.show(); 
+                        } else { await loadFinanceData(); }
                     } catch(e) {
                         alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
                         document.getElementById('loader').style.display = 'none';
