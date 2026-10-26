@@ -13,7 +13,7 @@
         .nav-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
         .card-dash { background: white; border-radius: 12px; padding: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height: 100%; }
         .stat-val { font-size: 1.3rem; font-weight: 800; margin-top: 5px; }
-        .status-box { background: white; border-radius: 10px; padding: 12px; text-align: center; border-bottom: 4px solid #ddd; text-decoration: none; display: block; }
+        .status-box { background: white; border-radius: 10px; padding: 10px 5px; text-align: center; border-bottom: 4px solid #ddd; text-decoration: none; display: block; }
         .alert-box { max-height: 250px; overflow-y: auto; background: #fff; border-radius: 0 0 8px 8px; border: 1px solid #eee; border-top: none; }
         .alert-header { font-size: 0.9rem; padding: 8px; text-align: center; font-weight: bold; color: white; border-radius: 8px 8px 0 0; }
         .alert-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
@@ -44,7 +44,6 @@
                 </div>
             </div>
             
-            <!-- 💡 ปุ่มทางเข้าสมุดอ้างอิง และ สมุด Pmax -->
             <div class="row g-2 mb-4">
                 <div class="col-12"><a href="auction_finance.html" class="btn btn-warning text-dark w-100 fw-bold shadow-sm py-2"><i class="bi bi-hammer"></i> ข้อมูลประมูล & เช็คยอดไฟแนนซ์</a></div>
                 <div class="col-12"><a href="pmax.html" class="btn btn-success w-100 fw-bold shadow-sm py-2"><i class="bi bi-journal-text"></i> สมุดบันทึกพี่แม็ก (Pmax)</a></div>
@@ -97,11 +96,13 @@
                 </div>
             </div>
 
+            <!-- 💡 อัปเดตโครงสร้างแบ่ง 4 กล่องให้พอดีกับหน้าจอ -->
             <h6 class="fw-bold mb-3 text-muted">สถานะสต็อกปัจจุบัน</h6>
             <div class="row g-2 mb-4">
-                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-danger"><div class="h4 fw-bold text-danger mb-0" id="count-wait">0</div><small class="text-muted" style="font-size:0.65rem;">รอส่งซ่อม</small></a></div>
-                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-warning"><div class="h4 fw-bold text-warning mb-0" id="count-repair">0</div><small class="text-muted" style="font-size:0.65rem;">กำลังซ่อม</small></a></div>
-                <div class="col-4"><a href="inventory.html" class="status-box shadow-sm border-success"><div class="h4 fw-bold text-success mb-0" id="count-ready">0</div><small class="text-muted" style="font-size:0.65rem;">พร้อมขาย</small></a></div>
+                <div class="col-3"><a href="inventory.html" class="status-box shadow-sm border-danger"><div class="h5 fw-bold text-danger mb-0" id="count-wait">0</div><small class="text-muted" style="font-size:0.65rem;">รอซ่อม</small></a></div>
+                <div class="col-3"><a href="inventory.html" class="status-box shadow-sm border-warning"><div class="h5 fw-bold text-warning mb-0" id="count-repair">0</div><small class="text-muted" style="font-size:0.65rem;">กำลังซ่อม</small></a></div>
+                <div class="col-3"><a href="inventory.html" class="status-box shadow-sm border-success"><div class="h5 fw-bold text-success mb-0" id="count-ready">0</div><small class="text-muted" style="font-size:0.65rem;">พร้อมขาย</small></a></div>
+                <div class="col-3"><a href="finance.html" class="status-box shadow-sm border-info"><div class="h5 fw-bold text-info mb-0" id="count-finance">0</div><small class="text-muted" style="font-size:0.65rem;">รอไฟแนนซ์</small></a></div>
             </div>
 
             <h6 class="fw-bold text-danger mb-2"><i class="bi bi-bell-fill"></i> แจ้งเตือนเอกสาร & ด่วน</h6>
@@ -243,7 +244,7 @@
                 document.getElementById('dash-y-sold').innerText = (data.dashboard.stats.ySold || 0) + ' คัน';
                 document.getElementById('dash-y-profit').innerText = '฿' + (data.dashboard.stats.yProfit || 0).toLocaleString();
 
-                let wait=0, repair=0, ready=0;
+                let wait=0, repair=0, ready=0, pendingFin=0;
                 let taxAlerts = []; let idAlerts = []; let docAlerts = [];
                 let agingAlerts = []; let stuckRepairAlerts = [];
                 
@@ -301,6 +302,10 @@
                                 });
                             }
                         }
+                    } 
+                    // 💡 เพิ่มการนับยอดรถรอไฟแนนซ์
+                    else if (b.saleStatus === 'รอเคลียร์ไฟแนนซ์') {
+                        pendingFin++;
                     }
                     
                     if (b.saleStatus === 'ขายแล้ว' || b.saleStatus === 'รอเคลียร์ไฟแนนซ์') {
@@ -321,9 +326,11 @@
                 agingAlerts.sort((a, b) => b.days - a.days); 
                 stuckRepairAlerts.sort((a, b) => b.days - a.days); 
 
+                // 💡 แสดงผลค่าทั้งหมดบนหน้าจอ
                 document.getElementById('count-wait').innerText = wait; 
                 document.getElementById('count-repair').innerText = repair; 
                 document.getElementById('count-ready').innerText = ready;
+                document.getElementById('count-finance').innerText = pendingFin;
                 
                 document.getElementById('alert-tax').innerHTML = taxAlerts.length > 0 ? taxAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
                 document.getElementById('alert-id').innerHTML = idAlerts.length > 0 ? idAlerts.map(x => x.html).join('') : '<div class="text-center p-4 text-muted">ไม่มีเตือน</div>';
