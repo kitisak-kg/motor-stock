@@ -289,6 +289,7 @@
             document.getElementById('loader').style.display = 'none';
         }
 
+        // 💡 อัปเดตโครงสร้างการแสดงผลในการ์ดบัญชี แยกทุน/แยกซ่อมชัดเจน 
         function buildBikeCard(b) {
             const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
             const isSold = b.saleStatus === 'ขายแล้ว';
@@ -301,10 +302,13 @@
                     ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
                 </div>` : '';
 
+            // ทุนดิบ + ค่าบวกเพิ่มอื่นๆ
+            const baseCapital = (b.realCost || 0) + (b.inc1P || 0) + (b.inc2P || 0) + (b.inc3P || 0);
+
             return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.cusName || ''} ${b.cusId || ''} ${b.cusAddress || ''}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-1 mb-1 gap-2">
                     <div class="d-flex align-items-start" style="min-width: 140px;">
-                        <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails(${b.rowIdx})" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
+                        <button class="btn btn-sm btn-light border shadow-sm py-0 px-1 me-2 mt-1 text-primary" onclick="showCarDetails('${b.rowIdx}')" title="ดูข้อมูลเต็ม"><i class="bi bi-file-earmark-text-fill"></i></button>
                         <div><b class="text-dark d-block" style="font-size:0.8rem; line-height:1.2;">${b.plate||'-'} ${b.model} ปี ${b.year||'-'}</b><small class="text-muted" style="font-size:0.65rem;">ขาย: <span class="fw-bold text-dark">${b.saleDate||'-'}</span></small></div>
                     </div>
                     
@@ -319,13 +323,16 @@
                         <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
                     </div>
-                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal(${b.rowIdx})"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
+                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal('${b.rowIdx}')"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
                 </div>
+                
+                <!-- 💡 แยกตาราง ทุน / ซ่อม / หัก / รับ / กำไร -->
                 <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
-                    <div class="col-3 border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรวมจม</span><b style="font-size:0.75rem;">฿${(b.totalInternal||0).toLocaleString()}</b></div>
-                    <div class="col-3 border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b style="font-size:0.75rem;">฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
-                    <div class="col-3 border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary" style="font-size:0.75rem;">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
-                    <div class="col-3"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
+                    <div class="col border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรถ</span><b style="font-size:0.75rem;">฿${baseCapital.toLocaleString()}</b></div>
+                    <div class="col border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ค่าซ่อม</span><b class="text-danger" style="font-size:0.75rem;">฿${(b.repairSum||0).toLocaleString()}</b></div>
+                    <div class="col border-end"><span class="text-danger d-block" style="font-size:0.55rem;">หักตอนขาย</span><b style="font-size:0.75rem;">฿${(b.transferFee + b.exTotal || 0).toLocaleString()}</b></div>
+                    <div class="col border-end"><span class="text-primary d-block" style="font-size:0.55rem;">รับสุทธิ(รวมคอม)</span><b class="text-primary" style="font-size:0.75rem;">฿${((b.soldPrice||0)+(b.saleCommission||0)).toLocaleString()}</b></div>
+                    <div class="col"><span class="text-success d-block" style="font-size:0.55rem;">กำไรสุทธิ</span><b class="text-success" style="font-size:0.85rem;">฿${(b.profit||0).toLocaleString()}</b></div>
                 </div>
             </div>`;
         }
@@ -360,8 +367,18 @@
         }
 
         function showCarDetails(rowIdx) {
-            const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
+            const b = allBikes.find(x => String(x.rowIdx) === String(rowIdx)); if(!b) return;
             
+            let ownerBadge = '';
+            if (b.ownerName || b.ownerId || b.ownerAddress) {
+                let ownerData = [];
+                if (b.ownerName) ownerData.push(b.ownerName);
+                if (b.ownerPhone) ownerData.push('เบอร์: ' + b.ownerPhone);
+                if (b.ownerId) ownerData.push('ปชช: ' + b.ownerId);
+                if (b.ownerAddress) ownerData.push('ที่อยู่: ' + b.ownerAddress);
+                ownerBadge = ` | <span class="text-secondary"><i class="bi bi-file-earmark-person"></i> ผู้ถือกรรมสิทธิ์เดิม:</span> <b class="text-dark">${ownerData.join(' | ')}</b>`;
+            }
+
             let html = `
                 <div class="mb-3 text-center border-bottom pb-2"><h5 class="fw-bold text-primary mb-0">${b.plate || '-'}</h5><div class="text-muted">${b.brand || ''} ${b.model || ''} ปี ${b.year || '-'}</div></div>
                 <h6 class="fw-bold text-dark border-bottom pb-1 mb-2"><i class="bi bi-info-circle"></i> ข้อมูลรถพื้นฐาน</h6>
@@ -373,7 +390,7 @@
                     
                     <div class="col-12"><small class="text-muted d-block">ประวัติการซื้อรถเข้า:</small> 
                         <div class="bg-white p-2 border rounded mt-1" style="font-size:0.75rem;">
-                            <span class="text-muted">ซื้อจาก:</span> <b class="text-dark">${b.source || '-'}</b><br>
+                            <span class="text-muted">ซื้อจาก:</span> <b class="text-dark">${b.source || '-'}</b>${ownerBadge}<br>
                             <span class="text-muted">วันที่รับรถ:</span> <b class="text-dark">${b.buyDate || '-'}</b> | <span class="text-muted">ทุนซื้อเข้า:</span> <b class="text-danger">฿${(b.realCost||0).toLocaleString()}</b>
                         </div>
                     </div>
@@ -400,14 +417,14 @@
             document.querySelectorAll('#section-'+type+' .sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
         }
 
-        // 💡 ฟังก์ชันสร้างกล่องรายการหักเงิน 10 ช่อง (ซ่อมแล้ว)
+        // 💡 ฟังก์ชันสร้างกล่องรายการหักเงิน 10 ช่อง
         function renderExRows(prefix, count, dataList = []) {
             let container = document.getElementById(`${prefix}-ex-container`);
             let html = '';
             for(let i=1; i<=count; i++) {
                 let dName = dataList[i-1] ? dataList[i-1].name : '';
                 let dPrice = dataList[i-1] ? dataList[i-1].price : '';
-                if(dPrice) dPrice = Number(dPrice).toLocaleString('en-US'); // เติมลูกน้ำก่อนใส่กล่อง
+                if(dPrice) dPrice = Number(dPrice).toLocaleString('en-US'); 
                 
                 let funcCall = prefix === 'm' ? '' : 'oninput="calcSaleProfit()"';
                 html += `
@@ -416,7 +433,6 @@
                 `;
             }
             container.innerHTML = html;
-            // เชื่อมระบบลูกน้ำให้ช่องที่เพิ่งสร้างใหม่
             container.querySelectorAll('.currency-mask').forEach(input => {
                 input.addEventListener('input', function() { formatCurrency(this); });
             });
@@ -463,9 +479,9 @@
             document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
-        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชี (แก้ไขบั๊กโหลด array ผิดพลาด)
+        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชีให้สมบูรณ์
         function openSaleModal(rowIdx) {
-            const b = allBikes.find(x => x.rowIdx === rowIdx);
+            const b = allBikes.find(x => String(x.rowIdx) === String(rowIdx)); if(!b) return;
             
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
 
@@ -495,13 +511,12 @@
             setFieldVal('s-cusName', b.cusName); setFieldVal('s-cusId', b.cusId); setFieldVal('s-cusAddress', b.cusAddress);
             setFieldVal('s-transferFee', b.transferFee, true); 
             
-            // 💡 โหลดข้อมูลรายการหักแบบใหม่ (ดึงจาก exList เลย ไม่ต้องแยกอ้างอิง)
             let activeEx = b.exList || [];
             if(activeEx.length < 3) {
                 activeEx = [ {name: b.ex1N||'', price: b.ex1P||0}, {name: b.ex2N||'', price: b.ex2P||0}, {name: b.ex3N||'', price: b.ex3P||0} ];
             }
             
-            sExCount = activeEx.length < 3 ? 3 : activeEx.length; // อย่างน้อยโชว์ 3 กล่อง
+            sExCount = activeEx.length < 3 ? 3 : activeEx.length;
             renderExRows('s', sExCount, activeEx);
             
             setFieldVal('s-finCIMB', b.finCIMB, true); 
@@ -532,24 +547,21 @@
                         cusName: document.getElementById('s-cusName').value, 
                         cusId: document.getElementById('s-cusId').value, 
                         cusAddress: document.getElementById('s-cusAddress').value, 
-
                         prbStatus: document.getElementById('s-prb') ? document.getElementById('s-prb').value : 'รอดำเนินการ', 
                         taxStatus: document.getElementById('s-tax') ? document.getElementById('s-tax').value : 'รอดำเนินการ', 
                         bookTransferStatus: document.getElementById('s-book') ? document.getElementById('s-book').value : 'รอดำเนินการ', 
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
                         transferFee: unformatCurrency(document.getElementById('s-transferFee').value), 
-                        
                         finCIMB: unformatCurrency(document.getElementById('s-finCIMB').value), 
                         downPayment1: unformatCurrency(document.getElementById('s-downPayment1').value), 
                         downPayment2: unformatCurrency(document.getElementById('s-downPayment2').value), 
                         finTidlor: unformatCurrency(document.getElementById('s-finTidlor').value), 
                         finOther: unformatCurrency(document.getElementById('s-finOther').value), 
-                        finCheckDate: document.getElementById('s-finCheckDate') ? document.getElementById('s-finCheckDate').value : '',
+                        finCheckDate: document.getElementById('s-finCheckDate').value,
                         saleCommission: unformatCurrency(document.getElementById('s-saleCommission').value)
                     };
 
-                    // 💡 แพ็ครายการหักขายส่งไปหลังบ้าน
                     let exList = [];
                     for(let i=1; i<=sExCount; i++) {
                         let n = document.getElementById(`s-ex${i}N`) ? document.getElementById(`s-ex${i}N`).value : '';
