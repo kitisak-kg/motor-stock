@@ -49,6 +49,7 @@
         </div>
     </div>
 
+    <!-- เมนูด้านล่าง -->
     <div class="nav-bottom">
         <a href="index.html" class="nav-btn"><i class="bi bi-house-door"></i>หน้าแรก</a>
         <a href="inventory.html" class="nav-btn"><i class="bi bi-box-seam"></i>สต็อก</a>
@@ -69,6 +70,7 @@
         </div>
     </div>
 
+    <!-- Modal Form -->
     <div class="modal fade" id="modal-form" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg">
@@ -92,7 +94,7 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         
-        // 💡 อัปเดตโครงสร้างคอลัมน์ (เพิ่มทะเบียนหลังเบอร์)
+        // 💡 อัปเดตโครงสร้างคอลัมน์
         const config = {
             stock: { sheet: 'Pmax_Stock', title: '1. สต็อก', cols: ['วันที่', 'รุ่น', 'ปี', 'สี', 'ทะเบียน', 'ภาษี', 'เลขเครื่อง', 'เลขตัวถัง', 'ราคาซื้อเข้า', 'จากไหน', 'ซ่อม', 'ตั้งขาย', 'ขายแล้ว', 'วันที่ขาย', 'ราคา', 'โอน', 'ค่าอื่นๆ', 'เหลือ', 'กำไร', 'อื่นๆ'] },
             transfer: { sheet: 'Pmax_Transfer', title: '2. งานส่งโอน', cols: ['วันที่', 'ลูกค้า', 'เบอร์', 'ทะเบียน', 'รุ่น', 'สี', 'เลขตัวถัง', 'เลขเครื่อง', 'โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'อื่นๆ'] },
@@ -122,16 +124,20 @@
             fetchPmaxData();
         };
 
+        // 💡 ระบบจัด Format ให้เป็นลูกน้ำ และเติม / วันที่ อัตโนมัติเวลาคีย์
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
         }
+        
         function formatDateInput(input) {
-            let v = input.value.replace(/\D/g, '').slice(0, 8);
+            let v = input.value.replace(/\D/g, '');
+            if (v.length > 8) v = v.slice(0, 8);
             if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
             else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
             input.value = v;
         }
+
         function formatPhone(input) {
             let v = String(input.value).replace(/\D/g, '');
             if (v.length > 3) {
@@ -140,24 +146,23 @@
             input.value = v;
         }
         
+        // 💡 ฟังก์ชัน Format ข้อมูลเพื่อนำไปโชว์ในตารางสวยๆ 
         function prettyPrint(val, colName) {
             if(val === undefined || val === null || String(val).trim() === '') return '-';
             
-            // 💡 ช่องข้อความ (ไม่ใส่ลูกน้ำเด็ดขาด)
-            if (colName === 'โอน ย้าย ต่อภาษี' || colName === 'ส่งใครโอน' || colName === 'ค่าอื่นๆ' || colName === 'อื่นๆ' || colName === 'ราคาผ่อน' || colName === 'ทะเบียน' || colName === 'จากใคร' || colName === 'โอน') {
-                if (colName === 'โอน' && currentTab === 'stock') {
-                    // แต่ถ้าเป็น โอน ในหน้าสต็อก ให้ใส่ลูกน้ำได้
-                    let num = Number(String(val).replace(/,/g, ''));
-                    if(!isNaN(num) && String(val).trim() !== '') return num.toLocaleString('en-US');
-                }
+            // 💡 ช่องที่มีข้อยกเว้น ไม่ต้องใส่ลูกน้ำ (ปล่อยให้พิมพ์ข้อความอิสระ)
+            const textOnlyCols = ['โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'ค่าอื่นๆ', 'อื่นๆ', 'ราคาผ่อน', 'ทะเบียน', 'จากใคร', 'จากไหน', 'สี'];
+            if (textOnlyCols.includes(colName)) {
                 return val;
             }
 
-            if(colName.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ/)) {
+            // ถ้าเป็นช่องจำนวนเงิน 
+            if((colName === 'โอน' && currentTab === 'stock') || colName.match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ/)) {
                 let num = Number(String(val).replace(/,/g, ''));
                 if(!isNaN(num) && String(val).trim() !== '') return num.toLocaleString('en-US');
             }
             
+            // แปลงวันที่ดิบ เช่น 30092569 เป็น 30/09/2569
             if(colName.match(/วันที่|ภาษี|บัตร/)) {
                 let v = String(val).replace(/\D/g, '');
                 if (v.length === 8) {
@@ -201,7 +206,7 @@
 
             let bodyHtml = '';
             dataList.forEach(row => {
-                let tr = `<tr class="data-row"><td class="text-center"><button class="btn btn-sm btn-outline-success py-0 px-2" onclick="openEditModal(${row.rowIdx})"><i class="bi bi-pencil"></i></button></td>`;
+                let tr = `<tr class="data-row"><td class="text-center"><button class="btn btn-sm btn-outline-success py-0 px-2" onclick="openEditModal('${row.rowIdx}')"><i class="bi bi-pencil"></i></button></td>`;
                 for(let i=1; i<=cols.length; i++) {
                     tr += `<td>${prettyPrint(row.data[i], cols[i-1])}</td>`;
                 }
@@ -227,15 +232,16 @@
         }
 
         function openEditModal(rowIdx) {
-            const record = pmaxData[currentTab].find(r => r.rowIdx === rowIdx);
+            const record = pmaxData[currentTab].find(r => String(r.rowIdx) === String(rowIdx));
             if(!record) return;
             document.getElementById('p-rowIdx').value = rowIdx;
             document.getElementById('btn-delete').style.display = 'block';
             document.getElementById('modal-title').innerText = `แก้ไข: ${config[currentTab].title}`;
-            buildForm(record.data.slice(1)); 
+            buildForm(record.data.slice(1)); // ข้าม ID คอลัมน์ 0
             formModal.show();
         }
 
+        // 💡 ฟังก์ชันคิดเลข ยอดรับรถเข้า (ทุนเก่ง - ยอดซื้อ = คงเหลือ)
         function calcReceiveTotal() {
             if(currentTab !== 'receive') return;
             const cols = config['receive'].cols;
@@ -253,6 +259,7 @@
             }
         }
 
+        // 💡 ฟังก์ชันคิดเลข ยอดไฟแนนซ์ (ราคาผ่อน x จำนวนงวด = ยอดรวม)
         function calcFinanceTotal() {
             if(currentTab !== 'finance') return;
             const cols = config['finance'].cols;
@@ -273,6 +280,7 @@
             }
         }
 
+        // 💡 สร้างฟอร์มอัตโนมัติ พร้อมโหลดค่าเก่าและจัด Format ทันที
         function buildForm(values) {
             const cols = config[currentTab].cols;
             let html = '';
@@ -283,12 +291,14 @@
                 let readOnlyAttr = '';
                 let typeAttr = 'type="text"';
 
+                // โหลดค่าพร้อมจัดฟอร์แมต
                 val = prettyPrint(val, col);
                 if (val === '-') val = ''; 
 
-                // 💡 ปลดล็อกช่องข้อความ ให้พิมพ์อักษรได้อิสระ
-                if (col === 'โอน ย้าย ต่อภาษี' || col === 'ส่งใครโอน' || col === 'ค่าอื่นๆ' || col === 'อื่นๆ' || col === 'ทะเบียน' || col === 'จากใคร') {
-                    // เป็นข้อความล้วน ไม่จับไปแปลงลูกน้ำ
+                // 💡 ปลดล็อกช่องข้อความ ให้พิมพ์อักษรได้อิสระ ไม่ดึงลูกน้ำมา
+                const textOnlyCols = ['โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'ค่าอื่นๆ', 'อื่นๆ', 'ทะเบียน', 'จากใคร', 'จากไหน', 'สี'];
+                if (textOnlyCols.includes(col)) {
+                    // ปล่อยให้พิมพ์อิสระ
                 } else if(col.match(/วันที่|ภาษี|บัตร/)) {
                     extraClass = 'date-mask';
                     onInput = 'oninput="formatDateInput(this)"';
@@ -300,9 +310,8 @@
                     typeAttr = 'type="number"';
                     onInput = 'oninput="calcFinanceTotal()"';
                 } else if (col === 'ราคาผ่อน') {
-                    // ช่องราคาผ่อนในหน้าไฟแนนซ์ (อาจมีลูกน้ำ)
-                    extraClass = 'currency-mask font-monospace fw-bold text-success';
-                    onInput = `oninput="formatCurrency(this); calcFinanceTotal()"`;
+                    // ช่องราคาผ่อนในหน้าไฟแนนซ์ ไม่เอาลูกน้ำ จะได้พิมพ์ผสม 1500x2 ได้
+                    extraClass = 'font-monospace fw-bold text-success';
                 } else if(col === 'โอน' && currentTab === 'stock') {
                     extraClass = 'currency-mask font-monospace fw-bold text-success';
                     onInput = 'oninput="formatCurrency(this)"';
@@ -334,8 +343,9 @@
                     for(let i=0; i<cols.length; i++) {
                         let rawVal = document.getElementById(`input-${i}`).value;
                         
-                        // ถอดลูกน้ำออกก่อนเซฟ (ยกเว้นช่องที่เป็นข้อความ)
-                        if (cols[i] !== 'โอน ย้าย ต่อภาษี' && cols[i] !== 'ส่งใครโอน' && cols[i] !== 'ค่าอื่นๆ' && cols[i] !== 'อื่นๆ' && cols[i] !== 'ทะเบียน' && cols[i] !== 'จากใคร') {
+                        const textOnlyCols = ['โอน ย้าย ต่อภาษี', 'ส่งใครโอน', 'ค่าอื่นๆ', 'อื่นๆ', 'ราคาผ่อน', 'ทะเบียน', 'จากใคร', 'จากไหน', 'สี'];
+                        // 💡 ถอดลูกน้ำออกก่อนเซฟ (ยกเว้นช่องที่เป็นข้อความ)
+                        if (!textOnlyCols.includes(cols[i])) {
                             if((cols[i] === 'โอน' && currentTab === 'stock') || cols[i].match(/ราคา|ยอด|ทุน|ซ่อม|กำไร|เหลือ|ตั้งขาย/)) {
                                 rawVal = String(rawVal).replace(/,/g, '');
                             }
