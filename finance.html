@@ -144,7 +144,7 @@
                 </div>
             </div>
 
-            <div class="modal-footer border-top-0 pt-0">
+            <div class="modal-footer border-top-0 pt-0 flex-column gap-2">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
                         <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
@@ -153,6 +153,8 @@
                         <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
                     </div>
                 </div>
+                <!-- 💡 ปุ่มตีกลับสต็อก (ยกเลิกการขาย) ที่เพิ่มเข้ามาใหม่ -->
+                <button class="btn btn-outline-danger w-100 fw-bold shadow-sm py-2 mt-1" style="font-size: 0.8rem;" onclick="revertSale()">🔄 ตีกลับเข้าสต็อก (ยกเลิกการขาย)</button>
             </div>
         </div>
       </div>
@@ -209,7 +211,6 @@
         });
         document.getElementById('global-pin').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('btn-confirm-pin').click(); });
 
-        // 💡 ฟังก์ชันจัดการลูกน้ำ (,) และวันที่ (/)
         function formatCurrency(input) {
             let val = String(input.value).replace(/[^0-9]/g, '');
             input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
@@ -289,7 +290,7 @@
             document.getElementById('loader').style.display = 'none';
         }
 
-        // 💡 อัปเดตโครงสร้างการแสดงผลในการ์ดบัญชี แยกทุน/แยกซ่อมชัดเจน 
+        // 💡 แยกทุนรถ กับ ค่าซ่อม ในการ์ดแสดงผล
         function buildBikeCard(b) {
             const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
             const isSold = b.saleStatus === 'ขายแล้ว';
@@ -302,7 +303,7 @@
                     ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
                 </div>` : '';
 
-            // ทุนดิบ + ค่าบวกเพิ่มอื่นๆ
+            // 💡 ทุนดิบ (ราคาซื้อเข้า + ค่าบวกเพิ่ม) โดยยังไม่รวมค่าซ่อม
             const baseCapital = (b.realCost || 0) + (b.inc1P || 0) + (b.inc2P || 0) + (b.inc3P || 0);
 
             return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.cusName || ''} ${b.cusId || ''} ${b.cusAddress || ''}">
@@ -417,14 +418,13 @@
             document.querySelectorAll('#section-'+type+' .sold-item').forEach(el => { el.style.display = el.getAttribute('data-search').toLowerCase().includes(q) ? 'block' : 'none'; });
         }
 
-        // 💡 ฟังก์ชันสร้างกล่องรายการหักเงิน 10 ช่อง
         function renderExRows(prefix, count, dataList = []) {
             let container = document.getElementById(`${prefix}-ex-container`);
             let html = '';
             for(let i=1; i<=count; i++) {
                 let dName = dataList[i-1] ? dataList[i-1].name : '';
                 let dPrice = dataList[i-1] ? dataList[i-1].price : '';
-                if(dPrice) dPrice = Number(dPrice).toLocaleString('en-US'); 
+                if(dPrice) dPrice = Number(dPrice).toLocaleString('en-US');
                 
                 let funcCall = prefix === 'm' ? '' : 'oninput="calcSaleProfit()"';
                 html += `
@@ -479,7 +479,6 @@
             document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
-        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชีให้สมบูรณ์
         function openSaleModal(rowIdx) {
             const b = allBikes.find(x => String(x.rowIdx) === String(rowIdx)); if(!b) return;
             
@@ -553,6 +552,7 @@
                         transferTo: document.getElementById('s-transferTo') ? document.getElementById('s-transferTo').value : '', 
                         transferDate: document.getElementById('s-transferDate') ? document.getElementById('s-transferDate').value : '',
                         transferFee: unformatCurrency(document.getElementById('s-transferFee').value), 
+                        
                         finCIMB: unformatCurrency(document.getElementById('s-finCIMB').value), 
                         downPayment1: unformatCurrency(document.getElementById('s-downPayment1').value), 
                         downPayment2: unformatCurrency(document.getElementById('s-downPayment2').value), 
@@ -590,6 +590,7 @@
             }, 400);
         }
         
+        // 💡 เรียกใช้ฟังก์ชัน revertSale() ที่ทำปุ่มสีแดงไว้
         function revertSale() {
             if(!confirm('ยืนยันตีกลับรถคันนี้เข้าลานจอด? (ยกเลิกการขาย)')) return;
             saleModal.hide();
