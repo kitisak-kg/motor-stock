@@ -72,6 +72,27 @@
 
     <div class="modal fade" id="modal-details" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold"><i class="bi bi-file-earmark-text"></i> ข้อมูลรถแบบละเอียด</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 small" id="detail-content"></div></div></div></div>
 
+    <!-- 💡 ป๊อปอัปดูประวัติซ่อม -->
+    <div class="modal fade" id="modal-repair-history" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark p-2 px-3 border-0">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-tools"></i> ประวัติการซ่อม</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <h6 id="repair-bike-title" class="fw-bold text-center text-dark mb-3 border-bottom pb-2"></h6>
+                    <div id="repair-content" class="small">
+                        <!-- รายการซ่อมจะถูกดึงมาใส่ตรงนี้ -->
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button class="btn btn-secondary w-100 fw-bold shadow-sm" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-sale" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -142,17 +163,11 @@
                         <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                     </div>
                 </div>
-
-                <!-- 💡 เพิ่มส่วนแสดงประวัติการซ่อม -->
-                <div class="bg-secondary bg-opacity-10 p-2 rounded border border-secondary mt-3">
-                    <div class="fw-bold text-secondary small mb-1"><i class="bi bi-tools"></i> ประวัติการซ่อม (อ้างอิง)</div>
-                    <div id="s-repair-history" class="small text-muted" style="max-height: 100px; overflow-y: auto;">
-                        กำลังโหลดข้อมูล...
-                    </div>
-                </div>
+                
+                <!-- 💡 ผมเอาประวัติซ่อมออกจากกล่องแก้ไขนี้แล้วนะครับ จะได้ไม่เกะกะ -->
             </div>
 
-            <div class="modal-footer border-top-0 pt-0 flex-column gap-2 mt-3">
+            <div class="modal-footer border-top-0 pt-0 flex-column gap-2 mt-2">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
                         <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
@@ -202,7 +217,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
-        let allBikes = []; let saleModal, capModal, detailsModal;
+        let allBikes = []; let saleModal, capModal, detailsModal, repairModal;
         let sExCount = 3;
 
         let pendingPinAction = null; let pinModalInstance = null;
@@ -241,6 +256,9 @@
             saleModal = new bootstrap.Modal(document.getElementById('modal-sale'));
             capModal = new bootstrap.Modal(document.getElementById('modal-capital'));
             detailsModal = new bootstrap.Modal(document.getElementById('modal-details'));
+            // 💡 ประกาศ Modal ประวัติซ่อม
+            repairModal = new bootstrap.Modal(document.getElementById('modal-repair-history'));
+            
             document.querySelectorAll('.date-mask').forEach(input => {
                 input.addEventListener('input', function(e) { formatDateInput(this); });
             });
@@ -297,6 +315,7 @@
             document.getElementById('loader').style.display = 'none';
         }
 
+        // 💡 แยกปุ่มดูซ่อม ออกมาต่างหาก
         function buildBikeCard(b) {
             const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
             const isSold = b.saleStatus === 'ขายแล้ว';
@@ -309,7 +328,6 @@
                     ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
                 </div>` : '';
 
-            // ทุนดิบ + ค่าบวกเพิ่มอื่นๆ
             const baseCapital = (b.realCost || 0) + (b.inc1P || 0) + (b.inc2P || 0) + (b.inc3P || 0);
 
             return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.cusName || ''} ${b.cusId || ''} ${b.cusAddress || ''}">
@@ -330,7 +348,11 @@
                         <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
                     </div>
-                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal('${b.rowIdx}', '${b.id}')"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
+                    <div class="d-flex gap-1">
+                        <!-- 💡 ปุ่มดูซ่อม -->
+                        <button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" style="font-size:0.7rem;" onclick="viewRepairHistory('${b.id}', '${b.plate||'-'} ${b.model||''}')"><i class="bi bi-tools"></i> ซ่อม</button>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal('${b.rowIdx}')"><i class="bi bi-pencil-square"></i> แก้ไข</button>
+                    </div>
                 </div>
                 
                 <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
@@ -370,6 +392,41 @@
                 i++;
             });
             document.getElementById('accordionSold').innerHTML = accHtml || '<p class="text-center p-4 text-muted">ยังไม่มีรถที่ขายจบแล้ว</p>';
+        }
+
+        // 💡 ฟังก์ชันดึงประวัติซ่อมมาโชว์ในป๊อปอัปแยก
+        async function viewRepairHistory(bikeId, title) {
+            document.getElementById('repair-bike-title').innerText = title;
+            document.getElementById('repair-content').innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm mb-2 text-warning"></div><br>กำลังโหลดรายการซ่อม...</div>';
+            repairModal.show();
+            
+            try {
+                const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
+                if (res.ok) {
+                    const list = await res.json();
+                    let repairHtml = '';
+                    let total = 0;
+                    list.forEach((r, idx) => {
+                        repairHtml += `<div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <div><span class="text-secondary fw-bold me-1">${idx + 1}.</span> ${r.name}<br><small class="text-muted ms-3">${r.shop}</small></div>
+                            <span class="text-danger fw-bold">฿${r.price.toLocaleString()}</span>
+                        </div>`;
+                        total += r.price;
+                    });
+                    
+                    if (list.length > 0) {
+                        repairHtml += `<div class="d-flex justify-content-between bg-light p-2 mt-2 rounded border fw-bold">
+                            <span>รวมค่าซ่อมทั้งหมด</span><span class="text-danger fs-6">฿${total.toLocaleString()}</span>
+                        </div>`;
+                    } else {
+                        repairHtml = '<div class="text-center p-4 text-muted">คันนี้ไม่มีประวัติการซ่อมครับ</div>';
+                    }
+                    
+                    document.getElementById('repair-content').innerHTML = repairHtml;
+                }
+            } catch (e) {
+                document.getElementById('repair-content').innerHTML = '<div class="text-center p-3 text-danger">ไม่สามารถเชื่อมต่อข้อมูลได้</div>';
+            }
         }
 
         function showCarDetails(rowIdx) {
@@ -484,8 +541,7 @@
             document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
-        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชี พร้อมดึงรายการซ่อมมาโชว์
-        async function openSaleModal(rowIdx, bikeId) {
+        function openSaleModal(rowIdx) {
             const b = allBikes.find(x => String(x.rowIdx) === String(rowIdx)); if(!b) return;
             
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
@@ -538,25 +594,7 @@
             setFieldVal('s-transferTo', b.transferTo);
             setFieldVal('s-transferDate', b.transferDate);
             
-            calcSaleProfit(); 
-
-            // 💡 ดึงประวัติซ่อมมาโชว์ตอนกดแก้
-            document.getElementById('s-repair-history').innerHTML = 'กำลังโหลดข้อมูล...';
-            try {
-                const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
-                if (res.ok) {
-                    const list = await res.json();
-                    let repairHtml = '';
-                    list.forEach(r => {
-                        repairHtml += `<div class="d-flex justify-content-between border-bottom pb-1 mb-1"><span>${r.name}</span><span class="text-danger">฿${r.price.toLocaleString()}</span></div>`;
-                    });
-                    document.getElementById('s-repair-history').innerHTML = repairHtml || 'ไม่มีประวัติการซ่อม';
-                }
-            } catch (e) {
-                document.getElementById('s-repair-history').innerHTML = 'ไม่สามารถโหลดประวัติซ่อมได้';
-            }
-
-            saleModal.show();
+            calcSaleProfit(); saleModal.show();
         }
 
         function processSale(statusType) {
