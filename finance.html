@@ -142,9 +142,17 @@
                         <div class="col-6"><label class="x-small fw-bold text-primary">ส่งเล่มไปวันไหน</label><input type="text" id="s-transferDate" class="form-control form-control-sm date-mask" placeholder="วว/ดด/ปปปป"></div>
                     </div>
                 </div>
+
+                <!-- 💡 เพิ่มส่วนแสดงประวัติการซ่อม -->
+                <div class="bg-secondary bg-opacity-10 p-2 rounded border border-secondary mt-3">
+                    <div class="fw-bold text-secondary small mb-1"><i class="bi bi-tools"></i> ประวัติการซ่อม (อ้างอิง)</div>
+                    <div id="s-repair-history" class="small text-muted" style="max-height: 100px; overflow-y: auto;">
+                        กำลังโหลดข้อมูล...
+                    </div>
+                </div>
             </div>
 
-            <div class="modal-footer border-top-0 pt-0 flex-column gap-2">
+            <div class="modal-footer border-top-0 pt-0 flex-column gap-2 mt-3">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
                         <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
@@ -153,7 +161,6 @@
                         <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
                     </div>
                 </div>
-                <!-- 💡 ปุ่มตีกลับสต็อก (ยกเลิกการขาย) ที่เพิ่มเข้ามาใหม่ -->
                 <button class="btn btn-outline-danger w-100 fw-bold shadow-sm py-2 mt-1" style="font-size: 0.8rem;" onclick="revertSale()">🔄 ตีกลับเข้าสต็อก (ยกเลิกการขาย)</button>
             </div>
         </div>
@@ -290,7 +297,6 @@
             document.getElementById('loader').style.display = 'none';
         }
 
-        // 💡 แยกทุนรถ กับ ค่าซ่อม ในการ์ดแสดงผล
         function buildBikeCard(b) {
             const prb = b.prbStatus || ''; const tax = b.taxStatus || ''; const bk = b.bookTransferStatus || '';
             const isSold = b.saleStatus === 'ขายแล้ว';
@@ -303,7 +309,7 @@
                     ${b.cusAddress ? `<br><span class="text-muted"><i class="bi bi-house"></i> ที่อยู่:</span> <b class="text-dark text-truncate d-inline-block align-bottom" style="max-width: 200px;">${b.cusAddress}</b>` : ''}
                 </div>` : '';
 
-            // 💡 ทุนดิบ (ราคาซื้อเข้า + ค่าบวกเพิ่ม) โดยยังไม่รวมค่าซ่อม
+            // ทุนดิบ + ค่าบวกเพิ่มอื่นๆ
             const baseCapital = (b.realCost || 0) + (b.inc1P || 0) + (b.inc2P || 0) + (b.inc3P || 0);
 
             return `<div class="card-finance border-start border-5 ${borderCol} sold-item p-2 mb-2" data-search="${b.plate} ${b.model} ${b.cha} ${b.cusName || ''} ${b.cusId || ''} ${b.cusAddress || ''}">
@@ -324,10 +330,9 @@
                         <span class="doc-badge ${tax.includes('แล้ว')?'doc-ok':'doc-wait'}">ภาษี:${tax.includes('แล้ว')?'✔':'⏳'}</span>
                         <span class="doc-badge ${bk.includes('แล้ว')?'doc-ok':'doc-wait'}">เล่ม:${bk.includes('แล้ว')?'✔':'⏳'}</span>
                     </div>
-                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal('${b.rowIdx}')"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
+                    <div><button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.7rem;" onclick="openSaleModal('${b.rowIdx}', '${b.id}')"><i class="bi bi-pencil-square"></i> แก้ไข</button></div>
                 </div>
                 
-                <!-- 💡 แยกตาราง ทุน / ซ่อม / หัก / รับ / กำไร -->
                 <div class="row g-0 small text-center bg-light rounded pt-1 pb-1">
                     <div class="col border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ทุนรถ</span><b style="font-size:0.75rem;">฿${baseCapital.toLocaleString()}</b></div>
                     <div class="col border-end"><span class="text-muted d-block" style="font-size:0.55rem;">ค่าซ่อม</span><b class="text-danger" style="font-size:0.75rem;">฿${(b.repairSum||0).toLocaleString()}</b></div>
@@ -479,7 +484,8 @@
             document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
-        function openSaleModal(rowIdx) {
+        // 💡 ฟังก์ชันเปิดแก้ไขข้อมูลหน้าบัญชี พร้อมดึงรายการซ่อมมาโชว์
+        async function openSaleModal(rowIdx, bikeId) {
             const b = allBikes.find(x => String(x.rowIdx) === String(rowIdx)); if(!b) return;
             
             const manualTotalInternal = (Number(b.realCost) || 0) + (Number(b.repairSum) || 0) + (Number(b.inc1P) || 0) + (Number(b.inc2P) || 0) + (Number(b.inc3P) || 0);
@@ -532,7 +538,25 @@
             setFieldVal('s-transferTo', b.transferTo);
             setFieldVal('s-transferDate', b.transferDate);
             
-            calcSaleProfit(); saleModal.show();
+            calcSaleProfit(); 
+
+            // 💡 ดึงประวัติซ่อมมาโชว์ตอนกดแก้
+            document.getElementById('s-repair-history').innerHTML = 'กำลังโหลดข้อมูล...';
+            try {
+                const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
+                if (res.ok) {
+                    const list = await res.json();
+                    let repairHtml = '';
+                    list.forEach(r => {
+                        repairHtml += `<div class="d-flex justify-content-between border-bottom pb-1 mb-1"><span>${r.name}</span><span class="text-danger">฿${r.price.toLocaleString()}</span></div>`;
+                    });
+                    document.getElementById('s-repair-history').innerHTML = repairHtml || 'ไม่มีประวัติการซ่อม';
+                }
+            } catch (e) {
+                document.getElementById('s-repair-history').innerHTML = 'ไม่สามารถโหลดประวัติซ่อมได้';
+            }
+
+            saleModal.show();
         }
 
         function processSale(statusType) {
@@ -590,7 +614,6 @@
             }, 400);
         }
         
-        // 💡 เรียกใช้ฟังก์ชัน revertSale() ที่ทำปุ่มสีแดงไว้
         function revertSale() {
             if(!confirm('ยืนยันตีกลับรถคันนี้เข้าลานจอด? (ยกเลิกการขาย)')) return;
             saleModal.hide();
