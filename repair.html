@@ -51,11 +51,15 @@
                 <h6 class="fw-bold small text-muted border-bottom pb-2">รายการเตรียมบันทึก</h6>
                 <div id="temp-items"></div>
                 <div class="d-flex justify-content-between mt-2 pt-2 border-top fw-bold text-danger"><span>รวมทั้งหมด:</span><span id="temp-total">฿0</span></div>
-                <button class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" onclick="saveAllRepairs()">💾 บันทึกลงระบบ</button>
+                <button class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" id="btn-save-repairs" onclick="saveAllRepairs()">💾 บันทึกลงระบบ</button>
             </div>
         </div>
 
-        <h6 class="fw-bold text-muted small m-0 mb-2">ประวัติซ่อมที่บันทึกแล้ว (กดลบ/แก้ได้)</h6>
+        <div class="d-flex justify-content-between align-items-end mb-2">
+            <h6 class="fw-bold text-muted small m-0">ประวัติซ่อมที่บันทึกแล้ว</h6>
+            <!-- 💡 เพิ่มปุ่มลบหลายรายการ (ซ่อนไว้ตอนแรก) -->
+            <button class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold d-none" id="btn-bulk-delete" onclick="deleteSelectedRepairs()"><i class="bi bi-trash"></i> ลบที่เลือก</button>
+        </div>
         <div id="repair-history" class="list-group shadow-sm small mb-4">
             <div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>
         </div>
@@ -184,7 +188,7 @@
                 allRepairBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม'));
                 allReadyBikes = data.bikes.filter(b => b.saleStatus === 'สต็อก' && b.status === 'พร้อมขาย');
                 renderDropdowns(filterText); 
-            } catch(e) { } // เงียบไว้ไม่ให้ตกใจตอนโหลดฉากหลัง
+            } catch(e) { } 
         }
 
         function renderDropdowns(filterText) {
@@ -350,9 +354,14 @@
             document.getElementById('temp-items').innerHTML = html; document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
         }
 
+        // 💡 ป้องกันการกดเบิ้ลส่งข้อมูลซ้ำ
         function saveAllRepairs() {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return alert("กรุณาเลือกรถครับ");
+            
+            const btn = document.getElementById('btn-save-repairs');
+            btn.disabled = true; // ปิดปุ่มกันกดเบิ้ล
+            
             executeWithPin(async (pin) => {
                 document.getElementById('loader').style.display = 'flex';
                 try {
@@ -363,6 +372,7 @@
                     if(result.status === 'error') { 
                         alert(result.message); 
                         document.getElementById('loader').style.display = 'none'; 
+                        btn.disabled = false; // เปิดปุ่มคืน
                         return; 
                     }
                     tempRepairs = []; renderTemp(); 
@@ -372,21 +382,35 @@
                     alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
                 }
                 document.getElementById('loader').style.display = 'none';
+                btn.disabled = false; // เปิดปุ่มคืน
             });
         }
 
         async function loadRepairHistory(bikeId) {
-            if(!bikeId) return document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
+            if(!bikeId) {
+                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
+                document.getElementById('btn-bulk-delete').classList.add('d-none');
+                return;
+            }
             try {
                 const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
                 if(!res.ok) throw new Error();
                 const list = await res.json();
                 let html = ''; let total = 0;
                 existingRepairNames = []; 
+                
+                // 💡 ซ่อนหรือแสดงปุ่มลบหลายรายการ
+                if(list.length > 0) document.getElementById('btn-bulk-delete').classList.remove('d-none');
+                else document.getElementById('btn-bulk-delete').classList.add('d-none');
+
                 list.forEach((r, i) => { 
                     existingRepairNames.push(r.name.trim().toLowerCase()); 
+                    // 💡 เพิ่ม Checkbox สำหรับเลือกลบหลายรายการ
                     html += `<div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-3">${r.shop}</small></div>
+                        <div class="d-flex align-items-center">
+                            <input type="checkbox" class="form-check-input me-2 cb-repair-delete" value="${r.rowIdx}">
+                            <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-4">${r.shop}</small></div>
+                        </div>
                         <div class="text-end">
                             <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
                             <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx})"><i class="bi bi-trash"></i></span></div>
@@ -395,9 +419,51 @@
                     total += r.price; 
                 });
                 currentActiveRepairTotal = total; 
-                if(html) html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
+                if(html) {
+                    html = `<div class="list-group-item bg-light border-bottom border-2 text-end pb-2">
+                        <input type="checkbox" class="form-check-input me-1" id="cb-select-all" onchange="toggleSelectAllRepairs()"> <label for="cb-select-all" class="small text-muted fw-bold">เลือกทั้งหมด</label>
+                    </div>` + html;
+                    html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
+                }
                 document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">คันนี้ยังไม่มีประวัติซ่อม</div>';
             } catch(e) {}
+        }
+
+        // 💡 ฟังก์ชันจัดการการติ๊กเลือกรายการซ่อม
+        function toggleSelectAllRepairs() {
+            const isChecked = document.getElementById('cb-select-all').checked;
+            document.querySelectorAll('.cb-repair-delete').forEach(cb => cb.checked = isChecked);
+        }
+
+        // 💡 ฟังก์ชันลบหลายรายการพร้อมกัน
+        function deleteSelectedRepairs() {
+            const selected = Array.from(document.querySelectorAll('.cb-repair-delete:checked')).map(cb => cb.value);
+            if(selected.length === 0) return alert('กรุณาเลือกรายการที่ต้องการลบ');
+            
+            if(!confirm(`ยืนยันการลบ ${selected.length} รายการที่เลือกถาวร?`)) return;
+            
+            executeWithPin(async (pin) => {
+                document.getElementById('loader').style.display = 'flex';
+                try {
+                    const res = await fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ action: 'deleteRepairMulti', rowIndices: selected, pin: pin }) 
+                    });
+                    if(!res.ok) throw new Error('Net Error');
+                    const result = await res.json();
+                    
+                    if(result.status === 'error') { 
+                        alert(result.message); 
+                        document.getElementById('loader').style.display = 'none'; 
+                        return; 
+                    }
+                    await refreshMasterData();
+                    await loadRepairHistory(document.getElementById('selected-bike-id').value);
+                } catch(e) {
+                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                }
+                document.getElementById('loader').style.display = 'none';
+            });
         }
 
         function openEdit(rId, name, price, shop) {
