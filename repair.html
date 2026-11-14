@@ -51,15 +51,16 @@
                 <h6 class="fw-bold small text-muted border-bottom pb-2">รายการเตรียมบันทึก</h6>
                 <div id="temp-items"></div>
                 <div class="d-flex justify-content-between mt-2 pt-2 border-top fw-bold text-danger"><span>รวมทั้งหมด:</span><span id="temp-total">฿0</span></div>
-                <button class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" id="btn-save-repairs" onclick="saveAllRepairs()">💾 บันทึกลงระบบ</button>
+                <!-- 💡 ใส่ ID ให้ปุ่ม เพื่อป้องกันการกดเบิ้ล -->
+                <button id="btn-save-repairs" class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" onclick="saveAllRepairs()">💾 บันทึกลงระบบ</button>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-end mb-2">
-            <h6 class="fw-bold text-muted small m-0">ประวัติซ่อมที่บันทึกแล้ว</h6>
-            <!-- 💡 เพิ่มปุ่มลบหลายรายการ (ซ่อนไว้ตอนแรก) -->
-            <button class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold d-none" id="btn-bulk-delete" onclick="deleteSelectedRepairs()"><i class="bi bi-trash"></i> ลบที่เลือก</button>
-        </div>
+        <!-- 💡 เพิ่มปุ่มลบหลายรายการ และ Checkbox -->
+        <h6 class="fw-bold text-muted small m-0 mb-2 d-flex justify-content-between align-items-center">
+            <span>ประวัติซ่อมที่บันทึกแล้ว</span>
+            <button class="btn btn-sm btn-danger py-0 d-none fw-bold shadow-sm" id="btn-bulk-delete" onclick="deleteSelectedRepairs()">🗑️ ลบที่เลือก</button>
+        </h6>
         <div id="repair-history" class="list-group shadow-sm small mb-4">
             <div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>
         </div>
@@ -97,7 +98,7 @@
                     <input type="text" id="e-item" class="form-control mb-2" placeholder="รายการ" onkeypress="if(event.key === 'Enter') updateRepairItem()">
                     <input type="number" id="e-price" class="form-control mb-2" placeholder="ราคา" onkeypress="if(event.key === 'Enter') updateRepairItem()">
                     <input type="text" id="e-shop" class="form-control mb-3" placeholder="อู่" onkeypress="if(event.key === 'Enter') updateRepairItem()">
-                    <button class="btn btn-primary w-100 fw-bold py-2" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
+                    <button class="btn btn-primary w-100 fw-bold py-2" id="btn-save-edit-rep" onclick="updateRepairItem()">✅ บันทึกแก้ไข</button>
                     <button class="btn btn-light w-100 mt-2 text-muted" data-bs-dismiss="modal">ยกเลิก</button>
                 </div>
             </div>
@@ -147,7 +148,7 @@
 
                     <div class="d-flex gap-2 mt-3">
                         <button class="btn btn-light w-50 fw-bold border" data-bs-dismiss="modal">ยกเลิก</button>
-                        <button class="btn btn-success w-50 fw-bold" onclick="confirmMarkReady()">ยืนยันจบงาน</button>
+                        <button class="btn btn-success w-50 fw-bold" id="btn-confirm-ready" onclick="confirmMarkReady()">ยืนยันจบงาน</button>
                     </div>
                 </div>
             </div>
@@ -161,6 +162,8 @@
         let allRepairBikes = []; let allReadyBikes = [];
         let existingRepairNames = []; 
         let currentActiveRepairTotal = 0; 
+        
+        let isSubmitting = false; // 💡 ป้องกันการกดเบิ้ล
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -269,6 +272,7 @@
         }
 
         function confirmMarkReady() {
+            if(isSubmitting) return;
             const payload = {
                 price: document.getElementById('ready-price-input').value,
                 showCost: document.getElementById('ready-showcost-input').value,
@@ -280,15 +284,15 @@
                 inc3P: document.getElementById('r-inc3P').value
             };
             readyPriceModalInstance.hide();
-            setTimeout(() => {
-                updateStatus('พร้อมขาย', payload); 
-            }, 400); 
+            setTimeout(() => { updateStatus('พร้อมขาย', payload); }, 400); 
         }
 
         function updateStatus(newStatus, payload = {}) {
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return;
             executeWithPin(async (pin) => {
+                if(isSubmitting) return; isSubmitting = true;
+                
                 document.getElementById('loader').style.display = 'flex';
                 const apiPayload = { 
                     action: 'changeBikeStatus', 
@@ -311,15 +315,15 @@
                     
                     if(result.status === 'error') { 
                         alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
                         if(newStatus === 'พร้อมขาย') readyPriceModalInstance.show(); 
                     } else { await refreshMasterData(); }
                 } catch(e) {
                     alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
-                    document.getElementById('loader').style.display = 'none';
                     if(newStatus === 'พร้อมขาย') readyPriceModalInstance.show();
+                } finally {
+                    isSubmitting = false;
+                    document.getElementById('loader').style.display = 'none';
                 }
-                document.getElementById('loader').style.display = 'none';
             });
         }
 
@@ -354,115 +358,107 @@
             document.getElementById('temp-items').innerHTML = html; document.getElementById('temp-total').innerText = `฿${total.toLocaleString()}`;
         }
 
-        // 💡 ป้องกันการกดเบิ้ลส่งข้อมูลซ้ำ
         function saveAllRepairs() {
+            if(isSubmitting) return; 
             const bikeId = document.getElementById('selected-bike-id').value;
             if(!bikeId) return alert("กรุณาเลือกรถครับ");
             
-            const btn = document.getElementById('btn-save-repairs');
-            btn.disabled = true; // ปิดปุ่มกันกดเบิ้ล
+            const btnSave = document.getElementById('btn-save-repairs');
+            btnSave.disabled = true; // ล็อกปุ่มกันเบิ้ล
             
             executeWithPin(async (pin) => {
+                isSubmitting = true;
                 document.getElementById('loader').style.display = 'flex';
                 try {
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveRepairMulti', bikeId: bikeId, items: tempRepairs, pin: pin }) });
                     if(!res.ok) throw new Error('Net Error');
                     const result = await res.json();
                     
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        btn.disabled = false; // เปิดปุ่มคืน
-                        return; 
+                    if(result.status === 'error') { alert(result.message); }
+                    else {
+                        tempRepairs = []; renderTemp(); 
+                        await refreshMasterData(); 
+                        await loadRepairHistory(bikeId);
                     }
-                    tempRepairs = []; renderTemp(); 
-                    await refreshMasterData(); 
-                    await loadRepairHistory(bikeId);
                 } catch(e) {
                     alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                } finally {
+                    isSubmitting = false;
+                    btnSave.disabled = false;
+                    document.getElementById('loader').style.display = 'none';
                 }
-                document.getElementById('loader').style.display = 'none';
-                btn.disabled = false; // เปิดปุ่มคืน
             });
         }
 
+        // 💡 อัปเดตตารางประวัติซ่อมให้มี Checkbox เพื่อใช้ลบทีละหลายอัน
         async function loadRepairHistory(bikeId) {
-            if(!bikeId) {
-                document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
-                document.getElementById('btn-bulk-delete').classList.add('d-none');
-                return;
-            }
+            if(!bikeId) return document.getElementById('repair-history').innerHTML = '<div class="list-group-item text-center py-4 text-muted bg-light">เลือกรถด้านบนเพื่อดูประวัติ</div>';
             try {
                 const res = await fetch(`${API_URL}?action=getRepairDetails&bikeId=${bikeId}`);
                 if(!res.ok) throw new Error();
                 const list = await res.json();
                 let html = ''; let total = 0;
                 existingRepairNames = []; 
+                document.getElementById('btn-bulk-delete').classList.add('d-none');
                 
-                // 💡 ซ่อนหรือแสดงปุ่มลบหลายรายการ
-                if(list.length > 0) document.getElementById('btn-bulk-delete').classList.remove('d-none');
-                else document.getElementById('btn-bulk-delete').classList.add('d-none');
-
                 list.forEach((r, i) => { 
                     existingRepairNames.push(r.name.trim().toLowerCase()); 
-                    // 💡 เพิ่ม Checkbox สำหรับเลือกลบหลายรายการ
                     html += `<div class="list-group-item d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <input type="checkbox" class="form-check-input me-2 cb-repair-delete" value="${r.rowIdx}">
-                            <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-4">${r.shop}</small></div>
+                            <!-- 💡 เช็คบ็อกซ์สำหรับลบแบบกลุ่ม -->
+                            <input type="checkbox" class="form-check-input me-2 rep-chk border-secondary" style="transform: scale(1.2);" value="${r.rowIdx}" onchange="updateBulkDeleteBtn()">
+                            <div><b><span class="text-secondary me-1">${i + 1}.</span> ${r.name}</b><br><small class="text-muted ms-3">${r.shop}</small></div>
                         </div>
                         <div class="text-end">
                             <span class="text-danger fw-bold d-block">฿${r.price.toLocaleString()}</span>
-                            <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span> <span class="badge bg-danger px-2 py-1 ms-1" onclick="deleteRepair(${r.rowIdx})"><i class="bi bi-trash"></i></span></div>
+                            <div class="mt-1"><span class="badge bg-primary px-2 py-1" onclick="openEdit(${r.rowIdx}, '${r.name}', ${r.price}, '${r.shop}')"><i class="bi bi-pencil-square"></i></span></div>
                         </div>
                     </div>`; 
                     total += r.price; 
                 });
                 currentActiveRepairTotal = total; 
-                if(html) {
-                    html = `<div class="list-group-item bg-light border-bottom border-2 text-end pb-2">
-                        <input type="checkbox" class="form-check-input me-1" id="cb-select-all" onchange="toggleSelectAllRepairs()"> <label for="cb-select-all" class="small text-muted fw-bold">เลือกทั้งหมด</label>
-                    </div>` + html;
-                    html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
-                }
+                if(html) html += `<div class="list-group-item d-flex justify-content-between bg-light fw-bold"><span>รวมค่าซ่อม (${list.length} รายการ)</span><span class="text-danger">฿${total.toLocaleString()}</span></div>`;
                 document.getElementById('repair-history').innerHTML = html || '<div class="list-group-item text-center py-4">คันนี้ยังไม่มีประวัติซ่อม</div>';
             } catch(e) {}
         }
-
-        // 💡 ฟังก์ชันจัดการการติ๊กเลือกรายการซ่อม
-        function toggleSelectAllRepairs() {
-            const isChecked = document.getElementById('cb-select-all').checked;
-            document.querySelectorAll('.cb-repair-delete').forEach(cb => cb.checked = isChecked);
+        
+        // 💡 ซ่อน/โชว์ ปุ่มลบที่เลือก
+        function updateBulkDeleteBtn() {
+            const checked = document.querySelectorAll('.rep-chk:checked').length;
+            const btn = document.getElementById('btn-bulk-delete');
+            if (checked > 0) {
+                btn.classList.remove('d-none');
+                btn.innerText = `🗑️ ลบที่เลือก (${checked})`;
+            } else {
+                btn.classList.add('d-none');
+            }
         }
-
-        // 💡 ฟังก์ชันลบหลายรายการพร้อมกัน
+        
+        // 💡 ฟังก์ชันลบหลายรายการ
         function deleteSelectedRepairs() {
-            const selected = Array.from(document.querySelectorAll('.cb-repair-delete:checked')).map(cb => cb.value);
-            if(selected.length === 0) return alert('กรุณาเลือกรายการที่ต้องการลบ');
+            if(isSubmitting) return;
+            const checked = document.querySelectorAll('.rep-chk:checked');
+            if (checked.length === 0) return;
+            if (!confirm(`ยืนยันลบรายการซ่อมที่เลือก จำนวน ${checked.length} รายการ? (กู้คืนไม่ได้)`)) return;
             
-            if(!confirm(`ยืนยันการลบ ${selected.length} รายการที่เลือกถาวร?`)) return;
+            const rowIdxs = Array.from(checked).map(c => c.value);
             
             executeWithPin(async (pin) => {
+                isSubmitting = true;
                 document.getElementById('loader').style.display = 'flex';
                 try {
-                    const res = await fetch(API_URL, { 
-                        method: 'POST', 
-                        body: JSON.stringify({ action: 'deleteRepairMulti', rowIndices: selected, pin: pin }) 
-                    });
-                    if(!res.ok) throw new Error('Net Error');
+                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepairMulti', rowIdxs: rowIdxs, pin: pin }) });
+                    if (!res.ok) throw new Error('Net Error');
                     const result = await res.json();
+                    if(result.status === 'error') { alert(result.message); }
                     
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        return; 
-                    }
                     await refreshMasterData();
                     await loadRepairHistory(document.getElementById('selected-bike-id').value);
-                } catch(e) {
-                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                } catch(e) { alert('เกิดปัญหาในการเชื่อมต่อ'); }
+                finally {
+                    isSubmitting = false;
+                    document.getElementById('loader').style.display = 'none';
                 }
-                document.getElementById('loader').style.display = 'none';
             });
         }
 
@@ -472,54 +468,33 @@
         }
 
         function updateRepairItem() {
+            if(isSubmitting) return;
             editModal.hide();
             setTimeout(() => {
                 executeWithPin(async (pin) => {
+                    isSubmitting = true;
                     document.getElementById('loader').style.display = 'flex';
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateRepair', rowIdx: document.getElementById('e-rowIdx').value, item: document.getElementById('e-item').value, price: document.getElementById('e-price').value, shop: document.getElementById('e-shop').value, pin: pin }) });
                         if(!res.ok) throw new Error('Net Error');
                         const result = await res.json();
                         
-                        if(result.status === 'error') { 
-                            alert(result.message); 
-                            document.getElementById('loader').style.display = 'none'; 
-                            editModal.show(); 
-                            return; 
+                        if(result.status === 'error') { alert(result.message); editModal.show(); }
+                        else {
+                            await refreshMasterData();
+                            await loadRepairHistory(document.getElementById('selected-bike-id').value);
                         }
-                        await refreshMasterData();
-                        await loadRepairHistory(document.getElementById('selected-bike-id').value);
                     } catch(e) {
                         alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
                         editModal.show();
+                    } finally {
+                        isSubmitting = false;
+                        document.getElementById('loader').style.display = 'none';
                     }
-                    document.getElementById('loader').style.display = 'none';
                 });
             }, 400);
         }
 
-        function deleteRepair(rId) {
-            if(!confirm('ลบรายการซ่อมนี้?')) return;
-            executeWithPin(async (pin) => {
-                document.getElementById('loader').style.display = 'flex';
-                try {
-                    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rId, pin: pin }) });
-                    if(!res.ok) throw new Error('Net Error');
-                    const result = await res.json();
-                    
-                    if(result.status === 'error') { 
-                        alert(result.message); 
-                        document.getElementById('loader').style.display = 'none'; 
-                        return; 
-                    }
-                    await refreshMasterData();
-                    await loadRepairHistory(document.getElementById('selected-bike-id').value);
-                } catch(e) {
-                    alert('เกิดปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
-                }
-                document.getElementById('loader').style.display = 'none';
-            });
-        }
         window.onload = init;
     </script>
 </body>
