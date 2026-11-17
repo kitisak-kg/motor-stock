@@ -77,7 +77,6 @@
             <div class="modal-header bg-dark text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">ข้อมูลสต็อกรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-3 small">
                 <input type="hidden" id="m-rowIdx">
-                <!-- 💡 เก็บซ่อน ID เพื่อให้ระบบซ่อมดึงไปใช้ -->
                 <input type="hidden" id="m-bike-id" value=""> 
 
                 <div class="row g-2 mb-2">
@@ -113,8 +112,6 @@
                         <div class="col-6"><label class="x-small">8. ทุนซื้อจริง</label><input type="text" id="m-realCost" class="form-control form-control-sm currency-mask" oninput="calcTotal()"></div>
                         <div class="col-6"><label class="x-small">9. ค่าซ่อมสะสม (จากอู่)</label><input type="text" id="m-repairReal" class="form-control form-control-sm bg-light currency-mask" readonly></div>
                     </div>
-
-                    <!-- 💡 เพิ่มกล่องบันทึกซ่อมด่วนตรงนี้ -->
                     <div class="mt-2 border-top pt-2 border-primary border-opacity-50" id="m-quick-repair-box" style="display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="x-small fw-bold text-danger"><i class="bi bi-tools"></i> ประวัติรายการซ่อม (เพิ่ม/ลบ ได้)</label>
@@ -179,8 +176,6 @@
             <div class="modal-header bg-success text-white p-2 px-3 border-0"><h6 class="modal-title fw-bold">📝 จัดการขายรถ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-3">
                 <input type="hidden" id="s-rowIdx"><input type="hidden" id="s-totalInternal" value="0">
-                <input type="hidden" id="s-bike-id" value=""> 
-
                 <h6 id="s-title" class="fw-bold mb-3 text-center text-primary border-bottom pb-2"></h6>
                 
                 <div id="s-cost-breakdown-container" class="bg-primary bg-opacity-10 p-2 rounded mb-3 border border-primary"></div>
@@ -197,7 +192,6 @@
                     <div class="box-deduct-title">ค่าใช้จ่ายตอนขาย (หักออกจากกำไร)</div>
                     <label class="x-small fw-bold text-dark">ค่าโอนจริง</label><input type="text" id="s-transferFee" class="form-control form-control-sm mb-2 currency-mask" oninput="calcSaleProfit()">
                     <div class="fw-bold text-danger x-small mb-1">รายการหักอื่นๆ (เช่น เบี้ยปรับล่าช้า)</div>
-                    <!-- 💡 ช่อง 1-3 เดิมที่เคยมีปัญหาคิดเลข ผมแก้คลาสแล้ว -->
                     <div class="row g-1">
                         <div class="col-8"><input type="text" id="s-ex1N" class="form-control form-control-sm" placeholder="รายการหัก 1"></div><div class="col-4"><input type="text" id="s-ex1P" class="form-control form-control-sm currency-mask s-ex-price" placeholder="ราคา" oninput="calcSaleProfit()"></div>
                         <div class="col-8 mt-1"><input type="text" id="s-ex2N" class="form-control form-control-sm" placeholder="รายการหัก 2"></div><div class="col-4 mt-1"><input type="text" id="s-ex2P" class="form-control form-control-sm currency-mask s-ex-price" placeholder="ราคา" oninput="calcSaleProfit()"></div>
@@ -250,10 +244,10 @@
             <div class="modal-footer border-top-0 pt-0">
                 <div class="row w-100 g-2 m-0">
                     <div class="col-6 p-0 pe-1">
-                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" id="btn-save-fin" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
+                        <button class="btn btn-info text-white w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('รอเคลียร์ไฟแนนซ์')">🏦 บันทึกเข้าไฟแนนซ์</button>
                     </div>
                     <div class="col-6 p-0 ps-1">
-                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" id="btn-save-sale" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
+                        <button class="btn btn-success w-100 fw-bold shadow-sm py-2" style="font-size: 0.8rem;" onclick="processSale('ขายแล้ว')">✅ บันทึกเข้าบัญชี (จบ)</button>
                     </div>
                 </div>
             </div>
@@ -268,7 +262,7 @@
         let bikeModal, saleModal, duplicateModal; 
         
         let currentFilter = localStorage.getItem('inventoryTab') || 'all';
-        let isSubmitting = false; // 💡 ป้องกันการกดเบิ้ล
+        let isSubmitting = false;
 
         let pendingPinAction = null; let pinModalInstance = null;
         function executeWithPin(callback) {
@@ -327,7 +321,7 @@
                 const data = await res.json();
                 allBikes = data.bikes || [];
                 allFinChecks = data.financeChecks || []; 
-                window.allRepairs = data.repairs || []; // 💡 โหลดประวัติซ่อมทั้งหมดมาเก็บไว้ใช้
+                window.allRepairs = data.repairs || []; 
                 filterInventory(currentFilter);
             } catch(e) {}
             document.getElementById('loader').style.display = 'none';
@@ -526,22 +520,31 @@
 
         function calcSaleProfit() {
             const getVal = (id) => { const el = document.getElementById(id); return el ? unformatCurrency(el.value) : 0; };
-            const soldPrice = getVal('s-price'); const comm = getVal('s-saleCommission'); const transferFee = getVal('s-transferFee');
+            const soldPrice = getVal('s-price'); 
+            const comm = getVal('s-saleCommission'); 
+            const transferFee = getVal('s-transferFee');
             
             let exTotal = 0;
-            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += Number(String(el.value).replace(/,/g, '')) || 0);
+            document.querySelectorAll('.s-ex-price').forEach(el => exTotal += unformatCurrency(el.value));
 
             const totalInternal = getVal('s-totalInternal'); 
             
-            const down1 = getVal('s-downPayment1'); const down2 = getVal('s-downPayment2');
-            const finTidlor = getVal('s-finTidlor'); const finOther = getVal('s-finOther');
+            const down1 = getVal('s-downPayment1'); 
+            const down2 = getVal('s-downPayment2');
+            const finTidlor = getVal('s-finTidlor'); 
+            const finOther = getVal('s-finOther');
+            
             document.getElementById('s-sum-down').innerText = `รวมเงินดาวน์: ฿${(down1 + down2).toLocaleString()}`;
             document.getElementById('s-sum-fin').innerText = `รวมยอดจัด: ฿${(finTidlor + finOther).toLocaleString()}`;
 
-            const revenue = soldPrice + comm; const deduct = transferFee + exTotal; const profit = revenue - totalInternal - deduct;
+            const revenue = soldPrice + comm; 
+            const deduct = transferFee + exTotal; 
+            const profit = revenue - totalInternal - deduct;
             
-            document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
-            document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
+            document.getElementById('s-calc-revenue').innerText = `฿${revenue.toLocaleString()}`; 
+            document.getElementById('s-calc-cost').innerText = `฿${totalInternal.toLocaleString()}`;
+            document.getElementById('s-calc-deduct').innerText = `฿${deduct.toLocaleString()}`; 
+            document.getElementById('s-calc-profit').innerText = `฿${profit.toLocaleString()}`;
         }
 
         function setFieldVal(id, val, isCurrency=false) {
@@ -551,7 +554,6 @@
             else el.value = val !== undefined ? val : '';
         }
         
-        // 💡 ฟังก์ชันโหลดประวัติการซ่อมแบบด่วนใน Modal เพิ่ม/แก้ไขรถ
         function loadMiniRepairs(bikeId, prefix) {
             if(!bikeId) {
                 document.getElementById(`${prefix}-quick-repair-box`).style.display = 'none';
@@ -571,14 +573,12 @@
             });
             listEl.innerHTML = html || '<div class="text-muted text-center py-2">ไม่มีประวัติการซ่อม</div>';
             
-            // อัปเดตช่องซ่อมสะสมหลักให้ตรงกัน
             if (prefix === 'm') {
                 setFieldVal('m-repairReal', sum, true);
                 calcTotal();
             }
         }
         
-        // 💡 ฟังก์ชันเพิ่มรายการซ่อมด่วน (พิมพ์จากหน้าสต็อกได้เลย)
         function quickAddRepair(prefix) {
             const bikeId = document.getElementById(`${prefix}-bike-id`).value;
             const name = document.getElementById(`${prefix}-quick-rep-name`).value.trim();
@@ -597,14 +597,13 @@
                     document.getElementById(`${prefix}-quick-rep-name`).value = '';
                     document.getElementById(`${prefix}-quick-rep-price`).value = '';
                     
-                    await loadInventory(); // โหลดใหม่เพื่อให้ allRepairs ล่าสุด
-                    loadMiniRepairs(bikeId, prefix); // วาดกล่องใหม่
+                    await loadInventory(); 
+                    loadMiniRepairs(bikeId, prefix); 
                 } catch(e) { alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'); }
                 finally { isSubmitting = false; document.getElementById('loader').style.display = 'none'; }
             });
         }
         
-        // 💡 ฟังก์ชันลบรายการซ่อมด่วน
         function deleteMiniRepair(rowIdx, bikeId, prefix) {
             if(!confirm('ลบรายการซ่อมนี้?')) return;
             if(isSubmitting) return;
@@ -621,7 +620,7 @@
 
         function openBikeModal() { 
             document.getElementById('m-rowIdx').value = ""; 
-            document.getElementById('m-bike-id').value = ""; // เคลียร์ ID
+            document.getElementById('m-bike-id').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
             
             const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-ownerName','m-ownerPhone','m-ownerId','m-ownerAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote', 'm-finTidlor', 'm-finOther', 'm-finCheckDate'];
@@ -630,7 +629,7 @@
             document.getElementById('m-status').value='รอส่งซ่อม'; 
             document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
             
-            loadMiniRepairs(null, 'm'); // ซ่อนกล่องซ่อมด่วน ถ้ารถใหม่ยังไม่มี ID
+            loadMiniRepairs(null, 'm'); 
             calcTotal(); 
             bikeModal.show(); 
         }
@@ -638,7 +637,7 @@
         function openEdit(rowIdx) {
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
-            document.getElementById('m-bike-id').value = b.id; // เก็บ ID ไว้ให้ระบบซ่อม
+            document.getElementById('m-bike-id').value = b.id; 
             
             const txtFields = ['buyDate','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc2N','inc3N','ownerName','ownerPhone','ownerId','ownerAddress', 'finCheckDate'];
             txtFields.forEach(id => setFieldVal('m-'+id, b[id]));
@@ -648,7 +647,7 @@
             
             setFieldVal('m-repairReal', b.repairSum, true);
 
-            loadMiniRepairs(b.id, 'm'); // 💡 โชว์ประวัติซ่อมและให้พิมพ์เพิ่มได้
+            loadMiniRepairs(b.id, 'm'); 
             
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
@@ -686,7 +685,7 @@
         function forceSaveBike() { duplicateModal.hide(); setTimeout(() => proceedSaveBike(), 400); }
 
         function proceedSaveBike() {
-            if(isSubmitting) return; // 💡 ป้องกันกดปุ่มเบิ้ล
+            if(isSubmitting) return; 
             const btnSave = document.getElementById('btn-save-bike');
             btnSave.disabled = true;
             
@@ -749,9 +748,13 @@
             setFieldVal('s-cusName', b.cusName); setFieldVal('s-cusId', b.cusId); setFieldVal('s-cusAddress', b.cusAddress);
             setFieldVal('s-transferFee', b.transferFee, true); 
             
-            setFieldVal('s-ex1N', b.ex1N); setFieldVal('s-ex1P', b.ex1P, true);
-            setFieldVal('s-ex2N', b.ex2N); setFieldVal('s-ex2P', b.ex2P, true);
-            setFieldVal('s-ex3N', b.ex3N); setFieldVal('s-ex3P', b.ex3P, true);
+            let activeEx = b.exList || [];
+            if(activeEx.length < 3) {
+                activeEx = [ {name: b.ex1N||'', price: b.ex1P||0}, {name: b.ex2N||'', price: b.ex2P||0}, {name: b.ex3N||'', price: b.ex3P||0} ];
+            }
+            
+            sExCount = activeEx.length < 3 ? 3 : activeEx.length;
+            renderExRows('s', sExCount, activeEx);
             
             setFieldVal('s-finCIMB', b.finCIMB, true); 
             setFieldVal('s-downPayment1', b.downPayment1, true); 
