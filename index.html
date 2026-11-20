@@ -75,42 +75,34 @@
                     </div>
                 </div>
 
-                <!-- กล่องยอดรวมเงินกู้ -->
-                <div class="col-12">
-                    <div class="card-dash border-start border-4 border-danger p-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-danger fw-bold" style="font-size:0.8rem;">💳 ยอดรวมเงินกู้ (แยกบัญชี)</small>
-                                <div class="stat-val text-danger m-0" id="dash-loan-total">฿0</div>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-danger rounded-pill fs-6 px-3 py-2" id="dash-loan-count">0 คัน</span>
-                            </div>
+                <!-- กล่องยอดรวมเงินกู้ (ซ้าย) -->
+                <div class="col-6">
+                    <div class="card-dash border-start border-4 border-danger">
+                        <div class="d-flex justify-content-between align-items-start gap-1">
+                            <small class="text-danger fw-bold" style="font-size:0.72rem;">💳 ยอดรวมเงินกู้ (แยกบัญชี)</small>
+                            <span class="badge bg-danger rounded-pill" style="font-size:0.65rem; white-space:nowrap;" id="dash-loan-count">0 คัน</span>
                         </div>
-                        <div class="mt-2 pt-2 border-top d-flex justify-content-between" style="font-size:0.75rem;">
-                            <span class="text-muted">ทุนรถกู้: <b class="text-dark" id="dash-loan-base">฿0</b></span>
-                            <span class="text-muted">ค่าซ่อมกู้: <b class="text-danger" id="dash-loan-repair">฿0</b></span>
+                        <div class="stat-val text-danger" id="dash-loan-total">฿0</div>
+                        <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
+                            <span class="text-muted d-block">ทุนรถกู้: <b class="text-dark" id="dash-loan-base">฿0</b></span>
+                            <span class="text-muted d-block">ค่าซ่อมกู้: <b class="text-danger" id="dash-loan-repair">฿0</b></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- กล่องยอดรับเบ็ดเสร็จรอเคลียร์ไฟแนนซ์ (ทุน+กำไร) -->
-                <div class="col-12">
-                    <div class="card-dash border-start border-4 border-primary p-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-primary fw-bold" style="font-size:0.8rem;">🏦 ทุน+กำไร รอเคลียร์ยอดไฟแนนซ์ (ยอดจัด+ดาวน์)</small>
-                                <div class="stat-val text-primary m-0" id="dash-pfin-total">฿0</div>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-primary rounded-pill fs-6 px-3 py-2" id="dash-pfin-count">0 คัน</span>
-                            </div>
+                <!-- กล่องยอดรับเบ็ดเสร็จรอเคลียร์ไฟแนนซ์ (ขวา) -->
+                <div class="col-6">
+                    <div class="card-dash border-start border-4 border-primary">
+                        <div class="d-flex justify-content-between align-items-start gap-1">
+                            <small class="text-primary fw-bold" style="font-size:0.72rem;">🏦 ทุน+กำไร รอเคลียร์ไฟแนนซ์</small>
+                            <span class="badge bg-primary rounded-pill" style="font-size:0.65rem; white-space:nowrap;" id="dash-pfin-count">0 คัน</span>
                         </div>
-                        <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-1" style="font-size:0.75rem;">
-                            <span class="text-muted">ยอดจัดรวม: <b class="text-dark" id="dash-pfin-fin">฿0</b></span>
-                            <span class="text-muted">เงินดาวน์รวม: <b class="text-info" id="dash-pfin-down">฿0</b></span>
+                        <div class="stat-val text-primary" id="dash-pfin-total">฿0</div>
+                        <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
+                            <span class="text-muted d-block">ยอดจัดรวม: <b class="text-dark" id="dash-pfin-fin">฿0</b></span>
+                            <span class="text-muted d-block">เงินดาวน์รวม: <b class="text-info" id="dash-pfin-down">฿0</b></span>
                         </div>
-                        <div class="mt-2 pt-2 border-top text-end" style="font-size:0.75rem;" id="dash-pfin-compare"></div>
+                        <div class="mt-1 pt-1 border-top text-start" style="font-size:0.65rem;" id="dash-pfin-compare"></div>
                     </div>
                 </div>
             </div>
@@ -368,7 +360,6 @@
                     }
                 });
 
-                // แสดงผลกล่องยอดรับเบ็ดเสร็จรอเคลียร์ไฟแนนซ์ + เทียบหนี้กู้
                 const pfinTotal = pfinFinSum + pfinDownSum;
                 document.getElementById('dash-pfin-total').innerText = '฿' + pfinTotal.toLocaleString();
                 document.getElementById('dash-pfin-count').innerText = pendingFin + ' คัน';
@@ -380,9 +371,9 @@
                 if (loanTotal === 0) {
                     compareEl.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> ไม่มียอดหนี้เงินกู้ค้าง</span>`;
                 } else if (diffLoan >= 0) {
-                    compareEl.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> พอจ่ายหนี้เงินกู้ (เหลือ ฿${diffLoan.toLocaleString()})</span>`;
+                    compareEl.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> พอจ่ายหนี้กู้ (เหลือ ฿${diffLoan.toLocaleString()})</span>`;
                 } else {
-                    compareEl.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> ยังขาดอีก ฿${Math.abs(diffLoan).toLocaleString()} จึงจะพอปิดหนี้กู้</span>`;
+                    compareEl.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> ขาดอีก ฿${Math.abs(diffLoan).toLocaleString()}</span>`;
                 }
                 
                 taxAlerts.sort((a, b) => a.days - b.days);
