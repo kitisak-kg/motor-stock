@@ -120,15 +120,18 @@
                         <div class="col-6"><label class="x-small">8. ทุนซื้อจริง</label><input type="text" id="m-realCost" class="form-control form-control-sm currency-mask" oninput="calcTotal()"></div>
                         <div class="col-6"><label class="x-small">9. ค่าซ่อมสะสม (จากอู่)</label><input type="text" id="m-repairReal" class="form-control form-control-sm bg-light currency-mask" readonly></div>
                     </div>
-                    <div class="mt-2 border-top pt-2 border-primary border-opacity-50" id="m-quick-repair-box" style="display:none;">
+
+                    <!-- กล่องซ่อมด่วน: ใช้ได้ทั้งเพิ่มรถใหม่และแก้ไขรถ + กด Enter ได้ + มีปุ่มบันทึกข้างหลัง + -->
+                    <div class="mt-2 border-top pt-2 border-primary border-opacity-50" id="m-quick-repair-box">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="x-small fw-bold text-danger"><i class="bi bi-tools"></i> ประวัติรายการซ่อม (เพิ่ม/ลบ ได้)</label>
+                            <label class="x-small fw-bold text-danger"><i class="bi bi-tools"></i> ประวัติรายการซ่อม (พิมพ์แล้วกด Enter หรือ + เพื่อเพิ่มคิว)</label>
                         </div>
-                        <div id="m-repair-list" class="bg-white border rounded p-1 mb-2" style="max-height: 90px; overflow-y: auto; font-size: 0.7rem;">กำลังโหลด...</div>
+                        <div id="m-repair-list" class="bg-white border rounded p-1 mb-2" style="max-height: 110px; overflow-y: auto; font-size: 0.72rem;">ไม่มีประวัติการซ่อม</div>
                         <div class="row g-1">
-                            <div class="col-7"><input type="text" id="m-quick-rep-name" class="form-control form-control-sm" placeholder="อะไหล่/ช่าง (ซ่อมด่วน)"></div>
-                            <div class="col-3"><input type="text" id="m-quick-rep-price" class="form-control form-control-sm currency-mask" placeholder="ราคา"></div>
-                            <div class="col-2"><button type="button" class="btn btn-sm btn-danger w-100 fw-bold" onclick="quickAddRepair('m')">+</button></div>
+                            <div class="col-5"><input type="text" id="m-quick-rep-name" class="form-control form-control-sm" placeholder="อะไหล่/ช่าง" onkeypress="handleQuickRepEnter(event)"></div>
+                            <div class="col-3"><input type="text" id="m-quick-rep-price" class="form-control form-control-sm currency-mask" placeholder="ราคา (0 ได้)" onkeypress="handleQuickRepEnter(event)"></div>
+                            <div class="col-2"><button type="button" class="btn btn-sm btn-danger w-100 fw-bold" onclick="addMiniTempRepair()" title="เพิ่มลงคิว">+</button></div>
+                            <div class="col-2"><button type="button" id="btn-save-mini-rep" class="btn btn-sm btn-success w-100 fw-bold" onclick="saveMiniTempRepairs()" title="บันทึกรายการซ่อมทั้งหมด">💾</button></div>
                         </div>
                     </div>
 
@@ -266,6 +269,7 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoFOD4-wunr3zVSXDwbF4dFArNwvEw1ZN1AqqzZyN8hvfzrqzcWDk_kaDexJ9x2-M/exec";
         let allBikes = []; let allFinChecks = []; window.allRepairs = [];
+        let miniTempRepairs = []; // คิวรายการซ่อมด่วนก่อนกดบันทึก
         let bikeModal, saleModal, duplicateModal; 
         
         let currentFilter = localStorage.getItem('inventoryTab') || 'all';
@@ -383,7 +387,6 @@
             const secretCost = (b.realCost||0) + (b.inc1P||0) + (b.inc2P||0) + (b.inc3P||0);
             const cardBorder = isLoan ? 'border-danger' : (b.status==='พร้อมขาย'?'border-success':'border-warning');
 
-            // ปุ่มขวา: ถ้ารถเงินกู้ ให้กดคืนเงินกู้ก่อน (ดีดเข้าสต็อกปกติ)
             const actionBtnHtml = isLoan 
                 ? `<button class="btn btn-danger btn-sm flex-grow-1 fw-bold" onclick="convertLoanToNormal(${b.rowIdx}, '${(b.plate||b.model||'').replace(/'/g,'')}', ${b.totalInternal||0})">🔄 คืนเงินกู้ (เข้าสต็อกปกติ)</button>`
                 : `<button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="openSaleModal(${b.rowIdx})">💰 จัดการขาย</button>`;
@@ -499,7 +502,7 @@
                 if(type === 'loan') {
                     matchType = (b.fundType === 'เงินกู้');
                 } else {
-                    if (b.fundType === 'เงินกู้') return false; // แยกไม่ให้ปนกับสต็อกปกติ
+                    if (b.fundType === 'เงินกู้') return false;
                     if(type === 'all') matchType = true;
                     else if(type === 'ไม่พร้อมขาย') matchType = (b.status === 'รอส่งซ่อม' || b.status === 'กำลังซ่อม');
                     else matchType = (b.status === type);
@@ -589,56 +592,95 @@
             if(isCurrency) el.value = val ? Number(val).toLocaleString('en-US') : '';
             else el.value = val !== undefined ? val : '';
         }
-        
-        function loadMiniRepairs(bikeId, prefix) {
-            if(!bikeId) {
-                document.getElementById(`${prefix}-quick-repair-box`).style.display = 'none';
+
+        // รองรับการกด Enter ในช่องซ่อมด่วน
+        function handleQuickRepEnter(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addMiniTempRepair();
+            }
+        }
+
+        // เพิ่มรายการซ่อมลงคิวชั่วคราว (ยังไม่ยิงเซิร์ฟเวอร์)
+        function addMiniTempRepair() {
+            const nameEl = document.getElementById('m-quick-rep-name');
+            const priceEl = document.getElementById('m-quick-rep-price');
+            const name = nameEl.value.trim();
+            const priceStr = priceEl.value.trim();
+
+            if (!name || priceStr === '') {
+                alert('กรุณาใส่ชื่ออะไหล่และราคา (ใส่ 0 ได้)');
+                if (!name) nameEl.focus(); else priceEl.focus();
                 return;
             }
-            document.getElementById(`${prefix}-quick-repair-box`).style.display = 'block';
-            const listEl = document.getElementById(`${prefix}-repair-list`);
-            const bikeRepairs = window.allRepairs.filter(r => String(r.bikeId) === String(bikeId));
+
+            const price = unformatCurrency(priceStr);
+            miniTempRepairs.push({ name: name, price: price, shop: 'เพิ่มด่วน (สต็อก)' });
+            nameEl.value = '';
+            priceEl.value = '';
+            loadMiniRepairs(document.getElementById('m-bike-id').value);
+            nameEl.focus();
+        }
+
+        function removeMiniTempRepair(idx) {
+            miniTempRepairs.splice(idx, 1);
+            loadMiniRepairs(document.getElementById('m-bike-id').value);
+        }
+
+        // วาดรายการซ่อมที่บันทึกแล้ว + รายการในคิวชั่วคราว
+        function loadMiniRepairs(bikeId) {
+            const listEl = document.getElementById('m-repair-list');
+            const bikeRepairs = bikeId ? window.allRepairs.filter(r => String(r.bikeId) === String(bikeId)) : [];
             
             let html = ''; let sum = 0;
             bikeRepairs.forEach(r => {
                 html += `<div class="d-flex justify-content-between border-bottom pb-1 mb-1">
-                    <div><span class="text-danger me-2 cursor-pointer" style="cursor:pointer;" onclick="deleteMiniRepair(${r.rowIdx}, '${bikeId}', '${prefix}')"><i class="bi bi-x-circle-fill"></i></span><span class="fw-bold">${r.item}</span></div>
+                    <div><span class="text-danger me-2" style="cursor:pointer;" onclick="deleteMiniRepair(${r.rowIdx}, '${bikeId}')"><i class="bi bi-x-circle-fill"></i></span><span class="fw-bold">${r.item}</span></div>
                     <div class="text-danger fw-bold">฿${r.price.toLocaleString()}</div>
                 </div>`;
                 sum += r.price;
             });
+
+            miniTempRepairs.forEach((r, idx) => {
+                html += `<div class="d-flex justify-content-between border-bottom pb-1 mb-1 bg-warning bg-opacity-10 px-1 rounded">
+                    <div><span class="text-secondary me-2" style="cursor:pointer;" onclick="removeMiniTempRepair(${idx})"><i class="bi bi-x-circle"></i></span><span class="badge bg-warning text-dark me-1">รอบันทึก</span><span class="fw-bold">${r.name}</span></div>
+                    <div class="text-danger fw-bold">฿${r.price.toLocaleString()}</div>
+                </div>`;
+                sum += r.price;
+            });
+
             listEl.innerHTML = html || '<div class="text-muted text-center py-2">ไม่มีประวัติการซ่อม</div>';
-            
-            if (prefix === 'm') {
-                setFieldVal('m-repairReal', sum, true);
-                calcTotal();
-            }
+            setFieldVal('m-repairReal', sum, true);
+            calcTotal();
         }
         
-        function quickAddRepair(prefix) {
-            const bikeId = document.getElementById(`${prefix}-bike-id`).value;
-            const name = document.getElementById(`${prefix}-quick-rep-name`).value.trim();
-            const price = unformatCurrency(document.getElementById(`${prefix}-quick-rep-price`).value);
-            
-            if(!name || price === '') return alert('กรุณาใส่ชื่ออะไหล่และราคา');
-            if(isSubmitting) return;
+        // ปุ่มบันทึกซ่อมด่วนข้างหลังปุ่ม +
+        function saveMiniTempRepairs() {
+            if (miniTempRepairs.length === 0) return alert('ยังไม่มีรายการซ่อมใหม่ในคิวครับ (พิมพ์แล้วกด + หรือ Enter ก่อน)');
+            const bikeId = document.getElementById('m-bike-id').value;
+            if (!bikeId) {
+                return alert('รถคันนี้ยังไม่ได้บันทึกลงระบบครับ\nกดปุ่ม "💾 บันทึกสต็อก" ด้านล่างสุดเพื่อบันทึกรถและค่าซ่อมทั้งหมดพร้อมกันได้เลยครับ');
+            }
+            if (isSubmitting) return;
 
             executeWithPin(async (pin) => {
                 isSubmitting = true; document.getElementById('loader').style.display = 'flex';
                 try {
-                    const payload = { action: 'saveRepairMulti', bikeId: bikeId, items: [{name: name, price: price, shop: 'เพิ่มด่วน (สต็อก)'}], pin: pin };
+                    const payload = { action: 'saveRepairMulti', bikeId: bikeId, items: miniTempRepairs, pin: pin };
                     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    await res.json();
-                    document.getElementById(`${prefix}-quick-rep-name`).value = '';
-                    document.getElementById(`${prefix}-quick-rep-price`).value = '';
-                    await loadInventory(); 
-                    loadMiniRepairs(bikeId, prefix); 
+                    const result = await res.json();
+                    if (result.status === 'error') { alert(result.message); }
+                    else {
+                        miniTempRepairs = [];
+                        await loadInventory(); 
+                        loadMiniRepairs(bikeId); 
+                    }
                 } catch(e) { alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'); }
                 finally { isSubmitting = false; document.getElementById('loader').style.display = 'none'; }
             });
         }
         
-        function deleteMiniRepair(rowIdx, bikeId, prefix) {
+        function deleteMiniRepair(rowIdx, bikeId) {
             if(!confirm('ลบรายการซ่อมนี้?')) return;
             if(isSubmitting) return;
             executeWithPin(async (pin) => {
@@ -646,7 +688,7 @@
                 try {
                     await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteRepair', rowIdx: rowIdx, pin: pin }) });
                     await loadInventory(); 
-                    loadMiniRepairs(bikeId, prefix);
+                    loadMiniRepairs(bikeId);
                 } catch(e) { alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'); }
                 finally { isSubmitting = false; document.getElementById('loader').style.display = 'none'; }
             });
@@ -656,15 +698,16 @@
             document.getElementById('m-rowIdx').value = ""; 
             document.getElementById('m-bike-id').value = ""; 
             document.getElementById('btn-delete').style.display = 'none'; 
+            miniTempRepairs = [];
             
-            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-ownerName','m-ownerPhone','m-ownerId','m-ownerAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote', 'm-finTidlor', 'm-finOther', 'm-finCheckDate'];
+            const clearFields = ['m-buyDate','m-plate','m-cha','m-eng','m-source','m-brand','m-model','m-year','m-appearance','m-color','m-changedColor','m-realCost','m-repairReal','m-inc1N','m-inc1P','m-inc2N','m-inc2P','m-inc3N','m-inc3P','m-showCost','m-targetPrice','m-ownerName','m-ownerPhone','m-ownerId','m-ownerAddress','m-taxExp','m-idExp','m-repairShop','m-stockNote', 'm-finTidlor', 'm-finOther', 'm-finCheckDate', 'm-quick-rep-name', 'm-quick-rep-price'];
             clearFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             
             document.getElementById('m-status').value='รอส่งซ่อม'; 
             document.getElementById('m-bookStatus').value='อยู่ที่ร้าน'; 
             document.getElementById('m-fundType').value = (currentFilter === 'loan') ? 'เงินกู้' : '';
             
-            loadMiniRepairs(null, 'm'); 
+            loadMiniRepairs(null); 
             calcTotal(); 
             bikeModal.show(); 
         }
@@ -673,6 +716,9 @@
             const b = allBikes.find(x => x.rowIdx === rowIdx); if(!b) return;
             document.getElementById('m-rowIdx').value = b.rowIdx;
             document.getElementById('m-bike-id').value = b.id; 
+            miniTempRepairs = [];
+            document.getElementById('m-quick-rep-name').value = '';
+            document.getElementById('m-quick-rep-price').value = '';
             
             const txtFields = ['buyDate','fundType','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc2N','inc3N','ownerName','ownerPhone','ownerId','ownerAddress', 'finCheckDate'];
             txtFields.forEach(id => setFieldVal('m-'+id, b[id]));
@@ -681,7 +727,7 @@
             curFields.forEach(id => setFieldVal('m-'+id, b[id], true));
             
             setFieldVal('m-repairReal', b.repairSum, true);
-            loadMiniRepairs(b.id, 'm'); 
+            loadMiniRepairs(b.id); 
             
             calcTotal(); document.getElementById('btn-delete').style.display = 'block'; bikeModal.show();
         }
@@ -725,7 +771,11 @@
             
             executeWithPin(async (pin) => {
                 isSubmitting = true;
-                const payload = { action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', pin: pin };
+                const payload = { 
+                    action: document.getElementById('m-rowIdx').value ? 'updateBike' : 'saveBike', 
+                    pin: pin,
+                    newRepairs: miniTempRepairs // ส่งคิวรายการซ่อมไปบันทึกพร้อมกันเลย
+                };
                 
                 const fields = ['rowIdx','buyDate','fundType','plate','brand','model','appearance','color','changedColor','year','cha','eng','source','realCost','showCost','targetPrice','taxExp','idExp','status','bookStatus','repairShop','stockNote','inc1N','inc1P','inc2N','inc2P','inc3N','inc3P','ownerName','ownerPhone','ownerId','ownerAddress', 'finTidlor', 'finOther', 'finCheckDate'];
                 fields.forEach(id => { const el = document.getElementById('m-'+id); if(el) payload[id] = el.value; });
@@ -740,7 +790,10 @@
                         alert(result.message); 
                         document.getElementById('loader').style.display = 'none'; 
                         bikeModal.show(); 
-                    } else { await loadInventory(); }
+                    } else { 
+                        miniTempRepairs = [];
+                        await loadInventory(); 
+                    }
                 } catch(e) {
                     alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
                     document.getElementById('loader').style.display = 'none';
