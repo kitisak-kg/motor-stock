@@ -83,9 +83,16 @@
                             <span class="badge bg-danger rounded-pill" style="font-size:0.65rem; white-space:nowrap;" id="dash-loan-count">0 คัน</span>
                         </div>
                         <div class="stat-val text-danger" id="dash-loan-total">฿0</div>
-                        <div class="mt-2 pt-2 border-top text-start" style="font-size:0.65rem;">
-                            <span class="text-muted d-block">ทุนรถกู้: <b class="text-dark" id="dash-loan-base">฿0</b></span>
-                            <span class="text-muted d-block">ค่าซ่อมกู้: <b class="text-danger" id="dash-loan-repair">฿0</b></span>
+                        <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-start gap-1" style="font-size:0.65rem;">
+                            <div class="text-start">
+                                <span class="text-muted d-block">ทุนรถกู้: <b class="text-dark" id="dash-loan-base">฿0</b></span>
+                                <span class="text-muted d-block">ค่าซ่อมกู้: <b class="text-danger" id="dash-loan-repair">฿0</b></span>
+                            </div>
+                            <div class="text-end" style="line-height: 1.4;">
+                                <span class="text-success d-block">พร้อมขาย: <b id="dash-loan-ready">0</b> คัน</span>
+                                <span class="text-danger d-block">รอซ่อม: <b id="dash-loan-wait">0</b> คัน</span>
+                                <span class="text-warning text-dark d-block">กำลังซ่อม: <b id="dash-loan-repair-cnt">0</b> คัน</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -281,6 +288,7 @@
                 document.getElementById('dash-y-profit').innerText = '฿' + (data.dashboard.stats.yProfit || 0).toLocaleString();
 
                 let wait=0, repair=0, ready=0, pendingFin=0;
+                let loanWait=0, loanRepair=0, loanReady=0;
                 let pfinFinSum = 0, pfinDownSum = 0;
                 let taxAlerts = []; let idAlerts = []; let docAlerts = [];
                 let agingAlerts = []; let stuckRepairAlerts = [];
@@ -294,6 +302,10 @@
                             if(b.status === 'รอส่งซ่อม') wait++; 
                             if(b.status === 'กำลังซ่อม') repair++; 
                             if(b.status === 'พร้อมขาย') ready++;
+                        } else {
+                            if(b.status === 'รอส่งซ่อม') loanWait++; 
+                            if(b.status === 'กำลังซ่อม') loanRepair++; 
+                            if(b.status === 'พร้อมขาย') loanReady++;
                         }
                         
                         let taxDiff = getDiffDays(b.taxExp);
@@ -359,6 +371,10 @@
                         }
                     }
                 });
+
+                document.getElementById('dash-loan-ready').innerText = loanReady;
+                document.getElementById('dash-loan-wait').innerText = loanWait;
+                document.getElementById('dash-loan-repair-cnt').innerText = loanRepair;
 
                 const pfinTotal = pfinFinSum + pfinDownSum;
                 document.getElementById('dash-pfin-total').innerText = '฿' + pfinTotal.toLocaleString();
